@@ -179,3 +179,68 @@
 .modulus .playing-card .marks .consumable { opacity: 0.6; }
 .modulus .playing-card .suit { margin-bottom: 6px; }
 .modulus-hand-card .mark-result { text-align: center; font-size: 12px; }
+
+/* ---------- Tag chips & effects editor (Phase 2) ---------- */
+.modulus .tag-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.modulus .tag-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 1px 4px 1px 8px;
+  border: 1px solid var(--mod-border); border-radius: 999px; font-size: 12px;
+}
+.modulus .tag-chip.engine { border-color: var(--mod-secondary); background: color-mix(in srgb, var(--mod-secondary) 15%, transparent); }
+.modulus .tag-chip .tag-value { width: 38px; height: 20px; font-size: 11px; }
+.modulus .tag-chip .remove { cursor: pointer; opacity: 0.7; }
+.modulus .tag-add, .modulus .effect-add { display: flex; gap: 6px; }
+.modulus .tag-add button, .modulus .effect-add button { width: auto; flex: 0 0 auto; }
+.modulus .effect-row { border: 1px solid var(--mod-border); border-radius: 6px; padding: 6px; margin-bottom: 6px; }
+.modulus .effect-row.invalid { border-color: var(--mod-danger); }
+.modulus .effect-head { display: flex; gap: 4px; align-items: center; }
+.modulus .effect-head select { flex: 1; }
+.modulus .effect-controls { display: flex; gap: 6px; padding: 0 4px; }
+.modulus .effect-controls a { cursor: pointer; }
+.modulus .effect-args { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.modulus .effect-arg { display: flex; flex-direction: column; font-size: 11px; flex: 1 1 120px; }
+.modulus .effect-arg input[type="checkbox"] { align-self: flex-start; }
+.modulus .effect-preview { font-style: italic; margin: 4px 0 0; font-size: 12px; }
+.modulus .effect-error { color: var(--mod-danger); margin: 2px 0 0; font-size: 12px; }
+
+/* ---------- Vocabulary editor ---------- */
+.modulus.vocab-editor .window-content { display: flex; flex-direction: column; overflow: hidden; }
+.modulus .vocab-body { display: flex; flex-direction: column; gap: 6px; height: 100%; min-height: 0; }
+.modulus .vocab-toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.modulus .vocab-toolbar input[type="search"] { flex: 1 1 200px; }
+.modulus .vocab-toolbar select { flex: 0 1 180px; }
+.modulus .vocab-toolbar button { width: auto; flex: 0 0 auto; }
+.modulus .vocab-toolbar .count { color: var(--mod-muted); font-size: 12px; }
+.modulus .vocab-list, .modulus .tag-list { flex: 1; overflow-y: auto; min-height: 0; }
+.modulus .vocab-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0; }
+.modulus .vocab-table th, .modulus .vocab-table td { padding: 3px 4px; text-align: left; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
+.modulus .vocab-table th:nth-child(1), .modulus .vocab-table td:nth-child(1) { width: 28px; }
+.modulus .vocab-table th:nth-child(2), .modulus .vocab-table td:nth-child(2) { width: 24%; }
+.modulus .vocab-table th:nth-child(3), .modulus .vocab-table td:nth-child(3) { width: 10%; }
+.modulus .vocab-table th:nth-child(7), .modulus .vocab-table td:nth-child(7) { width: 56px; }
+.modulus .vocab-table tr.selected { background: color-mix(in srgb, var(--mod-secondary) 15%, transparent); }
+.modulus .vocab-table .name a { cursor: pointer; }
+.modulus .vocab-table .name img { vertical-align: middle; border: none; }
+.modulus .vocab-table .tags { font-size: 11px; }
+.modulus .vocab-table .controls a { cursor: pointer; margin: 0 3px; }
+.modulus .tag-list .vocab-table th:nth-child(n), .modulus .tag-list .vocab-table td:nth-child(n) { width: auto; }
+.modulus .vocab-footer, .modulus .tag-new { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.modulus .vocab-footer button, .modulus .tag-new button { width: auto; flex: 0 0 auto; }
+.modulus .tag-new .tag-description { flex: 1; }
+
+/* ---------- Action builder ---------- */
+.modulus .builder-body { display: flex; flex-direction: column; gap: 6px; }
+.modulus .word-slots { display: flex; flex-wrap: wrap; gap: 4px; }
+.modulus .word-slots select { flex: 1 1 140px; }
+.modulus .word-slots select.over { border-color: var(--mod-danger); }
+.modulus .builder-result { border: 1px solid var(--mod-border); border-radius: 6px; padding: 8px; }
+.modulus .builder-result h3 { margin: 0 0 4px; }
+.modulus .breakdown { width: 100%; margin: 6px 0; border-collapse: collapse; }
+.modulus .breakdown th { text-align: left; border-bottom: 1px solid var(--mod-border); }
+.modulus .breakdown td:last-child { text-align: right; }
+.modulus .breakdown tr.total td { font-weight: bold; border-top: 1px solid var(--mod-border); }
+.modulus .outcome-list ul { margin: 2px 0 6px; padding-left: 18px; }
+.modulus .builder-footer { display: flex; gap: 10px; align-items: center; }
+.modulus .builder-footer button { width: auto; margin-left: auto; }
+.modulus-roll-card .effects { margin: 4px 0; padding-left: 16px; font-size: 12px; }
+.modulus-roll-card .action-meta { font-size: 12px; text-align: center; }

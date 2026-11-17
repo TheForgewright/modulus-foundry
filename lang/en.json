@@ -146,7 +146,10 @@
     "Item": {
       "TagsHint": "Comma-separated. A trailing number is the tag's value: offensive, slow 2, charge 3.",
       "JSONHint": "Temporary JSON editor; the typed effects editor arrives in Phase 2.",
-      "JSONError": "Invalid JSON in {field}: {error}"
+      "JSONError": "Invalid JSON in {field}: {error}",
+      "AddTag": "Add",
+      "AddTagPlaceholder": "tag or \"slow 2\"",
+      "TagValue": "Value (0 = no intensity)"
     },
     "Field": {
       "level": "Level",
@@ -480,6 +483,171 @@
           "drawPlayed": "Draw as many cards as were played",
           "rankUp": "Hand counts {n} rank(s) higher"
         }
+      }
+    },
+    "Effect": {
+      "Add": "Add effect",
+      "None": "No effects.",
+      "Optional": "optional",
+      "MoveUp": "Move up",
+      "MoveDown": "Move down",
+      "TriggerLabel": "When it applies",
+      "OpLabel": "What it does",
+      "ToLabel": "Who it affects",
+      "JSONArgsHint": "Card-deck effects take JSON arguments. See docs/CARD_DECK.md.",
+      "Trigger": {
+        "declare": "When declared",
+        "finalize": "When finalized",
+        "onHit": "On hit",
+        "onMiss": "On miss",
+        "onResolve": "On resolution",
+        "while": "While active"
+      },
+      "To": {
+        "self": "Self",
+        "target": "Target",
+        "room": "Room"
+      },
+      "Op": {
+        "cost": "Change cost",
+        "momentum": "Momentum",
+        "draw": "Draw cards",
+        "rollStat": "Override rolling stat",
+        "targetStat": "Override target stat",
+        "dice": "Buff / debuff dice",
+        "tierShift": "Tier shift",
+        "dc": "Fixed DC",
+        "flat": "Flat bonus (gated)",
+        "addTag": "Add tag",
+        "move": "Movement",
+        "status": "Apply / remove status",
+        "pips": "Pips",
+        "restrict": "Restrict tag",
+        "note": "Note for the GM",
+        "deckModify": "Deck: change cards",
+        "deckMark": "Deck: mark cards",
+        "cardMark": "Cards: mark ability",
+        "pokerHand": "Cards: use a hand"
+      },
+      "Arg": {
+        "delta": "Amount",
+        "set": "Set to",
+        "count": "Cards",
+        "stat": "Stat",
+        "buff": "Buff dice",
+        "debuff": "Debuff dice",
+        "appliesTo": "Applies to",
+        "value": "Value",
+        "task": "Use default task DC",
+        "name": "Name",
+        "text": "Text",
+        "mode": "Mode",
+        "track": "Track",
+        "tag": "Tag",
+        "until": "Until",
+        "breakRoll": "Break roll",
+        "breakTarget": "Break vs"
+      },
+      "Option": {
+        "roll": "This roll",
+        "defense": "Defense",
+        "attackers": "Attackers",
+        "apply": "Apply",
+        "remove": "Remove",
+        "physical": "Physical",
+        "mental": "Mental",
+        "social": "Social",
+        "choice": "Player choice"
+      },
+      "Error": {
+        "unknownOp": "Unknown effect type.",
+        "badTrigger": "Unknown trigger.",
+        "badTarget": "Unknown target.",
+        "badStat": "Pick a stat for {arg}.",
+        "emptyTag": "Enter a tag for {arg}.",
+        "emptyText": "Enter text for {arg}.",
+        "dcNeedsValue": "Enter a DC or tick the default task DC."
+      }
+    },
+    "Vocab": {
+      "Title": "Vocabulary Editor",
+      "Open": "Open",
+      "MenuHint": "Author actions, words, statuses, talents, skills and tags; import and export JSON.",
+      "Tab": {
+        "items": "Vocabulary",
+        "tags": "Tags"
+      },
+      "Search": "Search names and tags",
+      "AllTypes": "All types",
+      "AllGroups": "All groups",
+      "Type": "Type",
+      "Summary": "Summary",
+      "Group": "Group",
+      "Base": "base",
+      "Duplicate": "Duplicate",
+      "Empty": "Nothing matches. Create something with the buttons above.",
+      "ExportSelected": "Export selected",
+      "ExportFiltered": "Export filtered",
+      "ExportAll": "Export all",
+      "Import": "Import JSON",
+      "NothingToExport": "Nothing to export.",
+      "Exported": "Exported {n} item(s).",
+      "ImportFailed": "Import failed",
+      "ImportFailedHint": "The file was not imported:",
+      "ImportConfirm": "Create {create} item(s), update {update} existing item(s) and merge {tags} tag(s)? Items are matched by their vocabulary id, so re-importing updates instead of duplicating.",
+      "Imported": "Imported: {create} created, {update} updated.",
+      "Tag": "Tag",
+      "Kind": "Kind",
+      "Valued": "Takes a value (X)",
+      "Uses": "Used by",
+      "EngineKind": "Engine",
+      "LabelKind": "Label",
+      "AddTag": "Add tag",
+      "EngineTag": "That is an engine tag; its meaning is fixed.",
+      "Unregistered": "Used but not registered"
+    },
+    "Builder": {
+      "Open": "Act",
+      "Title": "Act: {name}",
+      "Words": "Words",
+      "TargetLabel": "Target",
+      "NoTarget": "No token targeted",
+      "SceneTrack": "Scene track",
+      "Target": {
+        "target": "Targeted token",
+        "self": "Self",
+        "none": "None"
+      },
+      "NoActions": "No actions available. Give this actor an action, or create an untrained action in the world.",
+      "Cost": "Cost",
+      "Total": "Total",
+      "MomentumAfter": "Momentum after",
+      "EffectiveMomentum": "Effective momentum",
+      "Roll": "Roll",
+      "Tier": "tier",
+      "Dice": "Dice",
+      "Chance": "Chance to hit",
+      "Spend": "Spend momentum",
+      "Override": "Ignore validation (GM)",
+      "Resolve": "Resolve",
+      "Line": {
+        "extraWords": "Extra words",
+        "focus": "Focus bonus",
+        "sceneTrack": "Scene track",
+        "exposed": "Exposed",
+        "resistance": "Target resistance"
+      },
+      "Error": {
+        "tooManyWords": "Too many words (max {max}).",
+        "needsRecovery": "At 0 or less momentum only Recovery actions can be declared.",
+        "unaffordable": "Costs {cost} but only {momentum} momentum is available.",
+        "noRollStat": "This action has no rolling stat.",
+        "noTargetStat": "This action has no target stat and no fixed DC."
+      },
+      "Warning": {
+        "statOverrideConflict": "Several words override the same stat; {used} wins.",
+        "duplicateWord": "The same word is used twice.",
+        "offensiveOnSelf": "Offensive action targeting self."
       }
     }
   }

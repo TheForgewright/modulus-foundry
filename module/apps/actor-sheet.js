@@ -6,6 +6,7 @@ import { SYSTEM_ID } from "../config.js";
 import { DOMAINS, EXPRESSIONS, statKey } from "../rules/constants.js";
 import { getSetting } from "../settings.js";
 import { openRollDialog } from "./roll-dialog.js";
+import { openActionBuilder } from "./action-builder.js";
 import { hasCardAbilities, cardAbilities, markAbilities } from "../deck/card-effects.js";
 import { cardView, markText, STANDALONE_DECK } from "../documents/actor.js";
 import { evaluateHand, checkHandRequirement, normalizeMark, HAND_NAMES, MAX_HAND_SIZE } from "../rules/deck.js";
@@ -29,6 +30,7 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       resetAllocation: ModulusActorSheet.#onResetAllocation,
       rollStat: ModulusActorSheet.#onRollStat,
       rollManual: ModulusActorSheet.#onRollManual,
+      buildAction: ModulusActorSheet.#onBuildAction,
       pip: ModulusActorSheet.#onPip,
       rest: ModulusActorSheet.#onRest,
       clearDefeat: ModulusActorSheet.#onClearDefeat,
@@ -406,6 +408,10 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
 
   static #onRollManual() {
     openRollDialog(this.document);
+  }
+
+  static #onBuildAction() {
+    openActionBuilder(this.document);
   }
 
   /* ---------------- Tracks (§4, hand tools §15) ---------------- */

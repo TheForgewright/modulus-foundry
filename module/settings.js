@@ -6,6 +6,7 @@
  */
 import { SYSTEM_ID } from "./config.js";
 import { evaluateFormula } from "./rules/formula.js";
+import { buildRegistry } from "./rules/tags.js";
 
 const S = (key) => `MODULUS.Settings.${key}`;
 
@@ -78,6 +79,34 @@ export function registerSettings() {
     }
     game.settings.register(SYSTEM_ID, key, setting);
   }
+
+  // Designer tag registry (§6.4): engine tags are built in; this holds the custom ones.
+  game.settings.register(SYSTEM_ID, "tagRegistry", {
+    scope: "world",
+    config: false,
+    type: Array,
+    default: []
+  });
+}
+
+/** Full tag registry: engine tags, common labels and the designers' custom tags. */
+export function tagRegistry() {
+  return buildRegistry(getSetting("tagRegistry") ?? []);
+}
+
+/** Assembly settings (§6.6) read from the world settings. */
+export function assemblySettings() {
+  return {
+    sameNameTagStacking: getSetting("sameNameTagStacking"),
+    statOverrideConflict: getSetting("statOverrideConflict"),
+    costFloorZero: getSetting("costFloorZero"),
+    resistanceTrack: getSetting("resistanceTrack"),
+    extraWordPenalty: getSetting("extraWordPenalty"),
+    focusBonus: getSetting("focusBonus"),
+    sceneTrackBonusDice: getSetting("sceneTrackBonusDice"),
+    exposedMode: getSetting("exposedMode"),
+    diceCap: getSetting("diceCap")
+  };
 }
 
 export function getSetting(key) {

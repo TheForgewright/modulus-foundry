@@ -7,7 +7,8 @@
       <label>{{localize "MODULUS.Field.xp.total"}} <input type="number" name="system.xp.total" value="{{source.xp.total}}" min="0" step="1"></label>
       <label>{{localize "MODULUS.Field.xp.spent"}} <input type="number" name="system.xp.spent" value="{{source.xp.spent}}" min="0" step="1"></label>
       <label>{{localize "MODULUS.Field.respecPoints"}} <input type="number" name="system.respecPoints" value="{{source.respecPoints}}" min="0" step="1" {{#unless isGM}}disabled{{/unless}}></label>
-      <button type="button" class="roll-button" data-action="rollManual"><i class="fa-solid fa-dice-d20"></i> {{localize "MODULUS.Roll.Roll"}}</button>
+      <button type="button" class="roll-button" data-action="buildAction"><i class="fa-solid fa-hand-fist"></i> {{localize "MODULUS.Builder.Open"}}</button>
+      <button type="button" class="roll-button secondary" data-action="rollManual"><i class="fa-solid fa-dice-d20"></i> {{localize "MODULUS.Roll.Roll"}}</button>
     </div>
   </div>
 </header>

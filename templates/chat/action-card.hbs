@@ -1,0 +1,6 @@
+<div class="modulus-roll-card">
+  <header><h3>{{ctx.label}}</h3></header>
+  {{#if ctx.action.tags}}<div class="roll-meta note">{{ctx.action.tags}}</div>{{/if}}
+  <div class="roll-meta">{{localize "MODULUS.Builder.Cost"}} {{ctx.action.cost}}</div>
+  {{#if ctx.action.onResolve.length}}<ul class="effects">{{#each ctx.action.onResolve}}<li>{{this}}</li>{{/each}}</ul>{{/if}}
+</div>

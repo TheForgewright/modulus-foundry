@@ -12,12 +12,79 @@
   <div class="form-group"><label>{{localize "MODULUS.Field.xpSpent"}}</label><input type="number" value="{{system.xpSpent}}" disabled></div>
   {{/if}}
 
+  {{!-- Tags (§6.4) --}}
   {{#if hasTags}}
-  <div class="form-group">
-    <label>{{localize "MODULUS.Field.tags"}}</label>
-    <input type="text" name="system._tagsText" value="{{tagsText}}" placeholder="offensive, slow 2">
-    <p class="hint">{{localize "MODULUS.Item.TagsHint"}}</p>
-  </div>
+  <fieldset class="tag-editor">
+    <legend>{{localize "MODULUS.Field.tags"}}</legend>
+    <div class="tag-chips">
+      {{#each tags}}
+      <span class="tag-chip {{#if engine}}engine{{/if}}" data-index="{{index}}" {{#if tooltip}}data-tooltip="{{tooltip}}"{{/if}}>
+        <input type="hidden" name="_tags.{{index}}.name" value="{{name}}">
+        <span class="tag-name">{{name}}</span>
+        <input type="number" class="tag-value" name="_tags.{{index}}.value" value="{{value}}" step="1" data-tooltip="MODULUS.Item.TagValue">
+        {{#if ../editable}}<a class="remove" data-action="removeTag"><i class="fa-solid fa-xmark"></i></a>{{/if}}
+      </span>
+      {{/each}}
+    </div>
+    {{#if editable}}
+    <div class="tag-add">
+      <input type="text" class="new-tag" list="{{rootId}}-tags" placeholder="{{localize 'MODULUS.Item.AddTagPlaceholder'}}">
+      <datalist id="{{rootId}}-tags">{{#each registry}}<option value="{{name}}">{{description}}</option>{{/each}}</datalist>
+      <button type="button" data-action="addTag"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Item.AddTag"}}</button>
+    </div>
+    {{/if}}
+  </fieldset>
+  {{/if}}
+
+  {{!-- Effects (§6.3) --}}
+  {{#if hasEffects}}
+  <fieldset class="effects-editor">
+    <legend>{{localize "MODULUS.Field.effects"}}</legend>
+    {{#each effects}}
+    <div class="effect-row {{#if errors.length}}invalid{{/if}}" data-index="{{index}}">
+      <div class="effect-head">
+        <select name="_fx.{{index}}.trigger" data-tooltip="MODULUS.Effect.TriggerLabel">{{selectOptions ../triggerOptions selected=trigger}}</select>
+        <select name="_fx.{{index}}.op" data-tooltip="MODULUS.Effect.OpLabel">{{selectOptions ../opOptions selected=op}}</select>
+        <select name="_fx.{{index}}.to" data-tooltip="MODULUS.Effect.ToLabel">{{selectOptions ../targetOptions selected=to}}</select>
+        {{#if ../editable}}
+        <span class="effect-controls">
+          <a data-action="moveEffect" data-dir="-1" data-tooltip="MODULUS.Effect.MoveUp"><i class="fa-solid fa-arrow-up"></i></a>
+          <a data-action="moveEffect" data-dir="1" data-tooltip="MODULUS.Effect.MoveDown"><i class="fa-solid fa-arrow-down"></i></a>
+          <a data-action="removeEffect" data-tooltip="DOCUMENT.Delete"><i class="fa-solid fa-trash"></i></a>
+        </span>
+        {{/if}}
+      </div>
+      {{#if json}}
+      <textarea class="json" name="_fx.{{index}}.argsJSON" rows="4" spellcheck="false">{{argsJSON}}</textarea>
+      <p class="hint">{{localize "MODULUS.Effect.JSONArgsHint"}}</p>
+      {{else}}
+      <div class="effect-args">
+        {{#each args}}
+        <label class="effect-arg">
+          <span>{{label}}{{#if optional}} <em>({{localize "MODULUS.Effect.Optional"}})</em>{{/if}}</span>
+          {{#if isInt}}<input type="number" name="{{name}}" value="{{value}}" step="1">{{/if}}
+          {{#if isBool}}<input type="checkbox" name="{{name}}" {{checked value}}>{{/if}}
+          {{#if isStat}}<select name="{{name}}">{{#if optional}}<option value=""></option>{{/if}}{{selectOptions ../../statOptions selected=value}}</select>{{/if}}
+          {{#if isSelect}}<select name="{{name}}">{{selectOptions options selected=value}}</select>{{/if}}
+          {{#if isTag}}<input type="text" name="{{name}}" value="{{value}}" list="{{../../rootId}}-tags">{{/if}}
+          {{#if isText}}<input type="text" name="{{name}}" value="{{value}}">{{/if}}
+        </label>
+        {{/each}}
+      </div>
+      {{/if}}
+      <p class="effect-preview">{{description}}</p>
+      {{#each errors}}<p class="effect-error">{{this}}</p>{{/each}}
+    </div>
+    {{else}}
+    <p class="hint">{{localize "MODULUS.Effect.None"}}</p>
+    {{/each}}
+    {{#if editable}}
+    <div class="effect-add">
+      <select class="new-effect-op">{{selectOptions opOptions}}</select>
+      <button type="button" data-action="addEffect"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Effect.Add"}}</button>
+    </div>
+    {{/if}}
+  </fieldset>
   {{/if}}
 
   {{#each lists}}

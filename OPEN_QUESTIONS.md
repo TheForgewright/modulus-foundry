@@ -59,6 +59,11 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 50 | Marks with requirement-only abilities (`consume: none`): should burn/draw marks fire, and are consumable marks used up? | No and no; `rankUp` still counts | `rules/deck.js` `useHand` |
 | 52 | A `draw` mark on a dry deck: may the reshuffle include the cards just played? | Yes, unless they were burned | `rules/deck.js` `useHand` |
 | 53 | How do marks get onto cards: fixed by content at deck build, chosen by the player during the encounter, or both? | Both (`deckMark`, `cardMark`) | `deck/card-effects.js` |
+| 55 | `resistanceTrack` alternative "the action's own domain tag": actions have no domain field. | The alternative uses the domain of the rolling stat | `rules/assembly.js` `resistanceDomain` |
+| 56 | Focus bonus magnitude when the hook is turned on. | 1 buff die if fewer words than the maximum are used | `rules/assembly.js`, setting `focusBonus` |
+| 57 | Who can use which actions and words: §6.1 says trained actions need granting, §6.2 says base words are known by all. Are untrained actions and non-base untrained words available to everyone? | Untrained world actions: everyone. Words: base words for everyone, others only when on the character | `apps/action-builder.js` `availableVocabulary` |
+| 58 | §11 says the packs ship "empty plus fixtures", §17.3 says fixtures are "not canon; do not ship as content". | Content packs ship empty; fixtures ship in a separate pack labelled "Test Fixtures (not canon)", hidden from players | `system.json`, `packs/_source/test-fixtures` |
+| 59 | Should the declaration-time "When declared" effects of the target's statuses (e.g. defensive stances) affect the attacker's assembly? | No; only the actor's own statuses' "while" effects, plus Exposed on the target | `rules/assembly.js` |
 
 ## Resolved
 

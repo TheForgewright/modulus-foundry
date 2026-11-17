@@ -1,0 +1,53 @@
+{
+  "_id": "mfxWrenching0001",
+  "_key": "!items!mfxWrenching0001",
+  "name": "Wrenching",
+  "type": "word",
+  "img": "icons/svg/padlock.svg",
+  "system": {
+    "description": "<p><em>Test fixture from the design doc (§17.3). Not canon; do not ship as content.</em></p>",
+    "momentumModifier": 0,
+    "trained": false,
+    "baseWord": true,
+    "tags": [],
+    "effects": [
+      {
+        "trigger": "declare",
+        "op": "targetStat",
+        "args": {
+          "stat": "physical.resilience"
+        },
+        "to": "self"
+      },
+      {
+        "trigger": "onHit",
+        "op": "restrict",
+        "args": {
+          "tag": "two-handed",
+          "until": "the target wins a Power-vs-Power break contest",
+          "breakRoll": "physical.power",
+          "breakTarget": "physical.power"
+        },
+        "to": "target"
+      }
+    ],
+    "groups": {
+      "tree": "",
+      "tier1": "",
+      "tier2": "",
+      "tier3": ""
+    }
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "modulus": {
+      "vocabId": "fixture-wrenching",
+      "fixture": true
+    }
+  }
+}

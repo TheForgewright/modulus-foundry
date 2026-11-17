@@ -1,0 +1,72 @@
+<div class="builder-body">
+  {{#if noActions}}
+  <p class="hint">{{localize "MODULUS.Builder.NoActions"}}</p>
+  {{else}}
+  <div class="form-group">
+    <label>{{localize "TYPES.Item.action"}}</label>
+    <select data-state="action">{{selectOptions actionOptions selected=state.action}}</select>
+  </div>
+  <div class="form-group stacked">
+    <label>{{localize "MODULUS.Builder.Words"}} <span class="hint">({{localize "MODULUS.Field.maxWords"}} {{actor.system.maxWords}})</span></label>
+    <div class="word-slots">
+      {{#each slots}}
+      <select data-state="word" data-index="{{index}}" class="{{#if over}}over{{/if}}">
+        <option value="">—</option>
+        {{selectOptions ../wordOptions selected=value}}
+      </select>
+      {{/each}}
+    </div>
+  </div>
+  <div class="form-group">
+    <label>{{localize "MODULUS.Builder.TargetLabel"}}</label>
+    <select data-state="targetMode">{{selectOptions targetModes selected=state.targetMode}}</select>
+    {{#if targetName}}<span class="hint">{{targetName}}</span>{{else}}<span class="hint">{{localize "MODULUS.Builder.NoTarget"}}</span>{{/if}}
+  </div>
+  <div class="form-group">
+    <label>{{localize "MODULUS.Builder.SceneTrack"}}</label>
+    <select data-state="sceneTrack">{{selectOptions sceneTracks selected=state.sceneTrack}}</select>
+  </div>
+
+  {{#with plan}}
+  <section class="builder-result">
+    <h3>{{label}}</h3>
+    {{#if rolls}}<div>{{rollStat}} → {{#if targetStat}}{{targetStat}}{{else}}—{{/if}}</div>{{/if}}
+    <div class="tag-chips">{{#each tags}}<span class="tag-chip">{{this}}</span>{{/each}}</div>
+
+    <table class="breakdown">
+      <tr><th colspan="2">{{localize "MODULUS.Builder.Cost"}}</th></tr>
+      {{#each costLines}}<tr><td>{{label}}</td><td>{{value}}</td></tr>{{/each}}
+      <tr class="total"><td>{{localize "MODULUS.Builder.Total"}}</td><td>{{cost}}</td></tr>
+      <tr><td>{{localize "MODULUS.Builder.MomentumAfter"}}</td><td>{{../momentum}} → {{afterCost}}</td></tr>
+      <tr><td>{{localize "MODULUS.Builder.EffectiveMomentum"}}</td><td>{{effectiveMomentum}}{{#if slow}} <span class="debuff">(slow {{slow}})</span>{{/if}}{{#if fast}} <span class="buff">(fast {{fast}})</span>{{/if}}</td></tr>
+    </table>
+
+    {{#if rolls}}
+    <table class="breakdown">
+      <tr><th colspan="2">{{localize "MODULUS.Builder.Roll"}}</th></tr>
+      <tr><td>{{localize "MODULUS.Roll.Keep"}}</td><td>{{tier}}</td></tr>
+      {{#each tierShifts}}<tr><td>{{label}}</td><td>{{delta}} {{localize "MODULUS.Builder.Tier"}}</td></tr>{{/each}}
+      {{#each diceLines}}<tr><td>{{label}}</td><td>{{#if buff}}<span class="buff">+{{buff}}▲</span> {{/if}}{{#if debuff}}<span class="debuff">+{{debuff}}▼</span>{{/if}}</td></tr>{{/each}}
+      {{#if extraDebuff}}<tr><td>{{localize "MODULUS.Roll.FromDegrade"}}</td><td><span class="debuff">+{{extraDebuff}}▼</span></td></tr>{{/if}}
+      <tr class="total"><td>{{localize "MODULUS.Builder.Dice"}}</td><td>{{buff}}▲ {{debuff}}▼{{#if flatBonus}} · +{{flatBonus}} {{localize "MODULUS.Roll.Flat"}}{{/if}}</td></tr>
+      <tr><td>DC</td><td>{{#if dc}}{{dc}}{{#if dcSource.targetName}} ({{dcSource.targetName}} · {{dcSource.statLabel}}){{/if}}{{else}}—{{/if}}</td></tr>
+      {{#if chance}}<tr class="total"><td>{{localize "MODULUS.Builder.Chance"}}</td><td>{{chance}}</td></tr>{{/if}}
+    </table>
+    {{/if}}
+
+    {{#each outcomes}}
+    <div class="outcome-list"><strong>{{label}}</strong><ul>{{#each lines}}<li>{{this}}</li>{{/each}}</ul></div>
+    {{/each}}
+
+    {{#each errors}}<p class="effect-error"><i class="fa-solid fa-ban"></i> {{this}}</p>{{/each}}
+    {{#each warnings}}<p class="hint"><i class="fa-solid fa-triangle-exclamation"></i> {{this}}</p>{{/each}}
+  </section>
+  {{/with}}
+
+  <footer class="builder-footer">
+    <label><input type="checkbox" data-state="spend" {{checked state.spend}}> {{localize "MODULUS.Builder.Spend"}}</label>
+    {{#if isGM}}<label><input type="checkbox" data-state="override" {{checked state.override}}> {{localize "MODULUS.Builder.Override"}}</label>{{/if}}
+    <button type="button" data-action="resolve" {{#unless canResolve}}disabled{{/unless}}><i class="fa-solid fa-dice-d20"></i> {{localize "MODULUS.Builder.Resolve"}}</button>
+  </footer>
+  {{/if}}
+</div>

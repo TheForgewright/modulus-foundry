@@ -35,5 +35,11 @@
   </div>
   {{/if}}
   {{#if outcome}}<div class="outcome {{outcome}}">{{localize (concat "MODULUS.Roll.Outcome." outcome)}}</div>{{/if}}
+  {{#with ctx.action}}
+  <div class="action-meta">{{rollStat}}{{#if targetStat}} → {{targetStat}}{{/if}} · {{localize "MODULUS.Builder.Cost"}} {{cost}}{{#if tags}} · <span class="note">{{tags}}</span>{{/if}}</div>
+  {{#if ../isHit}}{{#if onHit.length}}<ul class="effects">{{#each onHit}}<li>{{this}}</li>{{/each}}</ul>{{/if}}{{/if}}
+  {{#if ../isMiss}}{{#if onMiss.length}}<ul class="effects">{{#each onMiss}}<li>{{this}}</li>{{/each}}</ul>{{/if}}{{/if}}
+  {{#if onResolve.length}}<ul class="effects">{{#each onResolve}}<li>{{this}}</li>{{/each}}</ul>{{/if}}
+  {{/with}}
   {{/if}}
 </div>

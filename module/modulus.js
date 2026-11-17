@@ -13,6 +13,8 @@ import { ModulusItemSheet } from "./apps/item-sheet.js";
 import { openRollDialog, buildRollPlan, rollFromPlan } from "./apps/roll-dialog.js";
 import * as rules from "./rules/index.js";
 import { registerDeckHooks } from "./deck/lifecycle.js";
+import { VocabularyEditor } from "./apps/vocab-editor.js";
+import { ActionBuilder, openActionBuilder, buildDeclaration, resolveDeclaration } from "./apps/action-builder.js";
 
 Hooks.once("init", () => {
   console.log("Modulus | Initializing");
@@ -45,6 +47,9 @@ Hooks.once("init", () => {
     `systems/${SYSTEM_ID}/templates/actor/notes.hbs`,
     `systems/${SYSTEM_ID}/templates/actor/cards.hbs`,
     `systems/${SYSTEM_ID}/templates/chat/hand-card.hbs`,
+    `systems/${SYSTEM_ID}/templates/chat/action-card.hbs`,
+    `systems/${SYSTEM_ID}/templates/apps/vocab-editor.hbs`,
+    `systems/${SYSTEM_ID}/templates/apps/action-builder.hbs`,
     `systems/${SYSTEM_ID}/templates/item/item-sheet.hbs`,
     `systems/${SYSTEM_ID}/templates/chat/roll-card.hbs`,
     `systems/${SYSTEM_ID}/templates/dialog/roll-dialog.hbs`
@@ -52,6 +57,33 @@ Hooks.once("init", () => {
 
   registerDeckHooks();
 
+  game.settings.registerMenu(SYSTEM_ID, "vocabularyEditor", {
+    name: "MODULUS.Vocab.Title",
+    label: "MODULUS.Vocab.Open",
+    hint: "MODULUS.Vocab.MenuHint",
+    icon: "fa-solid fa-book-open",
+    type: VocabularyEditor,
+    restricted: true
+  });
+
   // Public API for macros and add-ons.
-  game.modulus = { rules, openRollDialog, buildRollPlan, rollFromPlan, ModulusRoll };
+  game.modulus = {
+    rules, openRollDialog, buildRollPlan, rollFromPlan, ModulusRoll,
+    VocabularyEditor, openVocabularyEditor: () => VocabularyEditor.open(),
+    ActionBuilder, openActionBuilder, buildDeclaration, resolveDeclaration
+  };
+});
+
+// Vocabulary Editor button on the Items sidebar (GM only).
+Hooks.on("renderItemDirectory", (app, html) => {
+  if (!game.user.isGM) return;
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  if (!root || root.querySelector(".modulus-vocab-button")) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "modulus-vocab-button";
+  button.innerHTML = `<i class="fa-solid fa-book-open"></i> ${game.i18n.localize("MODULUS.Vocab.Title")}`;
+  button.addEventListener("click", () => VocabularyEditor.open());
+  const actions = root.querySelector(".header-actions") ?? root.querySelector("header") ?? root;
+  actions.append(button);
 });

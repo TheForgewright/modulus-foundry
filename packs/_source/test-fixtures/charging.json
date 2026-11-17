@@ -1,0 +1,38 @@
+{
+  "_id": "mfxCharging00001",
+  "_key": "!items!mfxCharging00001",
+  "name": "Charging",
+  "type": "word",
+  "img": "icons/svg/wingfoot.svg",
+  "system": {
+    "description": "<p><em>Test fixture from the design doc (§17.3). Not canon; do not ship as content.</em></p>",
+    "momentumModifier": 1,
+    "trained": false,
+    "baseWord": true,
+    "tags": [
+      {
+        "name": "movement",
+        "value": 0
+      }
+    ],
+    "effects": [],
+    "groups": {
+      "tree": "",
+      "tier1": "",
+      "tier2": "",
+      "tier3": ""
+    }
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "modulus": {
+      "vocabId": "fixture-charging",
+      "fixture": true
+    }
+  }
+}

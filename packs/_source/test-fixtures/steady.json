@@ -1,0 +1,38 @@
+{
+  "_id": "mfxSteady0000001",
+  "_key": "!items!mfxSteady0000001",
+  "name": "Steady",
+  "type": "word",
+  "img": "icons/svg/statue.svg",
+  "system": {
+    "description": "<p><em>Test fixture from the design doc (§17.3). Not canon; do not ship as content.</em></p>",
+    "momentumModifier": -1,
+    "trained": false,
+    "baseWord": true,
+    "tags": [
+      {
+        "name": "slow",
+        "value": 2
+      }
+    ],
+    "effects": [],
+    "groups": {
+      "tree": "",
+      "tier1": "",
+      "tier2": "",
+      "tier3": ""
+    }
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "modulus": {
+      "vocabId": "fixture-steady",
+      "fixture": true
+    }
+  }
+}

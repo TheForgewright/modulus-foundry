@@ -18,10 +18,14 @@ Phase 1 (Foundation) from §18 of the design:
 | Character / NPC sheet: dot allocator, tier badges, pip tracks with break points, momentum, items, hand tools | Done |
 | World settings for every OPEN / DRAFT rule (§16) | Registered |
 | Roll engine through Foundry `Roll`, roll dialog, chat card with kept / dropped dice and Hit / Miss | Done |
-| Compendium packs with test fixtures (§17.3) | Phase 2 |
+| **Phase 2**: action assembly engine (§6.6) and momentum cost (§5.3), tests 4 and 13 | Done, unit-tested |
+| Typed effects editor and tag chips on item sheets; tag registry | Done |
+| Vocabulary Editor with filters, JSON import / export (round-trip tested) | Done; see [`docs/VOCABULARY.md`](docs/VOCABULARY.md) |
+| Act window: assemble action + words, live cost / dice / DC / chance, resolve | Done |
+| Compendium packs (empty content packs + §17.3 test fixtures) | Done |
 | Optional personal card deck (§10): composition effects, draw with reshuffle, poker hand picker, hand-quality abilities, marked cards, discard for momentum, burn | Done early; see [`docs/CARD_DECK.md`](docs/CARD_DECK.md) |
 
-Phases 2–6 (vocabulary editor, encounter stack, talents, persistent encounters, optional subsystems) are not started.
+Phases 3–6 (encounter stack, talents, persistent encounters, remaining optional subsystems) are not started.
 
 ## Layout
 
@@ -44,10 +48,14 @@ docs/DESIGN.md
 
 ## Development
 
-Requires Node 20+. No dependencies.
+Requires Node 20+. Tests have no dependencies; building compendium packs needs `npm install` (Foundry's CLI).
 
 ```bash
 npm test
+```
+
+```bash
+npm run build:packs
 ```
 
 To try it in Foundry, symlink or copy this folder into your Foundry data directory as `Data/systems/modulus`, then create a world using the Modulus system.

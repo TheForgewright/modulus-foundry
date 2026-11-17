@@ -74,7 +74,9 @@ export class ModulusRoll extends foundry.dice.Roll {
       m,
       dice,
       ctx: m.context ?? {},
-      outcome: m.hit == null ? null : m.hit ? "hit" : "miss"
+      outcome: m.hit == null ? null : m.hit ? "hit" : "miss",
+      isHit: m.hit === true,
+      isMiss: m.hit === false
     });
   }
 }

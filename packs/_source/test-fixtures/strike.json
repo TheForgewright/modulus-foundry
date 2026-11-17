@@ -1,0 +1,44 @@
+{
+  "_id": "mfxStrike0000001",
+  "_key": "!items!mfxStrike0000001",
+  "name": "Strike",
+  "type": "action",
+  "img": "icons/svg/sword.svg",
+  "system": {
+    "description": "<p><em>Test fixture from the design doc (§17.3). Not canon; do not ship as content.</em></p>",
+    "rollStat": "physical.power",
+    "targetStat": "physical.finesse",
+    "momentumCost": 1,
+    "rolls": true,
+    "trained": false,
+    "tags": [
+      {
+        "name": "strike",
+        "value": 0
+      },
+      {
+        "name": "offensive",
+        "value": 0
+      }
+    ],
+    "effects": [],
+    "groups": {
+      "tree": "",
+      "tier1": "",
+      "tier2": "",
+      "tier3": ""
+    }
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "modulus": {
+      "vocabId": "fixture-strike",
+      "fixture": true
+    }
+  }
+}

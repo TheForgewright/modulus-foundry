@@ -1,0 +1,91 @@
+<div class="vocab-body">
+  <nav class="sheet-tabs tabs">
+    <a class="item {{#if isItems}}active{{/if}}" data-action="tab" data-tab="items">{{localize "MODULUS.Vocab.Tab.items"}}</a>
+    <a class="item {{#if isTags}}active{{/if}}" data-action="tab" data-tab="tags">{{localize "MODULUS.Vocab.Tab.tags"}}</a>
+  </nav>
+
+  {{#if isItems}}
+  <div class="vocab-toolbar">
+    <input type="search" class="filter-text" value="{{filter.text}}" placeholder="{{localize 'MODULUS.Vocab.Search'}}">
+    <select data-filter="type"><option value="">{{localize "MODULUS.Vocab.AllTypes"}}</option>{{selectOptions types selected=filter.type}}</select>
+    <select data-filter="group"><option value="">{{localize "MODULUS.Vocab.AllGroups"}}</option>{{selectOptions groups selected=filter.group}}</select>
+    <span class="count">{{count}} / {{total}}</span>
+  </div>
+  <div class="vocab-toolbar">
+    {{#each types}}<button type="button" data-action="create" data-type="{{@key}}"><i class="fa-solid fa-plus"></i> {{this}}</button>{{/each}}
+  </div>
+
+  <table class="vocab-table">
+    <thead>
+      <tr>
+        <th class="sel"><input type="checkbox" data-action="toggleAll" {{checked allSelected}}></th>
+        <th>{{localize "Name"}}</th>
+        <th>{{localize "MODULUS.Vocab.Type"}}</th>
+        <th>{{localize "MODULUS.Vocab.Summary"}}</th>
+        <th>{{localize "MODULUS.Field.tags"}}</th>
+        <th>{{localize "MODULUS.Vocab.Group"}}</th>
+        <th></th>
+      </tr>
+    </thead>
+  </table>
+  <div class="vocab-list">
+    <table class="vocab-table">
+      <tbody>
+        {{#each rows}}
+        <tr data-item-id="{{id}}" class="{{#if selected}}selected{{/if}}">
+          <td class="sel"><input type="checkbox" class="row-select" {{checked selected}}></td>
+          <td class="name"><img src="{{img}}" alt="" width="20" height="20"> <a data-action="edit">{{name}}</a></td>
+          <td>{{typeLabel}}</td>
+          <td>{{summary}}{{#if effectCount}} <i class="fa-solid fa-wand-magic-sparkles" data-tooltip="{{effects}}"></i>{{/if}}</td>
+          <td class="tags">{{tags}}</td>
+          <td>{{group}}</td>
+          <td class="controls">
+            <a data-action="duplicate" data-tooltip="MODULUS.Vocab.Duplicate"><i class="fa-solid fa-copy"></i></a>
+            <a data-action="delete" data-tooltip="DOCUMENT.Delete"><i class="fa-solid fa-trash"></i></a>
+          </td>
+        </tr>
+        {{else}}
+        <tr><td colspan="7" class="hint">{{localize "MODULUS.Vocab.Empty"}}</td></tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="vocab-footer">
+    <button type="button" data-action="exportJSON" data-scope="selected" {{#unless selectedCount}}disabled{{/unless}}><i class="fa-solid fa-file-export"></i> {{localize "MODULUS.Vocab.ExportSelected"}} ({{selectedCount}})</button>
+    <button type="button" data-action="exportJSON" data-scope="filtered"><i class="fa-solid fa-filter"></i> {{localize "MODULUS.Vocab.ExportFiltered"}}</button>
+    <button type="button" data-action="exportJSON" data-scope="all"><i class="fa-solid fa-file-export"></i> {{localize "MODULUS.Vocab.ExportAll"}}</button>
+    <button type="button" data-action="importJSON"><i class="fa-solid fa-file-import"></i> {{localize "MODULUS.Vocab.Import"}}</button>
+    <input type="file" class="import-file" accept=".json,application/json" hidden>
+  </footer>
+  {{/if}}
+
+  {{#if isTags}}
+  <div class="tag-list">
+    <table class="vocab-table">
+      <thead><tr><th>{{localize "MODULUS.Vocab.Tag"}}</th><th>{{localize "MODULUS.Vocab.Kind"}}</th><th>{{localize "MODULUS.Vocab.Valued"}}</th><th>{{localize "MODULUS.Field.description"}}</th><th>{{localize "MODULUS.Vocab.Uses"}}</th><th></th></tr></thead>
+      <tbody>
+        {{#each registry}}
+        <tr data-tag="{{name}}">
+          <td><strong>{{name}}</strong></td>
+          <td>{{#if engine}}{{localize "MODULUS.Vocab.EngineKind"}} <span class="hint">{{status}}</span>{{else}}{{localize "MODULUS.Vocab.LabelKind"}}{{/if}}</td>
+          <td>{{#if valued}}X{{/if}}</td>
+          <td>{{description}}</td>
+          <td>{{uses}}</td>
+          <td>{{#if custom}}<a data-action="deleteTag" data-tooltip="DOCUMENT.Delete"><i class="fa-solid fa-trash"></i></a>{{/if}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    {{#if unregistered.length}}
+    <p class="hint">{{localize "MODULUS.Vocab.Unregistered"}}: {{#each unregistered}}<code>{{this}}</code> {{/each}}</p>
+    {{/if}}
+  </div>
+  <div class="tag-new">
+    <input type="text" class="tag-name" placeholder="{{localize 'MODULUS.Vocab.Tag'}}">
+    <label><input type="checkbox" class="tag-valued"> {{localize "MODULUS.Vocab.Valued"}}</label>
+    <input type="text" class="tag-description" placeholder="{{localize 'MODULUS.Field.description'}}">
+    <button type="button" data-action="addTag"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Vocab.AddTag"}}</button>
+  </div>
+  {{/if}}
+</div>
