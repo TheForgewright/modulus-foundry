@@ -57,7 +57,6 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 48 | If a player selects more than five cards, should the engine find the best five, or is five a hard limit on selection? | Hard limit of five | `rules/deck.js`, Cards tab |
 | 49 | Should hands be truly hidden from other players (needs GM-held storage), or is sheet-level hiding enough? | Sheet-level only | `docs/CARD_DECK.md` |
 | 50 | Marks with requirement-only abilities (`consume: none`): should burn/draw marks fire, and are consumable marks used up? | No and no; `rankUp` still counts | `rules/deck.js` `useHand` |
-| 54 | When copies of one mark type have different values (draw 2 on one card, draw 0 on another), whose value applies? | The copy that decides exhaustion: the first-picked permanent copy, else the first-picked consumable copy | `rules/deck.js` `resolveMarks` |
 | 52 | A `draw` mark on a dry deck: may the reshuffle include the cards just played? | Yes, unless they were burned | `rules/deck.js` `useHand` |
 | 53 | How do marks get onto cards: fixed by content at deck build, chosen by the player during the encounter, or both? | Both (`deckMark`, `cardMark`) | `deck/card-effects.js` |
 
@@ -67,4 +66,5 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 |---|---|---|
 | 42 | Tertiary stat with two defeated tracks: 1 or 2 debuff dice? | 2. §3.3 stands (one debuff die per step below tertiary); test 11's wording was wrong. |
 | 46 | Do cards discarded for momentum go back into the reshuffle? | Yes, they join the used pile. |
-| 51 | Do several marks of the same type in one hand stack? | No. Each mark type applies once per hand. If every copy is consumable, only the first-picked one is exhausted; if any copy is permanent, none is. |
+| 51 | Do several marks of the same type in one hand stack? | No. Each mark type applies once per hand. |
+| 54 | Which copy of a mark type is used, and whose value applies? | The copy on the card the player picked first, regardless of permanence. Its value applies; it is exhausted only if consumable. |

@@ -232,7 +232,7 @@ test("each mark type applies once per hand", () => {
   assert.equal(r.marksFired.length, 1);
 });
 
-test("all copies consumable: only the first-picked one is exhausted", () => {
+test("the first-picked copy is used: its value applies and only it is exhausted", () => {
   const st = stateWith([
     marked("9h", { type: "draw", value: 1, consumable: true }),
     marked("9d", { type: "draw", value: 1, consumable: true })
@@ -244,14 +244,17 @@ test("all copies consumable: only the first-picked one is exhausted", () => {
   assert.deepEqual(pile, { "9d": 0, "9h": 1 });
 });
 
-test("any permanent copy: it applies and nothing is exhausted", () => {
-  const st = stateWith([
-    marked("9h", { type: "draw", value: 1, consumable: true }),
-    marked("9d", { type: "draw", value: 2 })
-  ], [marked("2c"), marked("3c"), marked("4c")]);
-  const r = useHand(st, ["9h", "9d"]);
-  assert.equal(r.drawn.length, 2); // the permanent mark's value
-  assert.equal(r.marksFired[0].exhaust, false);
+test("permanence is not considered: the first-picked copy wins either way", () => {
+  const draw = () => [marked("2c"), marked("3c"), marked("4c")];
+  const cards = () => [marked("9h", { type: "draw", value: 1, consumable: true }), marked("9d", { type: "draw", value: 2 })];
+  // consumable picked first: value 1, and it is exhausted
+  let r = useHand(stateWith(cards(), draw()), ["9h", "9d"]);
+  assert.equal(r.drawn.length, 1);
+  assert.equal(r.state.discard.find((c) => c.id === "9h").marks.length, 0);
+  assert.equal(r.state.discard.find((c) => c.id === "9d").marks.length, 1);
+  // permanent picked first: value 2, nothing exhausted
+  r = useHand(stateWith(cards(), draw()), ["9d", "9h"]);
+  assert.equal(r.drawn.length, 2);
   assert.ok(r.state.discard.every((c) => c.marks.length === 1));
 });
 

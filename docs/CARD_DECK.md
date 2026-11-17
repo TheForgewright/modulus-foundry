@@ -110,10 +110,7 @@ A **mark** is a special effect on a card that fires when the card is part of a h
 
 `"consumable": true` removes the mark from its card after it fires; the card stays a plain card for the rest of the encounter. Marks without it fire every time. Every mark returns when a new deck is built for the next encounter.
 
-**Once per hand.** Each mark type applies at most once per hand, however many played cards carry it. When several cards carry the same type:
-
-- If any copy is permanent, it applies (the first one picked, if several) and no copy is used up.
-- If every copy is consumable, the copy on the card the player picked first applies, and only that one is used up. The others stay on their cards.
+**Once per hand.** Each mark type applies at most once per hand, however many played cards carry it. When several cards carry the same type, the copy on the card the player picked first is the one used: its value applies, and it is used up if it is consumable. The other copies are untouched and stay on their cards.
 
 Different types in the same hand each apply once, so a hand with a `burn` card and a `draw` card both burns and draws.
 

@@ -182,10 +182,9 @@ export function matchesSelector(card, sel = {}) {
 
 /**
  * Decide which marks fire for a hand. Each mark type applies once per hand, however
- * many cards carry it. Among the copies of a type, in the order the player picked
- * the cards (then the order marks were added to a card):
- *   - if any copy is permanent, the first permanent copy applies and nothing is exhausted;
- *   - otherwise the first copy applies and only that one is exhausted.
+ * many cards carry it. The first copy, in the order the player picked the cards (then
+ * the order marks were added to a card), is the one used: its value applies, and it is
+ * exhausted if it is consumable. Other copies are untouched.
  * @param {Card[]} cards  in selection order
  * @returns {Array<{type, value, consumable, cardId, markIndex, exhaust}>} one entry per type present
  */
@@ -199,8 +198,7 @@ export function resolveMarks(cards) {
   for (const type of MARK_TYPES) {
     const copies = byType.get(type);
     if (!copies) continue;
-    const permanent = copies.find((m) => !m.consumable);
-    out.push(permanent ? { ...permanent, exhaust: false } : { ...copies[0], exhaust: true });
+    out.push({ ...copies[0], exhaust: copies[0].consumable });
   }
   return out;
 }
