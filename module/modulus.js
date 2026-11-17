@@ -15,6 +15,11 @@ import * as rules from "./rules/index.js";
 import { registerDeckHooks } from "./deck/lifecycle.js";
 import { VocabularyEditor } from "./apps/vocab-editor.js";
 import { ActionBuilder, openActionBuilder, buildDeclaration, resolveDeclaration } from "./apps/action-builder.js";
+import { ModulusCombat, ModulusCombatant } from "./documents/combat.js";
+import { EncounterManager } from "./apps/encounter-manager.js";
+import { encounterController } from "./encounter/controller.js";
+import { registerQueries } from "./encounter/queries.js";
+import { decorateChatMessage } from "./encounter/outcomes.js";
 
 Hooks.once("init", () => {
   console.log("Modulus | Initializing");
@@ -24,6 +29,8 @@ Hooks.once("init", () => {
 
   CONFIG.Actor.documentClass = ModulusActor;
   CONFIG.Item.documentClass = ModulusItem;
+  CONFIG.Combat.documentClass = ModulusCombat;
+  CONFIG.Combatant.documentClass = ModulusCombatant;
   Object.assign(CONFIG.Actor.dataModels, { character: CharacterData, npc: NPCData });
   Object.assign(CONFIG.Item.dataModels, ITEM_MODELS);
   CONFIG.Dice.rolls.unshift(ModulusRoll);
@@ -50,12 +57,14 @@ Hooks.once("init", () => {
     `systems/${SYSTEM_ID}/templates/chat/action-card.hbs`,
     `systems/${SYSTEM_ID}/templates/apps/vocab-editor.hbs`,
     `systems/${SYSTEM_ID}/templates/apps/action-builder.hbs`,
+    `systems/${SYSTEM_ID}/templates/apps/encounter-manager.hbs`,
     `systems/${SYSTEM_ID}/templates/item/item-sheet.hbs`,
     `systems/${SYSTEM_ID}/templates/chat/roll-card.hbs`,
     `systems/${SYSTEM_ID}/templates/dialog/roll-dialog.hbs`
   ]);
 
   registerDeckHooks();
+  registerQueries();
 
   game.settings.registerMenu(SYSTEM_ID, "vocabularyEditor", {
     name: "MODULUS.Vocab.Title",
@@ -70,7 +79,8 @@ Hooks.once("init", () => {
   game.modulus = {
     rules, openRollDialog, buildRollPlan, rollFromPlan, ModulusRoll,
     VocabularyEditor, openVocabularyEditor: () => VocabularyEditor.open(),
-    ActionBuilder, openActionBuilder, buildDeclaration, resolveDeclaration
+    ActionBuilder, openActionBuilder, buildDeclaration, resolveDeclaration,
+    EncounterManager, openEncounterManager: (combatId) => EncounterManager.open(combatId), encounterController
   };
 });
 
@@ -87,3 +97,18 @@ Hooks.on("renderItemDirectory", (app, html) => {
   const actions = root.querySelector(".header-actions") ?? root.querySelector("header") ?? root;
   actions.append(button);
 });
+
+// Encounter Manager button on the Combat sidebar.
+Hooks.on("renderCombatTracker", (app, html) => {
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  if (!root || root.querySelector(".modulus-em-button")) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "modulus-em-button";
+  button.innerHTML = `<i class="fa-solid fa-layer-group"></i> ${game.i18n.localize("MODULUS.Encounter.Manager")}`;
+  button.addEventListener("click", () => EncounterManager.open(app.viewed?.id));
+  (root.querySelector("header") ?? root).append(button);
+});
+
+// Outcome buttons on Modulus chat cards (§7.8).
+Hooks.on("renderChatMessageHTML", (message, html) => decorateChatMessage(message, html));

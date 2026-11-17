@@ -64,6 +64,13 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 57 | Who can use which actions and words: §6.1 says trained actions need granting, §6.2 says base words are known by all. Are untrained actions and non-base untrained words available to everyone? | Untrained world actions: everyone. Words: base words for everyone, others only when on the character | `apps/action-builder.js` `availableVocabulary` |
 | 58 | §11 says the packs ship "empty plus fixtures", §17.3 says fixtures are "not canon; do not ship as content". | Content packs ship empty; fixtures ship in a separate pack labelled "Test Fixtures (not canon)", hidden from players | `system.json`, `packs/_source/test-fixtures` |
 | 59 | Should the declaration-time "When declared" effects of the target's statuses (e.g. defensive stances) affect the attacker's assembly? | No; only the actor's own statuses' "while" effects, plus Exposed on the target | `rules/assembly.js` |
+| 60 | Resolution ties between entries whose participants never rolled off (e.g. a Slow entry landing on someone else's momentum): how are they broken? | Each tied participant rolls a d20 at that moment, re-rolling equal results; higher resolves first | `rules/encounter.js` `settleTies` |
+| 61 | Inevitable: does the streak end when the actor takes a different action, or only on success? | Also ends when they take a different action | `rules/encounter.js` `resolveEntry` |
+| 62 | Charge: is the cost paid once on resolution, or each round declared? | Once, on resolution; charging rounds spend nothing | `rules/encounter.js` |
+| 63 | Aid / Hinder: when the aiding entry rolls and misses, does the aid still apply? | No; it applies on a hit or when the aiding action does not roll | `rules/encounter.js` `resolveEntry` |
+| 64 | Statuses tick per encounter round. A character in two running encounters ticks in both. Should durations follow one "master" clock? | Tick in every encounter they are in | `encounter/controller.js` `tickStatuses` |
+| 65 | Can momentum be edited mid-round? It is read at the start of declaration for ordering. | Yes; edits after declaration starts affect costs and later rounds, not this round's order | `rules/encounter.js` `beginDeclaration` |
+| 66 | On-hit effects with ops the engine cannot apply directly (dice, tier shifts imposed on a target) | Offered as GM notes until conditional effects (Phase 4) exist | `encounter/outcomes.js` |
 
 ## Resolved
 

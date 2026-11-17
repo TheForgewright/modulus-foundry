@@ -43,11 +43,20 @@ function statusesOf(actor) {
 /**
  * Assemble a declaration and work out everything resolution needs.
  * @param {Actor} actor
- * @param {{action: Item, words: Item[], target: Actor|null, targetMode: "target"|"self"|"none", sceneTrack?: string}} d
+ * @param {object} d
+ * @param {Item} d.action
+ * @param {Item[]} d.words
+ * @param {Actor|null} d.target          target actor, when targetMode is "target"
+ * @param {"target"|"self"|"none"|"entry"} d.targetMode
+ * @param {string} [d.sceneTrack]
+ * @param {number} [d.momentum]          momentum to check against (encounter momentum); default the sheet value
+ * @param {{buff?: number, debuff?: number}} [d.extraDice]  e.g. aid / hinder from the stack
+ * @param {number} [d.extraFlat]         e.g. Duelist bonus
  */
-export function buildDeclaration(actor, { action, words, target, targetMode, sceneTrack }) {
+export function buildDeclaration(actor, { action, words, target, targetMode, sceneTrack, momentum, extraDice = {}, extraFlat = 0 }) {
   let targetCtx = null;
   if (targetMode === "self") targetCtx = { kind: "self" };
+  else if (targetMode === "entry") targetCtx = { kind: "entry" };
   else if (targetMode === "target" && target) {
     const exposed = statusesOf(target).filter((s) => s.name.toLowerCase() === "exposed").reduce((n, s) => n + (s.value || 0), 0);
     targetCtx = target === actor ? { kind: "self" } : { kind: "other", resistance: target.system.momentum.resistance, exposed };
@@ -55,11 +64,19 @@ export function buildDeclaration(actor, { action, words, target, targetMode, sce
   const assembled = assembleAction({
     action: actionData(action),
     words: words.map(wordData),
-    actor: { momentum: actor.system.momentum.current, maxWords: actor.system.maxWords, sceneTrack },
+    actor: { momentum: momentum ?? actor.system.momentum.current, maxWords: actor.system.maxWords, sceneTrack },
     target: targetCtx,
     statuses: statusesOf(actor),
     settings: assemblySettings()
   });
+  if (extraDice.buff) assembled.dice.lines.push({ label: "aid", buff: extraDice.buff, debuff: 0 });
+  if (extraDice.debuff) assembled.dice.lines.push({ label: "hinder", buff: 0, debuff: extraDice.debuff });
+  assembled.dice.buff += extraDice.buff ?? 0;
+  assembled.dice.debuff += extraDice.debuff ?? 0;
+  if (extraFlat) {
+    assembled.flatLines.push({ label: "duelist", value: extraFlat });
+    assembled.flatBonus += extraFlat;
+  }
 
   const plan = { assembled, target: targetCtx?.kind === "other" ? target : null, dc: null, dcSource: null, tier: null };
   if (assembled.rolls && assembled.rollStat) {
@@ -79,7 +96,7 @@ export function buildDeclaration(actor, { action, words, target, targetMode, sce
       plan.dc = getSetting("defaultTaskDC");
       plan.dcSource = { kind: "task" };
     } else if (plan.target && assembled.targetStat) {
-      // §6.6 step 7: the DC is looked up at resolution; this is a preview of it.
+      // §6.6 step 7: the DC is looked up at resolution; before that this is a preview.
       const def = plan.target.getDefenseDC(assembled.targetStat);
       plan.dc = dcForTier(def.tier, dcTable());
       plan.dcSource = {
@@ -92,9 +109,41 @@ export function buildDeclaration(actor, { action, words, target, targetMode, sce
   return plan;
 }
 
-/** Roll a built declaration and post the card. Deducts momentum when `spend` is set (§5.3: at resolution). */
-export async function resolveDeclaration(actor, plan, { spend = true } = {}) {
+/** Summarise an assembled action for the stack engine (rules/encounter.js). */
+export function toStackDeclaration(plan, { payload, target }) {
   const a = plan.assembled;
+  const v = (name) => a.tags.filter((t) => t.name === name).reduce((n, t) => n + (t.value || 0), 0);
+  const has = (name) => a.tags.some((t) => t.name === name);
+  return {
+    label: a.label,
+    actionKey: [payload.actionUuid, ...(payload.wordUuids ?? [])].join("|"),
+    cost: a.cost.total,
+    slow: a.slow,
+    fast: a.fast,
+    charge: v("charge"),
+    taxing: v("taxing"),
+    determined: v("determined"),
+    duelist: v("duelist"),
+    aid: has("aid") ? v("aid") || 1 : 0,
+    hinder: has("hinder") ? v("hinder") || 1 : 0,
+    inevitable: has("inevitable"),
+    delayed: has("delayed"),
+    reaction: has("reaction"),
+    recovery: has("recovery"),
+    rolls: a.rolls,
+    tags: formatTags(a.tags),
+    target,
+    payload
+  };
+}
+
+/** Roll a built declaration and post the card. Deducts momentum when `spend` is set (§5.3: at resolution). */
+export async function resolveDeclaration(actor, plan, { spend = true, encounter = null } = {}) {
+  const a = plan.assembled;
+  const outcomeEffects = ["onHit", "onMiss", "onResolve"].flatMap((trigger) => a.outcomes[trigger].map((e) => {
+    const { source, ...effect } = e;
+    return { trigger, source, effect, text: `${source}: ${describeEffect(e, { stat: statLabel })}` };
+  }));
   const describe = (list) => list.map((e) => `${e.source}: ${describeEffect(e, { stat: statLabel })}`);
   const context = {
     label: a.label,
@@ -106,6 +155,9 @@ export async function resolveDeclaration(actor, plan, { spend = true } = {}) {
     defeatedTracks: plan.defeatedTracks,
     extraDebuff: plan.extraDebuff,
     dcSource: plan.dcSource,
+    encounter,
+    targetUuid: plan.target?.uuid ?? null,
+    outcomeEffects,
     action: {
       tags: formatTags(a.tags),
       cost: a.cost.total,
@@ -118,26 +170,39 @@ export async function resolveDeclaration(actor, plan, { spend = true } = {}) {
       tierShifts: a.tierShifts
     }
   };
+  let hit = null;
+  let message;
   if (a.rolls) {
     const roll = ModulusRoll.create({ tier: plan.tier, buff: plan.buff, debuff: plan.debuff, flatBonus: a.flatBonus, dc: plan.dc, context });
     await roll.evaluate();
-    await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }) });
+    message = await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }) });
+    hit = roll.modulus.hit;
   } else {
     const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/chat/action-card.hbs`, { ctx: context });
-    await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content });
+    message = await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content, flags: { [SYSTEM_ID]: { context } } });
   }
-  if (spend && a.cost.total) {
+  if (spend && a.cost.total && !encounter) {
     await actor.update({ "system.momentum.current": actor.system.momentum.current - a.cost.total });
   }
+  return { hit, message };
 }
 
+/**
+ * Action Builder window. Three modes:
+ *   standalone  the "Act" button: build, preview, resolve immediately (Phase 2 testbed)
+ *   declare     an encounter declaration: Declare or Pass; resolves the `result` promise
+ *   reconfirm   a Slow cascade re-confirmation: Keep, or change to the new build
+ */
 export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
     classes: ["modulus", "action-builder"],
     window: { icon: "fa-solid fa-hand-fist", resizable: true },
-    position: { width: 560, height: "auto" },
+    position: { width: 580, height: "auto" },
     actions: {
-      resolve: ActionBuilder.#onResolve
+      resolve: ActionBuilder.#onResolve,
+      submit: ActionBuilder.#onSubmit,
+      pass: ActionBuilder.#onPass,
+      keep: ActionBuilder.#onKeep
     }
   };
 
@@ -145,14 +210,96 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     body: { template: `systems/${SYSTEM_ID}/templates/apps/action-builder.hbs` }
   };
 
-  constructor(actor, options = {}) {
-    super({ id: `modulus-action-builder-${actor.id}`, ...options });
+  /**
+   * @param {Actor} actor
+   * @param {object} [opts]
+   * @param {"standalone"|"declare"|"reconfirm"} [opts.mode]
+   * @param {Combat} [opts.combat]
+   * @param {Combatant} [opts.combatant]
+   * @param {{actionUuid, wordUuids, target}} [opts.prefill]
+   * @param {string} [opts.note]   shown at the top (e.g. who caused a re-confirmation)
+   */
+  constructor(actor, { mode = "standalone", combat = null, combatant = null, prefill = null, note = "", ...options } = {}) {
+    const id = mode === "standalone" ? `modulus-action-builder-${actor.id}` : `modulus-declare-${combatant?.id ?? actor.id}-${foundry.utils.randomID(4)}`;
+    super({ id, ...options });
     this.actor = actor;
-    this.state = { action: "", words: [], targetMode: "target", spend: true, sceneTrack: "", override: false };
+    this.mode = mode;
+    this.combat = combat;
+    this.combatant = combatant;
+    this.note = note;
+    this.state = {
+      action: prefill?.actionUuid ?? "",
+      words: [...(prefill?.wordUuids ?? [])],
+      target: prefill?.target ? ActionBuilder.targetKey(prefill.target) : (mode === "standalone" ? "token" : "none"),
+      spend: true,
+      sceneTrack: combatant?.sceneTrack ?? "",
+      override: false
+    };
+    this.result = new Promise((resolve) => (this._resolveResult = resolve));
+  }
+
+  /** Open a declare / reconfirm window and wait for the answer. */
+  static prompt(actor, opts) {
+    const app = new this(actor, opts);
+    app.render({ force: true });
+    return app.result;
+  }
+
+  static targetKey(target) {
+    if (!target || target.kind === "none") return "none";
+    if (target.kind === "self") return "self";
+    if (target.kind === "actor") return `c:${target.pid}`;
+    if (target.kind === "entry") return `e:${target.entryId}`;
+    return "none";
+  }
+
+  get inEncounter() {
+    return this.mode !== "standalone";
   }
 
   get title() {
-    return game.i18n.format("MODULUS.Builder.Title", { name: this.actor.name });
+    const key = { standalone: "MODULUS.Builder.Title", declare: "MODULUS.Builder.DeclareTitle", reconfirm: "MODULUS.Builder.ReconfirmTitle" }[this.mode];
+    return game.i18n.format(key, { name: this.combatant?.name ?? this.actor.name });
+  }
+
+  get momentum() {
+    return this.inEncounter ? this.combatant.momentum : this.actor.system.momentum.current;
+  }
+
+  /** Target choices for the select. */
+  _targetOptions() {
+    const t = (k) => game.i18n.localize(k);
+    const opts = { none: t("MODULUS.Builder.Target.none"), self: t("MODULUS.Builder.Target.self") };
+    if (!this.inEncounter) {
+      opts.token = t("MODULUS.Builder.Target.target");
+      return opts;
+    }
+    for (const c of this.combat.combatants) {
+      if (c.id === this.combatant.id) continue;
+      opts[`c:${c.id}`] = c.name;
+    }
+    const state = this.combat.encounterState;
+    for (const e of state.stack) {
+      if (e.pid === this.combatant.id || e.cancelled) continue;
+      opts[`e:${e.id}`] = game.i18n.format("MODULUS.Builder.Target.entry", { name: e.name, label: e.decl.label });
+    }
+    return opts;
+  }
+
+  /** Resolve the target select into what the rules need. */
+  _target() {
+    const key = this.state.target;
+    if (key === "self") return { mode: "self", actor: null, stack: { kind: "self" } };
+    if (key === "token") {
+      const actor = game.user.targets.first()?.actor ?? null;
+      return { mode: actor ? "target" : "none", actor, stack: { kind: "none" } };
+    }
+    if (key.startsWith("c:")) {
+      const c = this.combat?.combatants.get(key.slice(2));
+      return c ? { mode: "target", actor: c.actor, stack: { kind: "actor", pid: c.id } } : { mode: "none", actor: null, stack: { kind: "none" } };
+    }
+    if (key.startsWith("e:")) return { mode: "entry", actor: null, stack: { kind: "entry", entryId: key.slice(2) } };
+    return { mode: "none", actor: null, stack: { kind: "none" } };
   }
 
   _current() {
@@ -160,35 +307,49 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     const action = actions.find((i) => i.uuid === this.state.action) ?? actions[0] ?? null;
     if (action) this.state.action = action.uuid;
     const chosen = this.state.words.map((u) => words.find((w) => w.uuid === u)).filter(Boolean);
-    const target = game.user.targets.first()?.actor ?? null;
-    return { actions, words, action, chosen, target };
+    return { actions, words, action, chosen, target: this._target() };
+  }
+
+  _plan() {
+    const { action, chosen, target } = this._current();
+    if (!action) return null;
+    return buildDeclaration(this.actor, {
+      action, words: chosen, target: target.actor, targetMode: target.mode,
+      sceneTrack: this.state.sceneTrack || undefined, momentum: this.momentum
+    });
   }
 
   async _prepareContext() {
     const t = (k) => game.i18n.localize(k);
     const { actions, words, action, chosen, target } = this._current();
     const maxWords = this.actor.system.maxWords;
-    // Slots: one per allowed word, plus one more so going over the limit is visible.
     const slots = Array.from({ length: Math.max(maxWords, chosen.length) + 1 }, (_, i) => ({
       index: i, value: this.state.words[i] ?? "", over: i >= maxWords
     }));
     const ctx = {
       actor: this.actor,
+      mode: this.mode,
+      isStandalone: this.mode === "standalone",
+      isDeclare: this.mode === "declare",
+      isReconfirm: this.mode === "reconfirm",
+      note: this.note,
       actionOptions: Object.fromEntries(actions.map((i) => [i.uuid, i.name])),
       wordOptions: Object.fromEntries(words.map((i) => [i.uuid, `${i.name} (${i.system.momentumModifier >= 0 ? "+" : ""}${i.system.momentumModifier})`])),
       slots,
       state: this.state,
-      targetName: target?.name,
-      targetModes: { target: t("MODULUS.Builder.Target.target"), self: t("MODULUS.Builder.Target.self"), none: t("MODULUS.Builder.Target.none") },
+      targetOptions: this._targetOptions(),
+      targetHint: this.state.target === "token" ? (target.actor?.name ?? t("MODULUS.Builder.NoTarget")) : "",
       sceneTracks: { "": "—", physical: t("MODULUS.Domain.physical"), mental: t("MODULUS.Domain.mental"), social: t("MODULUS.Domain.social") },
       isGM: game.user.isGM,
-      momentum: this.actor.system.momentum.current,
+      momentum: this.momentum,
+      maxWords,
       noActions: !actions.length
     };
     if (!action) return ctx;
-    const plan = buildDeclaration(this.actor, { action, words: chosen, target, targetMode: this.state.targetMode, sceneTrack: this.state.sceneTrack || undefined });
+    const plan = this._plan();
     const a = plan.assembled;
-    const lineLabel = (l) => (["extraWords", "focus", "sceneTrack", "exposed", "resistance"].includes(l.label) ? t(`MODULUS.Builder.Line.${l.label}`) : l.label);
+    const LINES = ["extraWords", "focus", "sceneTrack", "exposed", "resistance", "aid", "hinder", "duelist"];
+    const lineLabel = (l) => (LINES.includes(l.label) ? t(`MODULUS.Builder.Line.${l.label}`) : l.label);
     ctx.plan = {
       label: a.label,
       rolls: a.rolls,
@@ -197,7 +358,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       tags: a.tags.map((tag) => (tag.value ? `${tag.name} ${tag.value}` : tag.name)),
       costLines: a.cost.lines.map((l) => ({ label: lineLabel(l), value: l.value >= 0 ? `+${l.value}` : `${l.value}` })),
       cost: a.cost.total,
-      afterCost: this.actor.system.momentum.current - a.cost.total,
+      afterCost: this.momentum - a.cost.total,
       effectiveMomentum: a.effectiveMomentum,
       slow: a.slow,
       fast: a.fast,
@@ -231,10 +392,9 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
         const key = ev.target.dataset.state;
         const value = ev.target.type === "checkbox" ? ev.target.checked : ev.target.value;
         if (key === "word") {
-          const i = Number(ev.target.dataset.index);
           const words = [...this.state.words];
-          words[i] = value;
-          this.state.words = words.filter(Boolean); // blank slot removes the word
+          words[Number(ev.target.dataset.index)] = value;
+          this.state.words = words.filter(Boolean); // a blank slot removes the word
         } else this.state[key] = value;
         this.render();
       });
@@ -247,6 +407,8 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     this._hooks = [
       ["targetToken", Hooks.on("targetToken", rerender)],
       ["updateActor", Hooks.on("updateActor", (doc) => doc === this.actor && rerender())],
+      ["updateCombat", Hooks.on("updateCombat", (doc) => doc === this.combat && rerender())],
+      ["updateCombatant", Hooks.on("updateCombatant", (doc) => doc === this.combatant && rerender())],
       ["updateItem", Hooks.on("updateItem", rerender)],
       ["createItem", Hooks.on("createItem", rerender)],
       ["deleteItem", Hooks.on("deleteItem", rerender)]
@@ -256,14 +418,49 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
   _onClose(options) {
     super._onClose(options);
     for (const [hook, id] of this._hooks ?? []) Hooks.off(hook, id);
+    this._resolveResult?.(null); // closed without answering
+  }
+
+  /** The payload sent to the GM: uuids and target, never derived numbers. */
+  _payload() {
+    const { action, chosen, target } = this._current();
+    return {
+      actionUuid: action.uuid,
+      wordUuids: chosen.map((w) => w.uuid),
+      target: target.stack,
+      sceneTrack: this.state.sceneTrack || ""
+    };
+  }
+
+  _finish(result) {
+    const resolve = this._resolveResult;
+    this._resolveResult = null;
+    resolve?.(result);
+    this.close();
   }
 
   static async #onResolve() {
     const { action, chosen, target } = this._current();
     if (!action) return;
-    const plan = buildDeclaration(this.actor, { action, words: chosen, target, targetMode: this.state.targetMode, sceneTrack: this.state.sceneTrack || undefined });
+    const plan = buildDeclaration(this.actor, {
+      action, words: chosen, target: target.actor, targetMode: target.mode, sceneTrack: this.state.sceneTrack || undefined
+    });
     if (!plan.assembled.valid && !(game.user.isGM && this.state.override)) return;
     await resolveDeclaration(this.actor, plan, { spend: this.state.spend });
+  }
+
+  static #onSubmit() {
+    const plan = this._plan();
+    if (!plan || (!plan.assembled.valid && !(game.user.isGM && this.state.override))) return;
+    this._finish({ type: "declare", payload: this._payload() });
+  }
+
+  static #onPass() {
+    this._finish({ type: "pass" });
+  }
+
+  static #onKeep() {
+    this._finish({ type: "keep" });
   }
 }
 

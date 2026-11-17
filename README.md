@@ -23,9 +23,12 @@ Phase 1 (Foundation) from §18 of the design:
 | Vocabulary Editor with filters, JSON import / export (round-trip tested) | Done; see [`docs/VOCABULARY.md`](docs/VOCABULARY.md) |
 | Act window: assemble action + words, live cost / dice / DC / chance, resolve | Done |
 | Compendium packs (empty content packs + §17.3 test fixtures) | Done |
+| **Phase 3**: encounter engine (§7): order and rolloffs, declaration, Slow cascade with Locked auto-confirm, Fast, Duelist, execution, Charge / Taxing / Determined / Inevitable, aid / hinder, interrupts, surrender check; tests 5–10, 14 | Done, unit-tested |
+| GM controller and player prompts over Foundry user queries; full round tested end to end against mocked documents | Done |
+| Encounter Manager, Declare / Re-confirm / Duelist dialogs, encounter-scoped momentum, outcome Apply buttons | Done; see [`docs/ENCOUNTERS.md`](docs/ENCOUNTERS.md) |
 | Optional personal card deck (§10): composition effects, draw with reshuffle, poker hand picker, hand-quality abilities, marked cards, discard for momentum, burn | Done early; see [`docs/CARD_DECK.md`](docs/CARD_DECK.md) |
 
-Phases 3–6 (encounter stack, talents, persistent encounters, remaining optional subsystems) are not started.
+Phases 4–6 (talents, persistent encounters, remaining optional subsystems) are not started.
 
 ## Layout
 

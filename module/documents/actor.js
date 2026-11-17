@@ -158,7 +158,7 @@ Object.assign(ModulusActor.prototype, {
     const state = discardCards(deck, [cardId]);
     state.pendingMomentumLoss = (deck.pendingMomentumLoss ?? 0) + value;
     await this.saveDeck(encounterId, state);
-    await this.update({ "system.momentum.current": this.system.momentum.current + value });
+    await this.adjustEncounterMomentum(encounterId, value);
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
       content: `<p>${game.i18n.format("MODULUS.Deck.Chat.DiscardMomentum", { name: this.name, card: card.id, n: value })}</p>`
@@ -166,12 +166,19 @@ Object.assign(ModulusActor.prototype, {
     return value;
   },
 
+  /** Momentum is encounter-scoped (§5.2): use the combatant's when the id is an encounter, else the sheet's. */
+  async adjustEncounterMomentum(encounterId, delta) {
+    const combatant = game.combats.get(encounterId)?.combatants.find((c) => c.actor === this);
+    if (combatant) return combatant.adjustMomentum(delta);
+    return this.update({ "system.momentum.current": this.system.momentum.current + delta });
+  },
+
   async settleMomentumLoss(encounterId) {
     const deck = this.getDeck(encounterId);
     const loss = deck?.pendingMomentumLoss ?? 0;
     if (!loss) return;
     await this.saveDeck(encounterId, { ...deck, pendingMomentumLoss: 0 });
-    await this.update({ "system.momentum.current": this.system.momentum.current - loss });
+    await this.adjustEncounterMomentum(encounterId, -loss);
   },
 
   /**

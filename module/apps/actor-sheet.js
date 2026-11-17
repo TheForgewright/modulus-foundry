@@ -38,6 +38,7 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       editItem: ModulusActorSheet.#onEditItem,
       deleteItem: ModulusActorSheet.#onDeleteItem,
       switchTab: ModulusActorSheet.#onSwitchTab,
+      openEncounter: ModulusActorSheet.#onOpenEncounter,
       selectCard: ModulusActorSheet.#onSelectCard,
       drawCards: ModulusActorSheet.#onDrawCards,
       burnSelected: ModulusActorSheet.#onBurnSelected,
@@ -157,6 +158,14 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       systemFields: system.schema.fields,
       tabActive: Object.fromEntries(["main", "items", "cards", "notes"].map((id) => [id, this.tabGroups.primary === id])),
       cards: this._prepareCards(),
+      encounters: game.combats.filter((c) => c.combatants.some((x) => x.actor === actor)).map((c) => {
+        const combatant = c.combatants.find((x) => x.actor === actor);
+        const st = c.encounterState;
+        return {
+          combatId: c.id, combatantId: combatant.id, label: c.label, momentum: combatant.momentum,
+          round: st.round, phase: game.i18n.localize(`MODULUS.Encounter.Phase.${st.phase}`), persistent: c.persistent
+        };
+      }),
       biographyHTML: await foundry.applications.ux.TextEditor.implementation.enrichHTML(system.biography, { relativeTo: actor, secrets: actor.isOwner })
     });
     return context;
@@ -264,6 +273,15 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
 
   _onRender(context, options) {
     super._onRender?.(context, options);
+    for (const input of this.element.querySelectorAll("input.encounter-momentum")) {
+      if (input.dataset.bound) continue;
+      input.dataset.bound = "1";
+      input.addEventListener("change", (ev) => {
+        ev.stopPropagation();
+        const c = game.combats.get(ev.target.dataset.combatId)?.combatants.get(ev.target.dataset.combatantId);
+        c?.setMomentum(ev.target.value);
+      });
+    }
     const select = this.element.querySelector("select.deck-select");
     if (!select || select.dataset.bound) return;
     select.dataset.bound = "1";
@@ -450,6 +468,10 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
   static async #onDeleteItem(event, target) {
     const item = this.document.items.get(target.closest("[data-item-id]").dataset.itemId);
     if (item) await item.deleteDialog();
+  }
+
+  static #onOpenEncounter(event, target) {
+    game.modulus.openEncounterManager(target.dataset.combatId);
   }
 
   static #onSwitchTab(event, target) {

@@ -1,0 +1,144 @@
+<div class="em-body">
+  <aside class="em-list">
+    <h3>{{localize "MODULUS.Encounter.Instances"}}</h3>
+    <ul>
+      {{#each encounters}}
+      <li class="{{#if selected}}selected{{/if}}" data-combat-id="{{id}}" data-action="select">
+        <strong>{{label}}</strong>
+        <span class="hint">{{kind}}{{#if persistent}} · <i class="fa-solid fa-infinity" data-tooltip="MODULUS.Encounter.Persistent"></i>{{/if}} · {{localize "MODULUS.Encounter.Round"}} {{round}} · {{phase}}</span>
+        {{#if parent}}<span class="hint">↳ {{parent}}</span>{{/if}}
+      </li>
+      {{else}}
+      <li class="hint">{{localize "MODULUS.Encounter.None"}}</li>
+      {{/each}}
+    </ul>
+    {{#if isGM}}<button type="button" data-action="create"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Encounter.Create"}}</button>{{/if}}
+  </aside>
+
+  <section class="em-main">
+    {{#with combat}}
+    <header class="em-header">
+      <h2>{{label}} <span class="hint">{{kind}}</span></h2>
+      <div class="em-status">
+        <span class="em-round">{{localize "MODULUS.Encounter.Round"}} {{round}}</span>
+        <span class="em-phase phase-{{phase}}">{{phaseLabel}}</span>
+      </div>
+    </header>
+
+    {{!-- What the encounter needs next --}}
+    <div class="em-controls">
+      {{#if ../isGM}}
+        {{#if is.idle}}
+        <button type="button" data-action="startRound"><i class="fa-solid fa-play"></i> {{localize "MODULUS.Encounter.StartRound"}}</button>
+        <button type="button" class="secondary" data-action="addTokens"><i class="fa-solid fa-user-plus"></i> {{localize "MODULUS.Encounter.AddTokens"}}</button>
+        {{/if}}
+        {{#if is.participation}}
+        <span>{{localize "MODULUS.Encounter.ParticipationOpen"}}</span>
+        <button type="button" class="secondary" data-action="resendParticipation"><i class="fa-solid fa-paper-plane"></i> {{localize "MODULUS.Encounter.Resend"}}</button>
+        <button type="button" data-action="beginDeclarations"><i class="fa-solid fa-list-ol"></i> {{localize "MODULUS.Encounter.BeginDeclarations"}}</button>
+        {{/if}}
+        {{#if waiting}}
+        <span class="em-waiting">
+          <i class="fa-solid fa-hourglass-half"></i>
+          {{localize (concat "MODULUS.Encounter.Waiting." waiting.step.type)}}: <strong>{{waiting.name}}</strong>
+          {{#if waiting.cause}}<span class="hint">({{localize "MODULUS.Encounter.CausedBy"}} {{waiting.cause}})</span>{{/if}}
+          {{#if waiting.player}}<span class="hint">· {{waiting.player}}{{#unless waiting.asked}} ({{localize "MODULUS.Encounter.NotAsked"}}){{/unless}}</span>{{else}}<span class="hint">· {{localize "MODULUS.Encounter.GMToAct"}}</span>{{/if}}
+        </span>
+        {{#if waiting.player}}<button type="button" class="secondary" data-action="resend"><i class="fa-solid fa-paper-plane"></i> {{localize "MODULUS.Encounter.Resend"}}</button>{{/if}}
+        <button type="button" data-action="actForThem"><i class="fa-solid fa-user-pen"></i> {{localize "MODULUS.Encounter.ActForThem"}}</button>
+        {{#if waiting.isDeclare}}<button type="button" class="secondary" data-action="passForThem" data-tooltip="MODULUS.Encounter.PassHint"><i class="fa-solid fa-forward"></i> {{localize "MODULUS.Builder.Pass"}}</button>{{/if}}
+        {{#if waiting.isReconfirm}}<button type="button" class="secondary" data-action="forceConfirm" data-tooltip="MODULUS.Encounter.ForceConfirmHint"><i class="fa-solid fa-lock"></i> {{localize "MODULUS.Encounter.ForceConfirm"}}</button>{{/if}}
+        {{#if waiting.isDuelist}}<button type="button" class="secondary" data-action="skipDuelist"><i class="fa-solid fa-xmark"></i> {{localize "MODULUS.Encounter.SkipDuelist"}}</button>{{/if}}
+        {{/if}}
+        {{#if is.executing}}
+        {{#if current}}
+        <span>{{localize "MODULUS.Encounter.Next"}}: <strong>{{current.name}}</strong> · {{current.label}}</span>
+        <button type="button" data-action="resolveNext"><i class="fa-solid fa-dice-d20"></i> {{localize "MODULUS.Encounter.Resolve"}}</button>
+        {{/if}}
+        {{/if}}
+        {{#if is.surrender}}
+        <span>{{localize "MODULUS.Encounter.SurrenderHint"}}</span>
+        <button type="button" data-action="endRound"><i class="fa-solid fa-flag-checkered"></i> {{localize "MODULUS.Encounter.EndRound"}}</button>
+        {{/if}}
+        <button type="button" class="danger" data-action="deleteEncounter" data-tooltip="MODULUS.Encounter.End"><i class="fa-solid fa-trash"></i></button>
+      {{else}}
+        {{#if waiting}}<span class="em-waiting"><i class="fa-solid fa-hourglass-half"></i> {{localize (concat "MODULUS.Encounter.Waiting." waiting.step.type)}}: <strong>{{waiting.name}}</strong></span>{{/if}}
+      {{/if}}
+    </div>
+
+    {{!-- Participants --}}
+    <fieldset class="em-participants">
+      <legend>{{localize "MODULUS.Encounter.Participants"}} {{#if ../isGM}}<span class="hint">{{localize "MODULUS.Encounter.DropHint"}}</span>{{/if}}</legend>
+      <table class="em-table">
+        <thead><tr>
+          <th></th><th>{{localize "Name"}}</th><th>{{localize "MODULUS.Sheet.Momentum"}}</th><th>{{localize "MODULUS.Encounter.TakesPart"}}</th>
+          <th>{{localize "MODULUS.Builder.SceneTrack"}}</th><th>{{localize "MODULUS.Encounter.Order"}}</th><th>{{localize "MODULUS.Encounter.Notes"}}</th><th></th>
+        </tr></thead>
+        <tbody>
+          {{#each participants}}
+          <tr data-id="{{id}}" class="{{#if next}}next{{/if}} {{#if defeated}}defeated{{/if}}">
+            <td><img src="{{img}}" alt="" width="28" height="28" data-action="openSheet"></td>
+            <td><a data-action="openSheet">{{name}}</a>{{#if player}} <span class="hint">({{player}})</span>{{/if}}</td>
+            <td><input type="number" class="em-momentum" data-id="{{id}}" value="{{momentum}}" step="1" {{#unless canEdit}}disabled{{/unless}}></td>
+            <td><input type="checkbox" class="em-active" data-id="{{id}}" {{checked participating}} {{#unless ../../isGM}}disabled{{/unless}}></td>
+            <td><select class="em-track" data-id="{{id}}" {{#unless canEdit}}disabled{{/unless}}>{{selectOptions sceneTracks selected=sceneTrack}}</select></td>
+            <td>{{#if order}}{{order}}{{#if roll}} <span class="hint" data-tooltip="MODULUS.Encounter.RolloffTooltip">(d20 {{roll}})</span>{{/if}}{{/if}}{{#if declared}} <i class="fa-solid fa-check"></i>{{/if}}</td>
+            <td class="em-notes">
+              {{#each flags}}<span class="em-flag">{{this}}</span>{{/each}}
+              {{#if taxing}}<span class="em-flag" data-tooltip="MODULUS.Encounter.TaxingTooltip">taxing {{taxing}}</span>{{/if}}
+              {{#if charge}}<span class="em-flag">charge {{charge}}</span>{{/if}}
+              {{#if inevitable}}<span class="em-flag">inevitable {{inevitable}}</span>{{/if}}
+              {{#if defeated}}<span class="em-flag">{{localize "MODULUS.Encounter.Out"}}</span>{{/if}}
+            </td>
+            <td class="em-row-controls">
+              {{#if ../../isGM}}
+              {{#if ../is.surrender}}
+              {{#if defeated}}<a data-action="setOut" data-out="false" data-tooltip="MODULUS.Encounter.BackIn"><i class="fa-solid fa-person-walking-arrow-loop-left"></i></a>
+              {{else}}<a data-action="setOut" data-out="true" data-tooltip="MODULUS.Encounter.MarkOut"><i class="fa-solid fa-flag"></i></a>{{/if}}
+              {{/if}}
+              <a data-action="removeCombatant" data-tooltip="MODULUS.Encounter.Remove"><i class="fa-solid fa-user-minus"></i></a>
+              {{/if}}
+            </td>
+          </tr>
+          {{else}}
+          <tr><td colspan="8" class="hint">{{localize "MODULUS.Encounter.NoParticipants"}}</td></tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </fieldset>
+
+    {{!-- Stack, top resolves first --}}
+    <fieldset class="em-stack">
+      <legend>{{localize "MODULUS.Encounter.Stack"}} <span class="hint">{{localize "MODULUS.Encounter.StackHint"}}</span></legend>
+      <ol>
+        {{#each stack}}
+        <li class="em-entry state-{{state}} {{#if isCurrent}}current{{/if}} {{#if cancelled}}cancelled{{/if}} {{#if resolved}}resolved{{/if}} {{#if prompted}}prompted{{/if}}" data-entry-id="{{id}}">
+          <span class="em-effective" data-tooltip="{{momentum}}{{#if slow}} − slow {{slow}}{{/if}}{{#if fast}} + fast {{fast}}{{/if}}{{#if duelist}} − duelist {{duelist}}{{/if}}">{{effective}}</span>
+          <span class="em-badge">{{stateLabel}}{{#if charge}} {{charge}}{{/if}}</span>
+          <span class="em-entry-main">
+            <strong>{{name}}</strong>: {{label}}
+            {{#if target}}<span class="hint"> → {{target}}</span>{{/if}}
+            <span class="em-tags">{{tags}}{{#if delayed}} · delayed{{/if}}</span>
+          </span>
+          <span class="em-cost" data-tooltip="MODULUS.Builder.Cost">{{cost}} <i class="fa-solid fa-bolt"></i></span>
+          {{#if mods}}<span class="em-mods">{{mods}}</span>{{/if}}
+          {{#if outcome}}<span class="em-outcome">{{outcome}}</span>{{/if}}
+          {{#if cancelled}}<span class="em-outcome">{{localize "MODULUS.Encounter.Interrupted"}}</span>{{/if}}
+          {{#if ../../isGM}}{{#unless resolved}}{{#unless cancelled}}
+          <a class="em-interrupt" data-action="interrupt" data-tooltip="MODULUS.Encounter.InterruptHint"><i class="fa-solid fa-hand"></i></a>
+          {{/unless}}{{/unless}}{{/if}}
+        </li>
+        {{else}}
+        <li class="hint">{{localize "MODULUS.Encounter.EmptyStack"}}</li>
+        {{/each}}
+      </ol>
+    </fieldset>
+
+    {{#if log.length}}
+    <details class="em-log"><summary>{{localize "MODULUS.Encounter.LogTitle"}}</summary><ul>{{#each log}}<li>{{this}}</li>{{/each}}</ul></details>
+    {{/if}}
+    {{else}}
+    <p class="hint">{{localize "MODULUS.Encounter.SelectOrCreate"}}</p>
+    {{/with}}
+  </section>
+</div>

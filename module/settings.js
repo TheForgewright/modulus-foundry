@@ -150,3 +150,4 @@ function refreshActors() {
 }
 
 export const SETTING_KEYS = DEFINITIONS.map((d) => d[0]);
+export const SETTING_DEFAULTS = Object.fromEntries(DEFINITIONS.map((d) => [d[0], d[2]]));

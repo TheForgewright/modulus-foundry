@@ -1,0 +1,164 @@
+// End-to-end round through the real GM controller with mocked Foundry documents (§18 Phase 3).
+import { test, before } from "node:test";
+import assert from "node:assert/strict";
+import { installFoundryMock, Collection } from "./harness/foundry-mock.js";
+import { SETTING_DEFAULTS } from "../module/settings.js";
+import { newEncounterState } from "../module/rules/encounter.js";
+
+let mock;
+let encounterController;
+let items;
+
+/** Plain item stand-ins (the controller reads `.name`, `.uuid`, `.system`). */
+function item(uuid, name, type, system) {
+  return { uuid, name, type, system: { tags: [], effects: [], ...system } };
+}
+
+function makeActor(name, tiers = {}) {
+  return {
+    name,
+    uuid: `Actor.${name}`,
+    items: new Collection(),
+    system: {
+      maxWords: 2,
+      momentum: { current: 0, starting: 3, gainPerTurn: 1, ceiling: 8, resistance: { physical: 1, mental: 0, social: 0 } },
+      defeatedTracks: 0,
+      allDepleted: false
+    },
+    getEffectiveTier(key) {
+      const tier = tiers[key] ?? "secondary";
+      return { tier, baseTier: tier, extraDebuffDice: 0, extraBuffDice: 0, defeatedTracks: 0 };
+    },
+    getDefenseDC(key) {
+      return { dc: 11, tier: tiers[key] ?? "secondary", defeatedTracks: 0 };
+    },
+    applyPips: async () => {}
+  };
+}
+
+function makeCombat(participants) {
+  let state = JSON.stringify(newEncounterState());
+  const combatants = new Collection();
+  const combat = {
+    id: "C1",
+    label: "Test fight",
+    started: false,
+    combatants,
+    async startCombat() { this.started = true; },
+    get encounterState() { return JSON.parse(state); },
+    async saveEncounterState(s) { state = JSON.stringify(s); }
+  };
+  for (const [id, actor, momentum] of participants) {
+    combatants.set(id, {
+      id, name: actor.name, actor, defeated: false, participating: true, sceneTrack: "", playerOwners: [], parent: combat,
+      momentum,
+      async setMomentum(v) { this.momentum = v; },
+      async adjustMomentum(d) { this.momentum += d; },
+      async setFlag() {}
+    });
+  }
+  return combat;
+}
+
+before(async () => {
+  mock = installFoundryMock({ settingDefaults: SETTING_DEFAULTS });
+  items = new Map([
+    item("I.strike", "Strike", "action", { rollStat: "physical.power", targetStat: "physical.finesse", momentumCost: 1, rolls: true, tags: [{ name: "strike", value: 0 }, { name: "offensive", value: 0 }] }),
+    item("I.steady", "Steady", "word", { momentumModifier: -1, tags: [{ name: "slow", value: 2 }] }),
+    item("I.darting", "Darting", "word", { momentumModifier: 1, tags: [{ name: "fast", value: 1 }] }),
+    item("I.parry", "Parry", "action", { rollStat: "physical.finesse", targetStat: "", momentumCost: 1, rolls: false, tags: [{ name: "duelist", value: 2 }] })
+  ].map((i) => [i.uuid, i]));
+  globalThis.fromUuid = async (u) => items.get(u) ?? null;
+  globalThis.fromUuidSync = (u) => items.get(u) ?? null;
+  ({ encounterController } = await import("../module/encounter/controller.js"));
+});
+
+const strike = (target, words = []) => ({ type: "declare", payload: { actionUuid: "I.strike", wordUuids: words, target } });
+
+test("a full round: order, declare, Slow cascade, re-confirm, Duelist, resolve top to bottom, spend, end", async () => {
+  const A = makeActor("Ava"), B = makeActor("Bram"), C = makeActor("Cass");
+  const combat = makeCombat([["a", A, 4], ["b", B, 6], ["c", C, 7]]);
+  const ctl = encounterController(combat);
+
+  await ctl.startRound();
+  assert.equal(combat.encounterState.phase, "participation");
+  await ctl.beginDeclarations();
+  let s = combat.encounterState;
+  assert.deepEqual(s.order, ["a", "b", "c"]);
+  assert.equal(ctl.currentStep().pid, "a");
+
+  // NPCs: the GM answers through the same submit path a player's query would.
+  await ctl.submitDeclaration("a", strike({ kind: "actor", pid: "c" }));
+  await ctl.submitDeclaration("b", strike({ kind: "actor", pid: "a" }));
+  // Cass declares Strike + Steady (slow 2): effective 5, below Bram (6) -> Bram must re-confirm.
+  await ctl.submitDeclaration("c", strike({ kind: "actor", pid: "b" }, ["I.steady"]));
+  s = combat.encounterState;
+  assert.equal(s.stack.find((e) => e.pid === "c").state, "LOCKED");
+  assert.equal(ctl.currentStep().type, "reconfirm");
+  assert.equal(ctl.waitingOn().name, "Bram");
+
+  // Bram changes to a Fast strike instead.
+  await ctl.submitReconfirm(ctl.currentStep().entryId, strike({ kind: "actor", pid: "a" }, ["I.darting"]));
+  s = combat.encounterState;
+  assert.equal(s.stack.find((e) => e.pid === "b").effective, 7);
+  assert.equal(s.phase, "executing"); // no duelists: finalization passes straight through
+
+  // Resolve top to bottom: Bram (7), Cass (5), Ava (4).
+  const order = [];
+  for (let i = 0; i < 3; i++) {
+    const before = combat.encounterState;
+    const id = before.execOrder[before.execCursor];
+    order.push(before.stack.find((e) => e.id === id).pid);
+    await ctl.resolveNext();
+  }
+  assert.deepEqual(order, ["b", "c", "a"]);
+  assert.equal(combat.encounterState.phase, "surrender");
+
+  // Costs spent at resolution: Strike 1 + target resistance 1, +1 Darting / -1 Steady.
+  const m = Object.fromEntries(combat.combatants.map((x) => [x.id, x.momentum]));
+  assert.deepEqual(m, { a: 4 - 2, b: 6 - 3, c: 7 - 1 });
+  assert.equal(mock.messages.filter((x) => x.rolls).length, 3);
+
+  await ctl.endRound();
+  assert.equal(combat.encounterState.phase, "idle");
+  await ctl.startRound(); // round 2: gain 1, capped at the ceiling
+  assert.equal(combat.encounterState.round, 2);
+  assert.deepEqual(Object.fromEntries(combat.combatants.map((x) => [x.id, x.momentum])), { a: 3, b: 4, c: 7 });
+});
+
+test("invalid declarations are rejected and the step stays open; passing advances", async () => {
+  const A = makeActor("Dax"), B = makeActor("Eli");
+  const combat = makeCombat([["d", A, 0], ["e", B, 5]]);
+  combat.id = "C2";
+  const ctl = encounterController(combat);
+  await ctl.startRound();
+  await ctl.beginDeclarations();
+  await ctl.submitDeclaration("d", strike({ kind: "actor", pid: "e" })); // 0 momentum, not Recovery
+  assert.equal(ctl.currentStep().pid, "d");
+  assert.ok(mock.messages.some((x) => x.warn && x.warn.includes("needsRecovery")));
+  await ctl.submitDeclaration("d", { type: "pass" });
+  assert.equal(ctl.currentStep().pid, "e");
+});
+
+test("Duelist asks for a drop; interrupts cancel without spending", async () => {
+  const A = makeActor("Fen"), B = makeActor("Gil");
+  const combat = makeCombat([["f", A, 5], ["g", B, 8]]);
+  combat.id = "C3";
+  const ctl = encounterController(combat);
+  await ctl.startRound();
+  await ctl.beginDeclarations();
+  await ctl.submitDeclaration("f", strike({ kind: "actor", pid: "g" }));
+  await ctl.submitDeclaration("g", { type: "declare", payload: { actionUuid: "I.parry", wordUuids: [], target: { kind: "none" } } });
+  assert.equal(combat.encounterState.phase, "finalization");
+  assert.equal(ctl.currentStep().type, "duelist");
+  await ctl.submitDuelist(ctl.currentStep().entryId, 2);
+  const g = combat.encounterState.stack.find((e) => e.pid === "g");
+  assert.equal(g.effective, 6);
+  assert.equal(g.duelistBonus, 2);
+  assert.equal(combat.encounterState.phase, "executing");
+  await ctl.interrupt(combat.encounterState.stack.find((e) => e.pid === "f").id);
+  await ctl.resolveNext(); // Gil
+  assert.equal(combat.encounterState.phase, "surrender");
+  assert.equal(combat.combatants.get("f").momentum, 5); // interrupted: nothing spent
+  assert.equal(combat.combatants.get("g").momentum, 7);
+});

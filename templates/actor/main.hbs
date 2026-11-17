@@ -132,6 +132,18 @@
       <label>{{label}} <input type="number" name="system.momentum.resistance.{{domain}}" value="{{resistance}}" min="0" step="1"></label>
       {{/each}}
     </div>
+    {{#if encounters.length}}
+    <table class="sheet-encounters">
+      <tr><th>{{localize "MODULUS.Encounter.Instances"}}</th><th>{{localize "MODULUS.Encounter.Round"}}</th><th>{{localize "MODULUS.Sheet.Momentum"}}</th></tr>
+      {{#each encounters}}
+      <tr>
+        <td><a data-action="openEncounter" data-combat-id="{{combatId}}">{{label}}</a>{{#if persistent}} <i class="fa-solid fa-infinity"></i>{{/if}}</td>
+        <td>{{round}} · {{phase}}</td>
+        <td><input type="number" class="encounter-momentum" data-combat-id="{{combatId}}" data-combatant-id="{{combatantId}}" value="{{momentum}}" step="1"></td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}}
     <p class="hint">{{localize "MODULUS.Sheet.MomentumHint"}}</p>
   </fieldset>
 </section>

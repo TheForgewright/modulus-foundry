@@ -616,7 +616,8 @@
       "Target": {
         "target": "Targeted token",
         "self": "Self",
-        "none": "None"
+        "none": "None",
+        "entry": "Stack: {name} ({label})"
       },
       "NoActions": "No actions available. Give this actor an action, or create an untrained action in the world.",
       "Cost": "Cost",
@@ -635,7 +636,10 @@
         "focus": "Focus bonus",
         "sceneTrack": "Scene track",
         "exposed": "Exposed",
-        "resistance": "Target resistance"
+        "resistance": "Target resistance",
+        "aid": "Aid",
+        "hinder": "Hinder",
+        "duelist": "Duelist"
       },
       "Error": {
         "tooManyWords": "Too many words (max {max}).",
@@ -648,7 +652,148 @@
         "statOverrideConflict": "Several words override the same stat; {used} wins.",
         "duplicateWord": "The same word is used twice.",
         "offensiveOnSelf": "Offensive action targeting self."
-      }
+      },
+      "DeclareTitle": "Declare: {name}",
+      "ReconfirmTitle": "Re-confirm: {name}",
+      "EncounterMomentum": "Encounter momentum",
+      "Pass": "Pass",
+      "Declare": "Declare",
+      "Keep": "Keep my action",
+      "Change": "Change to this"
+    },
+    "Outcome": {
+      "Apply": "Apply",
+      "ApplyAll": "Apply all",
+      "ChooseTrack": "Which track does {name} lose pips from?",
+      "ChooseTrackHint": "Pick the track.",
+      "Restricted": "Restricted: {tag}"
+    },
+    "Encounter": {
+      "Manager": "Encounter Manager",
+      "Speaker": "Encounter",
+      "Untitled": "Encounter {n}",
+      "Instances": "Encounters",
+      "None": "No encounters yet.",
+      "Create": "New encounter",
+      "KindLabel": "Kind",
+      "Persistent": "Persistent (momentum carries over)",
+      "Parent": "Nested inside",
+      "Scale": "Scale",
+      "AddSelected": "Add selected tokens",
+      "Kind": {
+        "standard": "Standard",
+        "relationship": "Relationship",
+        "investigation": "Investigation",
+        "ordeal": "Ordeal"
+      },
+      "Phase": {
+        "idle": "Between rounds",
+        "participation": "Participation",
+        "declaring": "Declaring",
+        "finalization": "Finalization",
+        "executing": "Execution",
+        "surrender": "Surrender check"
+      },
+      "State": {
+        "PENDING": "Pending",
+        "SUBMITTED": "Submitted",
+        "LOCKED": "Locked",
+        "CHARGING": "Charging"
+      },
+      "Outcome": {
+        "hit": "Hit",
+        "miss": "Miss",
+        "resolved": "Resolved",
+        "charging": "Charging"
+      },
+      "Flag": {
+        "defeated": "Defeated on a track",
+        "negativeMomentum": "Negative momentum",
+        "allDepleted": "All tracks depleted"
+      },
+      "Waiting": {
+        "declare": "Waiting for a declaration",
+        "reconfirm": "Waiting for a re-confirmation",
+        "duelist": "Waiting for a Duelist decision"
+      },
+      "Round": "Round",
+      "StartRound": "Start round",
+      "AddTokens": "Add selected tokens",
+      "ParticipationOpen": "Players are choosing who takes part.",
+      "Resend": "Re-send",
+      "BeginDeclarations": "Close participation and declare",
+      "CausedBy": "caused by",
+      "NotAsked": "not asked yet",
+      "GMToAct": "the GM acts for them",
+      "ActForThem": "Act for them",
+      "PassHint": "They declare nothing this round.",
+      "ForceConfirm": "Force confirm",
+      "ForceConfirmHint": "Keep their action without asking.",
+      "SkipDuelist": "No drop",
+      "Next": "Next",
+      "Resolve": "Resolve",
+      "SurrenderHint": "Decide who continues, yields or is out, then end the round.",
+      "EndRound": "End round",
+      "End": "End encounter",
+      "EndConfirm": "End and delete the encounter \"{name}\"? Encounter-length statuses are removed.",
+      "Participants": "Participants",
+      "DropHint": "(drop actors here to add them without tokens)",
+      "TakesPart": "Takes part",
+      "Order": "Order",
+      "Notes": "Notes",
+      "RolloffTooltip": "Tiebreak d20 this round: higher declares later and resolves earlier.",
+      "TaxingTooltip": "Rounds before another Taxing action",
+      "Out": "Out",
+      "BackIn": "Back in",
+      "MarkOut": "Mark as out (yields or removed)",
+      "Remove": "Remove from encounter",
+      "NoParticipants": "No participants. Add selected tokens or drop actors here.",
+      "Stack": "Stack",
+      "StackHint": "(top resolves first)",
+      "Interrupted": "Interrupted",
+      "InterruptHint": "Interrupt: cancel this entry. It spends nothing.",
+      "EmptyStack": "Nothing declared yet.",
+      "LogTitle": "Recent events",
+      "SelectOrCreate": "Select or create an encounter.",
+      "Participation": "Who takes part this round?",
+      "ParticipationHint": "{name}, round {round}. Tick the characters taking part this round; momentum and scene track can be adjusted here.",
+      "TakePart": "Confirm",
+      "ReconfirmNote": "{cause} declared a Slow action that now resolves below you. Keep your action, or change it.",
+      "Duelist": "Duelist",
+      "DuelistHint": "You may lower your entry by 0 to {max} momentum; the amount becomes a flat bonus to its roll.",
+      "DuelistDrop": "Lower by",
+      "Confirm": "Confirm",
+      "Rolloff": "Rolloff: {rolls}. Lower declares first; higher declares later and resolves earlier.",
+      "Cascade": "{name} declared Slow: {names} must re-confirm.",
+      "Charging": "{name} is charging {label} ({n}/{of}).",
+      "Rejected": "{name}: declaration not accepted. {errors}",
+      "Error": {
+        "noAction": "The action could not be found.",
+        "taxingCooldown": "Taxing: {rounds} more round(s) before another Taxing action.",
+        "noSuchEntry": "That stack entry no longer exists.",
+        "ownEntry": "You cannot target your own entry.",
+        "notYourTurn": "It is not this participant's turn to declare.",
+        "notPrompted": "No re-confirmation is pending for that entry.",
+        "notDuelistTurn": "Not this Duelist's turn."
+      },
+      "Log": {
+        "roundStart": "Round {round} started.",
+        "order": "Declaration order fixed.",
+        "declare": "{name} declared {label}.",
+        "pass": "{name} passed.",
+        "reconfirmKeep": "{name} kept {label}.",
+        "reconfirmChange": "{name} changed to {label}.",
+        "cascadeCapped": "Cascade depth cap reached.",
+        "cascadeGuard": "Cascade loop guard reached.",
+        "finalization": "Finalization.",
+        "duelist": "{name} dropped {drop} (Duelist).",
+        "execution": "Execution started.",
+        "charging": "{name} keeps charging.",
+        "resolve": "{name}: {label} ({outcome}).",
+        "cancel": "{name}: {label} interrupted.",
+        "roundEnd": "Round {round} ended."
+      },
+      "ContinueCharging": "You are charging {label} ({n} round(s) so far). Declare it again to keep charging; anything else resets the count."
     }
   }
 }

@@ -1,4 +1,6 @@
 <div class="builder-body">
+  {{#if note}}<p class="builder-note"><i class="fa-solid fa-circle-info"></i> {{note}}</p>{{/if}}
+  {{#unless isStandalone}}<p class="hint">{{localize "MODULUS.Builder.EncounterMomentum"}}: <strong>{{momentum}}</strong></p>{{/unless}}
   {{#if noActions}}
   <p class="hint">{{localize "MODULUS.Builder.NoActions"}}</p>
   {{else}}
@@ -7,7 +9,7 @@
     <select data-state="action">{{selectOptions actionOptions selected=state.action}}</select>
   </div>
   <div class="form-group stacked">
-    <label>{{localize "MODULUS.Builder.Words"}} <span class="hint">({{localize "MODULUS.Field.maxWords"}} {{actor.system.maxWords}})</span></label>
+    <label>{{localize "MODULUS.Builder.Words"}} <span class="hint">({{localize "MODULUS.Field.maxWords"}} {{maxWords}})</span></label>
     <div class="word-slots">
       {{#each slots}}
       <select data-state="word" data-index="{{index}}" class="{{#if over}}over{{/if}}">
@@ -19,8 +21,8 @@
   </div>
   <div class="form-group">
     <label>{{localize "MODULUS.Builder.TargetLabel"}}</label>
-    <select data-state="targetMode">{{selectOptions targetModes selected=state.targetMode}}</select>
-    {{#if targetName}}<span class="hint">{{targetName}}</span>{{else}}<span class="hint">{{localize "MODULUS.Builder.NoTarget"}}</span>{{/if}}
+    <select data-state="target">{{selectOptions targetOptions selected=state.target}}</select>
+    {{#if targetHint}}<span class="hint">{{targetHint}}</span>{{/if}}
   </div>
   <div class="form-group">
     <label>{{localize "MODULUS.Builder.SceneTrack"}}</label>
@@ -64,9 +66,19 @@
   {{/with}}
 
   <footer class="builder-footer">
-    <label><input type="checkbox" data-state="spend" {{checked state.spend}}> {{localize "MODULUS.Builder.Spend"}}</label>
+    {{#if isStandalone}}<label><input type="checkbox" data-state="spend" {{checked state.spend}}> {{localize "MODULUS.Builder.Spend"}}</label>{{/if}}
     {{#if isGM}}<label><input type="checkbox" data-state="override" {{checked state.override}}> {{localize "MODULUS.Builder.Override"}}</label>{{/if}}
+    {{#if isStandalone}}
     <button type="button" data-action="resolve" {{#unless canResolve}}disabled{{/unless}}><i class="fa-solid fa-dice-d20"></i> {{localize "MODULUS.Builder.Resolve"}}</button>
+    {{/if}}
+    {{#if isDeclare}}
+    <button type="button" class="secondary" data-action="pass"><i class="fa-solid fa-forward"></i> {{localize "MODULUS.Builder.Pass"}}</button>
+    <button type="button" data-action="submit" {{#unless canResolve}}disabled{{/unless}}><i class="fa-solid fa-check"></i> {{localize "MODULUS.Builder.Declare"}}</button>
+    {{/if}}
+    {{#if isReconfirm}}
+    <button type="button" class="secondary" data-action="keep"><i class="fa-solid fa-lock"></i> {{localize "MODULUS.Builder.Keep"}}</button>
+    <button type="button" data-action="submit" {{#unless canResolve}}disabled{{/unless}}><i class="fa-solid fa-pen"></i> {{localize "MODULUS.Builder.Change"}}</button>
+    {{/if}}
   </footer>
   {{/if}}
 </div>
