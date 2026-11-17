@@ -1,0 +1,39 @@
+<div class="modulus-roll-card">
+  {{#if flavor}}<div class="flavor">{{flavor}}</div>{{/if}}
+  <header>
+    <h3>{{ctx.label}}</h3>
+    <div class="roll-meta">
+      {{ctx.statLabel}} ·
+      <span class="tier-badge tier-{{m.tier}}">{{localize (concat "MODULUS.Tier." m.tier)}}</span>
+      {{#if ctx.defeatedTracks}}<span class="note">({{localize (concat "MODULUS.Tier." ctx.baseTier)}}, {{localize "MODULUS.Roll.Defeated"}} ×{{ctx.defeatedTracks}})</span>{{/if}}
+    </div>
+    <div class="roll-meta">
+      {{#if m.buff}}<span class="buff">+{{m.buff}} {{localize "MODULUS.Roll.BuffShort"}}</span>{{/if}}
+      {{#if m.debuff}}<span class="debuff">+{{m.debuff}} {{localize "MODULUS.Roll.DebuffShort"}}</span>{{/if}}
+      {{#if ctx.extraDebuff}}<span class="note">({{ctx.extraDebuff}} {{localize "MODULUS.Roll.FromDegrade"}})</span>{{/if}}
+    </div>
+  </header>
+  {{#if isPrivate}}
+  <div class="dice-total">?</div>
+  {{else}}
+  <ol class="dice">
+    {{#each dice}}<li class="die {{#if kept}}kept{{else}}dropped{{/if}} {{#if max}}max{{/if}} {{#if min}}min{{/if}}">{{value}}</li>{{/each}}
+  </ol>
+  <div class="totals">
+    <span>{{localize "MODULUS.Roll.Kept"}} <strong>{{m.kept}}</strong></span>
+    {{#if m.flatBonus}}<span>+ {{m.flatBonus}} {{localize "MODULUS.Roll.Flat"}}</span>{{/if}}
+    <span class="total">= {{m.total}}</span>
+  </div>
+  {{#if m.dc}}
+  <div class="dc">
+    DC {{m.dc}}
+    {{#if ctx.dcSource}}
+      {{#if ctx.dcSource.targetName}}
+      <span class="note">{{ctx.dcSource.targetName}} · {{ctx.dcSource.statLabel}} · {{localize (concat "MODULUS.Tier." ctx.dcSource.tier)}}{{#if ctx.dcSource.defeatedTracks}} ({{localize "MODULUS.Roll.Defeated"}} ×{{ctx.dcSource.defeatedTracks}}){{/if}}</span>
+      {{else}}<span class="note">{{localize "MODULUS.Roll.DCMode.manual"}}</span>{{/if}}
+    {{/if}}
+  </div>
+  {{/if}}
+  {{#if outcome}}<div class="outcome {{outcome}}">{{localize (concat "MODULUS.Roll.Outcome." outcome)}}</div>{{/if}}
+  {{/if}}
+</div>

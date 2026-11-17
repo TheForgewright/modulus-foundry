@@ -1,0 +1,134 @@
+/* Modulus system styles. Uses Foundry's theme variables where possible so light and dark themes both work. */
+
+.modulus {
+  --mod-primary: #2e7d4f;
+  --mod-secondary: #3b6ea8;
+  --mod-tertiary: #8a6d3b;
+  --mod-danger: #b03a2e;
+  --mod-muted: color-mix(in srgb, currentColor 45%, transparent);
+  --mod-border: color-mix(in srgb, currentColor 25%, transparent);
+}
+
+/* ---------- Shared ---------- */
+.modulus .hint { font-size: var(--font-size-12, 12px); color: var(--mod-muted); margin: 4px 0; }
+.modulus fieldset { border: 1px solid var(--mod-border); border-radius: 6px; padding: 8px 10px; margin: 0 0 10px; }
+.modulus legend { font-weight: bold; padding: 0 4px; }
+
+.modulus .tier-badge {
+  display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; line-height: 16px;
+  border: 1px solid var(--mod-border); white-space: nowrap;
+}
+.modulus .tier-badge.tier-primary { background: color-mix(in srgb, var(--mod-primary) 25%, transparent); border-color: var(--mod-primary); }
+.modulus .tier-badge.tier-secondary { background: color-mix(in srgb, var(--mod-secondary) 25%, transparent); border-color: var(--mod-secondary); }
+.modulus .tier-badge.tier-tertiary { background: color-mix(in srgb, var(--mod-tertiary) 25%, transparent); border-color: var(--mod-tertiary); }
+.modulus .tier-badge.degraded { outline: 2px dashed var(--mod-danger); outline-offset: 1px; }
+.modulus .debuff { color: var(--mod-danger); }
+.modulus .buff { color: var(--mod-primary); }
+
+/* ---------- Actor sheet ---------- */
+.modulus.sheet.actor .window-content { display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.modulus .modulus-header { display: flex; gap: 10px; align-items: flex-start; }
+.modulus .modulus-header .profile { flex: 0 0 auto; object-fit: cover; border: 1px solid var(--mod-border); border-radius: 4px; cursor: pointer; }
+.modulus .header-fields { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.modulus .actor-name, .modulus .item-name { font-size: 22px; height: auto; }
+.modulus .header-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.modulus .header-row label { display: flex; flex-direction: column; font-size: 11px; }
+.modulus .header-row input { width: 70px; }
+.modulus .roll-button { margin-left: auto; width: auto; }
+
+.modulus .sheet-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--mod-border); }
+.modulus .sheet-tabs .item { padding: 4px 12px; cursor: pointer; border-radius: 4px 4px 0 0; }
+.modulus .sheet-tabs .item.active { font-weight: bold; border: 1px solid var(--mod-border); border-bottom: none; }
+.modulus .tab { display: none; overflow-y: auto; flex: 1; min-height: 0; }
+.modulus .tab.active { display: block; }
+
+.modulus .stat-grid { width: 100%; border-collapse: separate; border-spacing: 4px; table-layout: fixed; }
+.modulus .stat-grid th { text-align: center; font-weight: bold; }
+.modulus .stat-grid thead th:first-child, .modulus .stat-grid tbody th { width: 90px; }
+.modulus .stat-grid .chosen { text-decoration: underline; }
+.modulus .stat-grid button.pick { width: 100%; }
+.modulus .stat-grid button.pick.chosen { background: color-mix(in srgb, var(--mod-primary) 35%, transparent); }
+.modulus .stat-cell {
+  position: relative; text-align: center; vertical-align: top;
+  border: 1px solid var(--mod-border); border-radius: 6px; padding: 6px 4px;
+}
+.modulus .stat-cell.intersection { box-shadow: inset 0 0 0 2px var(--mod-primary); }
+.modulus .stat-cell.free-dot { box-shadow: inset 0 0 0 2px var(--mod-secondary); }
+.modulus .stat-name { font-size: 12px; margin-bottom: 2px; }
+.modulus .dots { display: flex; justify-content: center; gap: 4px; margin: 4px 0; min-height: 14px; }
+.modulus .allocating .dots { cursor: pointer; }
+.modulus .allocating .dots:hover .dot { border-color: var(--mod-secondary); }
+.modulus .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; }
+.modulus .dot.filled { background: currentColor; }
+.modulus .stat-cell .bonus { display: block; font-size: 10px; }
+.modulus .stat-cell .bonus input { width: 40px; height: 20px; }
+.modulus .stat-cell .roll-stat {
+  position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; line-height: 20px;
+  padding: 0; font-size: 12px; border: none; background: none;
+}
+.modulus .allocation-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.modulus .allocation-footer button { width: auto; }
+.modulus .alloc-errors { margin: 0; padding-left: 16px; color: var(--mod-danger); font-size: 12px; }
+
+.modulus .track { display: grid; grid-template-columns: 170px 1fr auto; gap: 4px 8px; align-items: center; padding: 4px 0; }
+.modulus .track-label { display: flex; gap: 6px; align-items: center; }
+.modulus .track-label .count { color: var(--mod-muted); font-size: 12px; }
+.modulus .pips { display: flex; flex-wrap: wrap; gap: 8px; }
+.modulus .segment { display: inline-flex; gap: 3px; padding: 2px; border-radius: 4px; }
+.modulus .segment.broken { background: color-mix(in srgb, var(--mod-danger) 15%, transparent); }
+.modulus .pip { width: 14px; height: 14px; border-radius: 3px; border: 2px solid currentColor; background: currentColor; }
+.modulus .pip.lost { background: transparent; opacity: 0.5; }
+.modulus .pip.break-point { transform: rotate(45deg) scale(0.85); border-color: var(--mod-danger); }
+.modulus .track-controls { display: flex; gap: 4px; }
+.modulus .track-controls button { width: 26px; height: 26px; padding: 0; }
+.modulus .track-controls .max-override { width: 50px; }
+.modulus .defeat-status { grid-column: 1 / -1; color: var(--mod-danger); font-weight: bold; display: flex; gap: 8px; align-items: center; }
+.modulus .defeat-status button { width: auto; height: 22px; line-height: 18px; font-size: 11px; }
+.modulus .rest-controls { display: flex; gap: 6px; margin-top: 6px; }
+
+.modulus .momentum-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-bottom: 6px; }
+.modulus .momentum-row label { display: flex; flex-direction: column; font-size: 11px; }
+.modulus .momentum-row input { width: 70px; }
+.modulus .momentum-row .sublabel { font-size: 11px; font-weight: bold; align-self: center; }
+
+.modulus .item-section { margin-bottom: 10px; }
+.modulus .item-section-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--mod-border); }
+.modulus .item-section-header h3 { margin: 0; border: none; }
+.modulus .item-section-header button { width: 26px; height: 26px; padding: 0; }
+.modulus .item-list { list-style: none; margin: 4px 0; padding: 0; }
+.modulus .item-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+.modulus .item-row .item-name { flex: 1; cursor: pointer; }
+.modulus .item-row button.icon { width: 24px; height: 24px; padding: 0; border: none; background: none; }
+
+/* ---------- Item sheet ---------- */
+.modulus.sheet.item .window-content { overflow-y: auto; }
+.modulus-item { display: flex; flex-direction: column; gap: 6px; }
+.modulus-item textarea.json { font-family: var(--font-monospace, monospace); font-size: 12px; }
+.modulus-item .form-group.stacked { flex-direction: column; align-items: stretch; }
+.modulus-item .description prose-mirror { min-height: 160px; }
+
+/* ---------- Roll dialog ---------- */
+.modulus-roll-dialog .modulus-roll-preview { font-weight: bold; text-align: center; margin: 6px 0 0; }
+
+/* ---------- Chat card ---------- */
+.modulus-roll-card { --mod-primary: #2e7d4f; --mod-danger: #b03a2e; --mod-secondary: #3b6ea8; --mod-tertiary: #8a6d3b; }
+.modulus-roll-card header h3 { margin: 0 0 2px; border: none; }
+.modulus-roll-card .roll-meta { font-size: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.modulus-roll-card .note { color: color-mix(in srgb, currentColor 60%, transparent); font-size: 11px; }
+.modulus-roll-card .buff { color: var(--mod-primary); }
+.modulus-roll-card .debuff { color: var(--mod-danger); }
+.modulus-roll-card .tier-badge { display: inline-block; padding: 0 6px; border-radius: 999px; font-size: 11px; border: 1px solid currentColor; }
+.modulus-roll-card .dice { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 8px 0; padding: 0; justify-content: center; }
+.modulus-roll-card .die {
+  width: 30px; height: 30px; line-height: 28px; text-align: center; font-weight: bold;
+  border: 2px solid currentColor; border-radius: 6px;
+}
+.modulus-roll-card .die.dropped { opacity: 0.35; text-decoration: line-through; border-style: dashed; }
+.modulus-roll-card .die.kept { background: color-mix(in srgb, var(--mod-primary) 30%, transparent); transform: scale(1.15); }
+.modulus-roll-card .die.kept.max { box-shadow: 0 0 6px var(--mod-primary); }
+.modulus-roll-card .totals { display: flex; justify-content: center; gap: 6px; align-items: baseline; }
+.modulus-roll-card .totals .total { font-size: 20px; font-weight: bold; }
+.modulus-roll-card .dc { text-align: center; margin-top: 4px; }
+.modulus-roll-card .outcome { text-align: center; font-size: 18px; font-weight: bold; margin-top: 4px; padding: 2px; border-radius: 4px; }
+.modulus-roll-card .outcome.hit { background: color-mix(in srgb, var(--mod-primary) 30%, transparent); }
+.modulus-roll-card .outcome.miss { background: color-mix(in srgb, var(--mod-danger) 25%, transparent); }

@@ -1,0 +1,5 @@
+<nav class="sheet-tabs tabs">
+  {{#each tabs}}
+  <a class="item {{#if active}}active{{/if}}" data-action="switchTab" data-tab="{{id}}">{{label}}</a>
+  {{/each}}
+</nav>

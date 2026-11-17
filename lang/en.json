@@ -1,0 +1,410 @@
+{
+  "TYPES": {
+    "Actor": {
+      "character": "Character",
+      "npc": "NPC"
+    },
+    "Item": {
+      "action": "Action",
+      "word": "Word",
+      "talent": "Talent",
+      "skill": "Skill",
+      "status": "Status",
+      "ancestry": "Ancestry",
+      "society": "Society",
+      "background": "Background",
+      "armor": "Armor"
+    }
+  },
+  "MODULUS": {
+    "Domain": {
+      "physical": "Physical",
+      "mental": "Mental",
+      "social": "Social"
+    },
+    "Expression": {
+      "power": "Power",
+      "finesse": "Finesse",
+      "resilience": "Resilience"
+    },
+    "Tier": {
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "tertiary": "Tertiary"
+    },
+    "Stat": {
+      "physical_power": "Strength",
+      "physical_finesse": "Dexterity",
+      "physical_resilience": "Resistance",
+      "mental_power": "Intelligence",
+      "mental_finesse": "Wits",
+      "mental_resilience": "Discipline",
+      "social_power": "Presence",
+      "social_finesse": "Guile",
+      "social_resilience": "Poise"
+    },
+    "Track": {
+      "all": "All"
+    },
+    "Defeat": {
+      "physical": "Down",
+      "mental": "Discredited",
+      "social": "Lost the Room",
+      "Clear": "Clear"
+    },
+    "Sheet": {
+      "Actor": "Modulus Actor Sheet",
+      "Item": "Modulus Item Sheet",
+      "Stats": "Stats",
+      "Tracks": "Tracks",
+      "Momentum": "Momentum",
+      "MomentumHint": "Momentum is encounter-scoped. The value here is read at the start of each round.",
+      "Tab": {
+        "main": "Character",
+        "items": "Items",
+        "notes": "Notes"
+      }
+    },
+    "Allocation": {
+      "Instructions": "Pick a domain (row) and an expression (column). Their intersection gets 2 dots, the rest of that row and column 1. Then click the dots of any other stat to place the free dot.",
+      "FreeDotTooltip": "Place the free dot here",
+      "Reset": "Re-run allocation",
+      "ResetConfirm": "Clear this character's dot allocation and choose again?",
+      "Error": {
+        "NoDomain": "Choose a domain.",
+        "BadDomain": "Unknown domain.",
+        "NoExpression": "Choose an expression.",
+        "BadExpression": "Unknown expression.",
+        "NoFreeDot": "Place the free dot.",
+        "BadFreeDot": "Unknown stat for the free dot.",
+        "FreeDotOnIntersection": "The free dot cannot go on the domain/expression intersection."
+      }
+    },
+    "Tracks": {
+      "ApplyPip": "Apply 1 pip",
+      "HealPip": "Restore 1 pip",
+      "ShortRest": "Short rest",
+      "LongRest": "Long rest",
+      "BreakPointTooltip": "Break point: only a long rest or magic heals past it. Reaching it lets the character change scene track.",
+      "Overflow": "{name}: {amount} pip(s) of {track} damage overflow. Spend them from another track of the player's choice.",
+      "BreakPoint": "{name} reached a {track} break point."
+    },
+    "NPC": {
+      "StatsMode": {
+        "label": "Stats mode",
+        "dots": "Dot allocation",
+        "direct": "Set tiers directly"
+      },
+      "MaxOverride": "Override max pips (blank = computed)"
+    },
+    "Roll": {
+      "Title": "Roll: {name}",
+      "Roll": "Roll",
+      "Stat": "Rolling stat",
+      "BuffDice": "Buff dice",
+      "DebuffDice": "Debuff dice",
+      "BuffShort": "buff",
+      "DebuffShort": "debuff",
+      "FlatBonus": "Gated flat bonus",
+      "FlatBonusHint": "Only for bonuses earned by a prior action or a momentum spend.",
+      "DCMode": {
+        "label": "DC",
+        "manual": "Manual",
+        "target": "Targeted actor's stat",
+        "none": "None"
+      },
+      "ManualDC": "Manual DC",
+      "TargetStat": "Target stat",
+      "NoTarget": "No token targeted. Target a token to use its defense DC.",
+      "Keep": "keep",
+      "Kept": "Kept",
+      "Flat": "flat",
+      "Defeated": "defeated",
+      "FromDegrade": "from degradation",
+      "DegradeDice": "{n} debuff from degradation",
+      "Outcome": {
+        "hit": "Hit",
+        "miss": "Miss"
+      }
+    },
+    "Status": {
+      "Duration": {
+        "untilNextTurn": "Until next turn",
+        "rounds": "Rounds",
+        "scene": "Scene",
+        "encounter": "Encounter",
+        "persistent": "Persistent"
+      }
+    },
+    "Background": {
+      "childhood": "Childhood",
+      "job": "Job",
+      "leisure": "Leisure",
+      "extra": "Extra"
+    },
+    "Item": {
+      "TagsHint": "Comma-separated. A trailing number is the tag's value: offensive, slow 2, charge 3.",
+      "JSONHint": "Temporary JSON editor; the typed effects editor arrives in Phase 2.",
+      "JSONError": "Invalid JSON in {field}: {error}"
+    },
+    "Field": {
+      "level": "Level",
+      "xp": {
+        "total": "XP total",
+        "spent": "XP spent"
+      },
+      "respecPoints": "Respec points",
+      "bonus": "Bonus",
+      "maxWords": "Max words",
+      "momentum": {
+        "current": "Current",
+        "starting": "Starting",
+        "gainPerTurn": "Gain / round",
+        "ceiling": "Ceiling",
+        "resistance": "Resistance"
+      },
+      "description": "Description",
+      "rollStat": "Rolling stat",
+      "targetStat": "Target stat",
+      "momentumCost": "Momentum cost",
+      "momentumModifier": "Momentum modifier",
+      "rolls": "Rolls",
+      "trained": "Trained",
+      "baseWord": "Base word (everyone knows it)",
+      "tags": "Tags",
+      "effects": "Effects",
+      "conditionalEffects": "Conditional effects",
+      "groups": {
+        "tree": "Group: tree",
+        "tier1": "Group: tier 1",
+        "tier2": "Group: tier 2",
+        "tier3": "Group: tier 3"
+      },
+      "domain": "Domain",
+      "talentTier": "Tier",
+      "prereqTalent": "Prerequisite talent",
+      "crossPrereq": "Cross prerequisite (tier 3)",
+      "xpCost": "XP cost",
+      "xpSpent": "XP spent (cumulative)",
+      "grantsWords": "Grants words",
+      "grantsActions": "Grants actions",
+      "affectsTags": "Affects tags",
+      "rank": "Rank",
+      "wordPool": "Word pool",
+      "duration": {
+        "type": "Duration",
+        "rounds": "Rounds"
+      },
+      "track": "Track",
+      "statusValue": "Value (X)",
+      "tierDegrade": "Degrades tiers",
+      "recovery": "Recovery",
+      "context": "Context",
+      "advanced": "Advanced ancestry",
+      "minorBoon": "Minor boon",
+      "majorBoon": "Major boon",
+      "minorBane": "Minor bane",
+      "category": "Category",
+      "equipped": "Equipped",
+      "defendsAgainst": "Defends against",
+      "penalty": "Penalty"
+    },
+    "Settings": {
+      "dc": {
+        "primary": {
+          "Name": "Defense DC: primary",
+          "Hint": "DC when the defender is primary in the target stat. [OPEN] preset A 14, preset B 13."
+        },
+        "secondary": {
+          "Name": "Defense DC: secondary",
+          "Hint": "DC when the defender is secondary in the target stat. 11 under both presets."
+        },
+        "tertiary": {
+          "Name": "Defense DC: tertiary",
+          "Hint": "DC when the defender is tertiary in the target stat. [OPEN] preset A 8, preset B 9."
+        }
+      },
+      "defaultTaskDC": {
+        "Name": "Default task DC",
+        "Hint": "Suggested DC for unopposed tasks, pre-filled in the roll dialog. [OPEN]"
+      },
+      "momentum": {
+        "ceiling": {
+          "Name": "Momentum ceiling formula",
+          "Hint": "Variables: level. Functions: floor, ceil, round, min, max."
+        },
+        "startingDefault": {
+          "Name": "Default starting momentum",
+          "Hint": "Starting momentum for new characters."
+        },
+        "gainDefault": {
+          "Name": "Default momentum gain per round",
+          "Hint": "Placeholder; designers have not chosen a value."
+        },
+        "floor": {
+          "Name": "Momentum floor",
+          "Hint": "[OPEN] Leave blank for no floor. Used from Phase 3."
+        }
+      },
+      "costSpendTiming": {
+        "Name": "When momentum cost is spent",
+        "Hint": "[OPEN] Used from Phase 3.",
+        "Choice": {
+          "resolve": "At resolution (validated at declaration)",
+          "declare": "At declaration"
+        }
+      },
+      "costFloorZero": {
+        "Name": "Action cost cannot go below 0",
+        "Hint": "[OPEN] Used from Phase 2."
+      },
+      "resistanceTrack": {
+        "Name": "Which momentum resistance applies",
+        "Hint": "[OPEN] Used from Phase 2.",
+        "Choice": {
+          "targetStat": "Domain of the action's target stat",
+          "actionDomain": "Action's own domain tag"
+        }
+      },
+      "maxWordsFormula": {
+        "Name": "Max words per action formula",
+        "Hint": "[OPEN] Variables: level. Alternative: 2 + floor(level / 2)."
+      },
+      "extraWordPenalty": {
+        "Name": "Debuff dice per extra word",
+        "Hint": "[OPEN] Debuff dice for each word beyond the second. Used from Phase 2."
+      },
+      "focusBonus": {
+        "Name": "Focus bonus",
+        "Hint": "[OPEN] Bonus for leaving word slots unused. Magnitude undecided. Used from Phase 2."
+      },
+      "sceneTrackBonusDice": {
+        "Name": "Scene track bonus dice",
+        "Hint": "[DRAFT] Buff dice for on-track actions. Used from Phase 5."
+      },
+      "exposedMode": {
+        "Name": "Exposed X mode",
+        "Hint": "[OPEN] Used from Phase 2.",
+        "Choice": {
+          "flat": "Flat bonus",
+          "dice": "Buff dice"
+        }
+      },
+      "defeatAffectsDefense": {
+        "Name": "Defeat degradation applies to defense",
+        "Hint": "[OPEN] When on, defeated tracks also lower the tier used for the defender's DC."
+      },
+      "diceStacking": {
+        "Name": "Buff / debuff dice stacking",
+        "Hint": "[DRAFT] Additive, buff and debuff do not cancel.",
+        "Choice": {
+          "additive": "Additive"
+        }
+      },
+      "diceCap": {
+        "Name": "Buff / debuff dice cap",
+        "Hint": "[DRAFT] 0 = no cap. Used from Phase 2."
+      },
+      "sameNameTagStacking": {
+        "Name": "Same-name tag stacking",
+        "Hint": "[OPEN] Used from Phase 2.",
+        "Choice": {
+          "sum": "Sum values",
+          "max": "Highest value",
+          "last": "Last declared"
+        }
+      },
+      "statOverrideConflict": {
+        "Name": "Conflicting stat overrides",
+        "Hint": "[OPEN] Used from Phase 2.",
+        "Choice": {
+          "last": "Last declared word wins",
+          "first": "First declared word wins"
+        }
+      },
+      "cascadeDepthCap": {
+        "Name": "Slow cascade depth cap",
+        "Hint": "[OPEN] 0 = none (a loop guard of 25 always applies). Used from Phase 3."
+      },
+      "chargeResolvesOn": {
+        "Name": "Charge resolves",
+        "Hint": "[OPEN] Used from Phase 3.",
+        "Choice": {
+          "xth": "On the Xth consecutive declaration",
+          "after": "The round after"
+        }
+      },
+      "interruptMode": {
+        "Name": "Interrupt mode",
+        "Hint": "[OPEN] Used from Phase 3.",
+        "Choice": {
+          "manual": "Manual GM button"
+        }
+      },
+      "autoApplyOutcomes": {
+        "Name": "Auto-apply outcomes",
+        "Hint": "Apply on-hit / on-miss effects without GM confirmation. Used from Phase 3."
+      },
+      "pips": {
+        "primary": {
+          "Name": "Pips per level: primary",
+          "Hint": "[DRAFT] Track tier comes from that domain's Resilience."
+        },
+        "secondary": {
+          "Name": "Pips per level: secondary",
+          "Hint": "[DRAFT]"
+        },
+        "tertiary": {
+          "Name": "Pips per level: tertiary",
+          "Hint": "[DRAFT]"
+        },
+        "minLevel": {
+          "Name": "Minimum level for pips",
+          "Hint": "[OPEN] Level used for pips is max(level, this). 1 keeps level 0 characters from having no pips."
+        }
+      },
+      "condFx": {
+        "defaultDuration": {
+          "Name": "Conditional effect default duration (rounds)",
+          "Hint": "[DRAFT] Used from Phase 4."
+        },
+        "aboveRank": {
+          "Name": "Tier shifts above primary",
+          "Hint": "[OPEN]",
+          "Choice": {
+            "clamp": "Clamp at primary",
+            "buffDie": "One buff die per excess step"
+          }
+        },
+        "defaultLimitPerRound": {
+          "Name": "Conditional effect default per-round limit",
+          "Hint": "[DRAFT] Used from Phase 4."
+        },
+        "chainDepth": {
+          "Name": "Conditional effect chain depth (tierChanged)",
+          "Hint": "[DRAFT] Effects never chain except via tierChanged, cut at this depth. Used from Phase 4."
+        },
+        "shiftsAffectDefense": {
+          "Name": "Tier shifts affect defense",
+          "Hint": "[OPEN] Used from Phase 4."
+        }
+      },
+      "enableDeck": {
+        "Name": "Enable personal card deck",
+        "Hint": "Optional subsystem (§10). Phase 6."
+      },
+      "roomEntryMomentum": {
+        "Name": "Room entry momentum",
+        "Hint": "[DRAFT] Used from Phase 5.",
+        "Choice": {
+          "highestCapped": "Highest relationship, capped at ceiling",
+          "baseline": "Baseline"
+        }
+      },
+      "showAdvancedBonus": {
+        "Name": "Show placeholder stat bonus",
+        "Hint": "Shows the v0.1 per-stat flat bonus field. The designers say it will change; do not build on it."
+      }
+    }
+  }
+}

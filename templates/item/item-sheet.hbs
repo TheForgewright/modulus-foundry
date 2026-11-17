@@ -1,0 +1,42 @@
+<div class="modulus-item">
+  <header class="modulus-header">
+    <img class="profile" src="{{item.img}}" alt="" data-edit="img" data-action="editImage" width="64" height="64">
+    <input class="item-name" type="text" name="name" value="{{item.name}}" {{#unless editable}}disabled{{/unless}}>
+  </header>
+
+  {{#each scalar}}
+  {{formGroup field value=value localize=true}}
+  {{/each}}
+
+  {{#if isSkill}}
+  <div class="form-group"><label>{{localize "MODULUS.Field.xpSpent"}}</label><input type="number" value="{{system.xpSpent}}" disabled></div>
+  {{/if}}
+
+  {{#if hasTags}}
+  <div class="form-group">
+    <label>{{localize "MODULUS.Field.tags"}}</label>
+    <input type="text" name="system._tagsText" value="{{tagsText}}" placeholder="offensive, slow 2">
+    <p class="hint">{{localize "MODULUS.Item.TagsHint"}}</p>
+  </div>
+  {{/if}}
+
+  {{#each lists}}
+  <div class="form-group">
+    <label>{{label}}</label>
+    <input type="text" name="system.{{key}}" value="{{value}}">
+  </div>
+  {{/each}}
+
+  {{#each json}}
+  <div class="form-group stacked">
+    <label>{{label}}</label>
+    <textarea class="json" name="system.{{key}}" rows="6" spellcheck="false">{{value}}</textarea>
+    <p class="hint">{{localize "MODULUS.Item.JSONHint"}}</p>
+  </div>
+  {{/each}}
+
+  <div class="form-group stacked description">
+    <label>{{localize "MODULUS.Field.description"}}</label>
+    {{formInput descriptionField enriched=descriptionHTML value=system._source.description name="system.description" toggled=true}}
+  </div>
+</div>

@@ -1,0 +1,19 @@
+<section class="tab items {{#if tabActive.items}}active{{/if}}" data-tab="items">
+  {{#each items}}
+  <div class="item-section">
+    <header class="item-section-header">
+      <h3>{{label}}</h3>
+      {{#if ../editable}}<button type="button" data-action="createItem" data-type="{{type}}" data-tooltip="DOCUMENT.Create"><i class="fa-solid fa-plus"></i></button>{{/if}}
+    </header>
+    <ul class="item-list">
+      {{#each items}}
+      <li class="item-row" data-item-id="{{id}}">
+        <img src="{{img}}" alt="" width="24" height="24">
+        <a class="item-name" data-action="editItem">{{name}}</a>
+        {{#if ../../editable}}<button type="button" class="icon" data-action="deleteItem" data-tooltip="DOCUMENT.Delete"><i class="fa-solid fa-trash"></i></button>{{/if}}
+      </li>
+      {{/each}}
+    </ul>
+  </div>
+  {{/each}}
+</section>

@@ -1,0 +1,13 @@
+<header class="modulus-header">
+  <img class="profile" src="{{actor.img}}" alt="{{actor.name}}" data-edit="img" data-action="editImage" width="96" height="96">
+  <div class="header-fields">
+    <input class="actor-name" type="text" name="name" value="{{actor.name}}" placeholder="{{localize 'Name'}}" {{#unless editable}}disabled{{/unless}}>
+    <div class="header-row">
+      <label>{{localize "MODULUS.Field.level"}} <input type="number" name="system.level" value="{{source.level}}" min="0" step="1"></label>
+      <label>{{localize "MODULUS.Field.xp.total"}} <input type="number" name="system.xp.total" value="{{source.xp.total}}" min="0" step="1"></label>
+      <label>{{localize "MODULUS.Field.xp.spent"}} <input type="number" name="system.xp.spent" value="{{source.xp.spent}}" min="0" step="1"></label>
+      <label>{{localize "MODULUS.Field.respecPoints"}} <input type="number" name="system.respecPoints" value="{{source.respecPoints}}" min="0" step="1" {{#unless isGM}}disabled{{/unless}}></label>
+      <button type="button" class="roll-button" data-action="rollManual"><i class="fa-solid fa-dice-d20"></i> {{localize "MODULUS.Roll.Roll"}}</button>
+    </div>
+  </div>
+</header>

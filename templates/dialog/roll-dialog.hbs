@@ -1,0 +1,33 @@
+<div class="modulus-roll-form">
+  <div class="form-group">
+    <label>{{localize "MODULUS.Roll.Stat"}}</label>
+    <select name="statKey">{{selectOptions stats selected=statKey}}</select>
+  </div>
+  <div class="form-group">
+    <label>{{localize "MODULUS.Roll.BuffDice"}}</label>
+    <input type="number" name="buff" value="{{buff}}" min="0" step="1">
+  </div>
+  <div class="form-group">
+    <label>{{localize "MODULUS.Roll.DebuffDice"}}</label>
+    <input type="number" name="debuff" value="{{debuff}}" min="0" step="1">
+  </div>
+  <div class="form-group">
+    <label>{{localize "MODULUS.Roll.FlatBonus"}}</label>
+    <input type="number" name="flatBonus" value="{{flatBonus}}" step="1">
+    <p class="hint">{{localize "MODULUS.Roll.FlatBonusHint"}}</p>
+  </div>
+  <div class="form-group">
+    <label>{{localize "MODULUS.Roll.DCMode.label"}}</label>
+    <select name="dcMode">{{selectOptions dcModes selected=dcMode localize=true}}</select>
+  </div>
+  <div class="form-group">
+    <label>{{localize "MODULUS.Roll.ManualDC"}}</label>
+    <input type="number" name="dc" value="{{dc}}" step="1">
+  </div>
+  <div class="form-group">
+    <label>{{localize "MODULUS.Roll.TargetStat"}}{{#if targetName}} ({{targetName}}){{/if}}</label>
+    <select name="targetStat">{{selectOptions stats selected=targetStat}}</select>
+  </div>
+  {{#unless targetName}}<p class="hint">{{localize "MODULUS.Roll.NoTarget"}}</p>{{/unless}}
+  <p class="modulus-roll-preview"></p>
+</div>

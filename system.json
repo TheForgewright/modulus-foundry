@@ -1,0 +1,39 @@
+{
+  "id": "modulus",
+  "title": "Modulus",
+  "description": "Modulus: one engine for physical, mental and social conflict. 3d20 keep-one resolution, momentum-ordered encounter stacks, words that build actions.",
+  "version": "0.1.0",
+  "authors": [
+    { "name": "TheForgewright" },
+    { "name": "DrexMartell" }
+  ],
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14.370"
+  },
+  "esmodules": ["module/modulus.js"],
+  "styles": ["styles/modulus.css"],
+  "languages": [
+    { "lang": "en", "name": "English", "path": "lang/en.json" }
+  ],
+  "documentTypes": {
+    "Actor": {
+      "character": { "htmlFields": ["biography"] },
+      "npc": { "htmlFields": ["biography"] }
+    },
+    "Item": {
+      "action": { "htmlFields": ["description"] },
+      "word": { "htmlFields": ["description"] },
+      "talent": { "htmlFields": ["description"] },
+      "skill": { "htmlFields": ["description"] },
+      "status": { "htmlFields": ["description"] },
+      "ancestry": { "htmlFields": ["description"] },
+      "society": { "htmlFields": ["description"] },
+      "background": { "htmlFields": ["description"] },
+      "armor": { "htmlFields": ["description"] }
+    }
+  },
+  "socket": true,
+  "grid": { "type": 1, "distance": 1, "units": "m" },
+  "primaryTokenAttribute": "momentum.current"
+}

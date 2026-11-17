@@ -1,0 +1,12 @@
+{
+  "name": "modulus",
+  "private": true,
+  "type": "module",
+  "description": "Modulus game system for Foundry VTT",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

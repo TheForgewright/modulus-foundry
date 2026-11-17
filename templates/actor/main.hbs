@@ -1,0 +1,137 @@
+<section class="tab main {{#if tabActive.main}}active{{/if}}" data-tab="main">
+
+  {{!-- Stat grid and dot allocator (§3.1, §3.2) --}}
+  <fieldset class="stat-grid-block">
+    <legend>{{localize "MODULUS.Sheet.Stats"}}</legend>
+
+    {{#if isNPC}}
+    <div class="form-group">
+      <label>{{localize "MODULUS.NPC.StatsMode.label"}}</label>
+      <select name="system.statsMode">{{selectOptions statsModeChoices selected=source.statsMode}}</select>
+    </div>
+    {{/if}}
+
+    {{#if allocating}}
+    <p class="hint">{{localize "MODULUS.Allocation.Instructions"}}</p>
+    {{/if}}
+
+    <table class="stat-grid {{#if allocating}}allocating{{/if}}">
+      <thead>
+        <tr>
+          <th></th>
+          {{#each expressions}}
+          <th>
+            {{#if ../allocating}}
+            <button type="button" class="pick {{#if chosen}}chosen{{/if}}" data-action="pickExpression" data-expression="{{expression}}">{{label}}</button>
+            {{else}}<span class="{{#if chosen}}chosen{{/if}}">{{label}}</span>{{/if}}
+          </th>
+          {{/each}}
+        </tr>
+      </thead>
+      <tbody>
+        {{#each grid}}
+        <tr>
+          <th>
+            {{#if ../allocating}}
+            <button type="button" class="pick {{#if chosen}}chosen{{/if}}" data-action="pickDomain" data-domain="{{domain}}">{{label}}</button>
+            {{else}}<span class="{{#if chosen}}chosen{{/if}}">{{label}}</span>{{/if}}
+          </th>
+          {{#each cells}}
+          <td class="stat-cell tier-{{tier}} {{#if intersection}}intersection{{/if}} {{#if freeDot}}free-dot{{/if}}">
+            <div class="stat-name">{{label}}</div>
+            {{#if ../../direct}}
+            <select name="{{directName}}">{{selectOptions ../../tierChoices selected=directValue}}</select>
+            {{else}}
+            <div class="dots" {{#if ../../allocating}}data-action="pickFreeDot" data-stat="{{key}}" data-tooltip="MODULUS.Allocation.FreeDotTooltip"{{/if}}>
+              {{#each dots}}<span class="dot {{#if this}}filled{{/if}}"></span>{{/each}}
+            </div>
+            {{/if}}
+            <div class="tier-badge tier-{{effTier}} {{#if degraded}}degraded{{/if}}" {{#if degraded}}data-tooltip="{{tierLabel}} → {{effTierLabel}}{{#if extraDebuff}} +{{extraDebuff}}▼{{/if}}"{{/if}}>
+              {{effTierLabel}}{{#if extraDebuff}} <span class="debuff">+{{extraDebuff}}▼</span>{{/if}}
+            </div>
+            {{#if ../../showBonus}}
+            <label class="bonus">{{localize "MODULUS.Field.bonus"}} <input type="number" name="{{bonusName}}" value="{{bonus}}" step="1"></label>
+            {{/if}}
+            <button type="button" class="roll-stat" data-action="rollStat" data-stat="{{key}}" data-tooltip="MODULUS.Roll.Roll"><i class="fa-solid fa-dice-d20"></i></button>
+          </td>
+          {{/each}}
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    {{#unless direct}}
+    <div class="allocation-footer">
+      <span class="shape">
+        <span class="tier-badge tier-primary">{{shape.primary}} {{localize "MODULUS.Tier.primary"}}</span>
+        <span class="tier-badge tier-secondary">{{shape.secondary}} {{localize "MODULUS.Tier.secondary"}}</span>
+        <span class="tier-badge tier-tertiary">{{shape.tertiary}} {{localize "MODULUS.Tier.tertiary"}}</span>
+      </span>
+      {{#if allocErrors.length}}
+      <ul class="alloc-errors">{{#each allocErrors}}<li>{{this}}</li>{{/each}}</ul>
+      {{else}}
+      <button type="button" data-action="resetAllocation"><i class="fa-solid fa-rotate-left"></i> {{localize "MODULUS.Allocation.Reset"}}</button>
+      {{/if}}
+    </div>
+    {{/unless}}
+  </fieldset>
+
+  {{!-- Tracks (§4) --}}
+  <fieldset class="tracks-block">
+    <legend>{{localize "MODULUS.Sheet.Tracks"}}</legend>
+    {{#each tracks}}
+    <div class="track {{#if defeated}}defeated{{/if}}">
+      <div class="track-label">
+        <strong>{{label}}</strong>
+        <span class="tier-badge">{{tierLabel}}</span>
+        <span class="count">{{remaining}} / {{max}}</span>
+      </div>
+      <div class="pips">
+        {{#each segments}}
+        <span class="segment {{#if broken}}broken{{/if}}">
+          {{#each pips}}<span class="pip {{#if lost}}lost{{/if}} {{#if breakPoint}}break-point{{/if}}" {{#if breakPoint}}data-tooltip="MODULUS.Tracks.BreakPointTooltip"{{/if}}></span>{{/each}}
+        </span>
+        {{/each}}
+      </div>
+      <div class="track-controls">
+        <button type="button" data-action="pip" data-domain="{{domain}}" data-amount="1" data-tooltip="MODULUS.Tracks.ApplyPip"><i class="fa-solid fa-minus"></i></button>
+        <button type="button" data-action="pip" data-domain="{{domain}}" data-amount="-1" data-tooltip="MODULUS.Tracks.HealPip"><i class="fa-solid fa-plus"></i></button>
+        {{#if ../isNPC}}
+        <input type="number" class="max-override" name="{{maxOverrideName}}" value="{{maxOverride}}" min="0" step="1" placeholder="{{max}}" data-tooltip="MODULUS.NPC.MaxOverride">
+        {{/if}}
+      </div>
+      {{#if defeated}}
+      <div class="defeat-status">
+        <i class="fa-solid fa-skull"></i> {{defeatLabel}}
+        {{#if ../isGM}}<button type="button" data-action="clearDefeat" data-domain="{{domain}}">{{localize "MODULUS.Defeat.Clear"}}</button>{{/if}}
+      </div>
+      {{/if}}
+    </div>
+    {{/each}}
+    {{#if isGM}}
+    <div class="rest-controls">
+      <button type="button" data-action="rest" data-kind="short"><i class="fa-solid fa-mug-hot"></i> {{localize "MODULUS.Tracks.ShortRest"}}</button>
+      <button type="button" data-action="rest" data-kind="long"><i class="fa-solid fa-bed"></i> {{localize "MODULUS.Tracks.LongRest"}}</button>
+    </div>
+    {{/if}}
+  </fieldset>
+
+  {{!-- Momentum (§5) --}}
+  <fieldset class="momentum-block">
+    <legend>{{localize "MODULUS.Sheet.Momentum"}}</legend>
+    <div class="momentum-row">
+      <label>{{localize "MODULUS.Field.momentum.current"}} <input type="number" name="system.momentum.current" value="{{source.momentum.current}}" step="1"></label>
+      <label>{{localize "MODULUS.Field.momentum.starting"}} <input type="number" name="system.momentum.starting" value="{{source.momentum.starting}}" step="1"></label>
+      <label>{{localize "MODULUS.Field.momentum.gainPerTurn"}} <input type="number" name="system.momentum.gainPerTurn" value="{{source.momentum.gainPerTurn}}" step="1"></label>
+      <label>{{localize "MODULUS.Field.momentum.ceiling"}} <input type="number" value="{{system.momentum.ceiling}}" disabled></label>
+      <label>{{localize "MODULUS.Field.maxWords"}} <input type="number" value="{{system.maxWords}}" disabled></label>
+    </div>
+    <div class="momentum-row">
+      <span class="sublabel">{{localize "MODULUS.Field.momentum.resistance"}}</span>
+      {{#each domains}}
+      <label>{{label}} <input type="number" name="system.momentum.resistance.{{domain}}" value="{{resistance}}" min="0" step="1"></label>
+      {{/each}}
+    </div>
+    <p class="hint">{{localize "MODULUS.Sheet.MomentumHint"}}</p>
+  </fieldset>
+</section>
