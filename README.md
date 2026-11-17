@@ -19,6 +19,7 @@ Phase 1 (Foundation) from §18 of the design:
 | World settings for every OPEN / DRAFT rule (§16) | Registered |
 | Roll engine through Foundry `Roll`, roll dialog, chat card with kept / dropped dice and Hit / Miss | Done |
 | Compendium packs with test fixtures (§17.3) | Phase 2 |
+| Optional personal card deck (§10): composition effects, draw with reshuffle, poker hand picker, hand-quality abilities, discard for momentum, burn | Done early; see [`docs/CARD_DECK.md`](docs/CARD_DECK.md) |
 
 Phases 2–6 (vocabulary editor, encounter stack, talents, persistent encounters, optional subsystems) are not started.
 

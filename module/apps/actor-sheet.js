@@ -6,6 +6,9 @@ import { SYSTEM_ID } from "../config.js";
 import { DOMAINS, EXPRESSIONS, statKey } from "../rules/constants.js";
 import { getSetting } from "../settings.js";
 import { openRollDialog } from "./roll-dialog.js";
+import { hasCardAbilities, cardAbilities } from "../deck/card-effects.js";
+import { cardView, STANDALONE_DECK } from "../documents/actor.js";
+import { evaluateHand, checkHandRequirement, HAND_NAMES, MAX_HAND_SIZE } from "../rules/deck.js";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -32,7 +35,13 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       createItem: ModulusActorSheet.#onCreateItem,
       editItem: ModulusActorSheet.#onEditItem,
       deleteItem: ModulusActorSheet.#onDeleteItem,
-      switchTab: ModulusActorSheet.#onSwitchTab
+      switchTab: ModulusActorSheet.#onSwitchTab,
+      selectCard: ModulusActorSheet.#onSelectCard,
+      drawCards: ModulusActorSheet.#onDrawCards,
+      burnSelected: ModulusActorSheet.#onBurnSelected,
+      discardMomentum: ModulusActorSheet.#onDiscardMomentum,
+      useAbility: ModulusActorSheet.#onUseAbility,
+      newDeck: ModulusActorSheet.#onNewDeck
     }
   };
 
@@ -41,10 +50,17 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
     nav: { template: T("nav") },
     main: { template: T("main") },
     items: { template: T("items"), scrollable: [""] },
+    cards: { template: T("cards"), scrollable: [""] },
     notes: { template: T("notes") }
   };
 
   tabGroups = { primary: "main" };
+
+  /** Card ids currently selected in the hand (UI state only, not persisted). */
+  _selectedCards = new Set();
+
+  /** Which encounter's deck the Cards tab shows. */
+  _deckId = null;
 
   get isNPC() {
     return this.document.type === "npc";
@@ -132,14 +148,189 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       items,
       showBonus: getSetting("showAdvancedBonus"),
       tab: this.tabGroups.primary,
-      tabs: ["main", "items", "notes"].map((id) => ({ id, label: t(`MODULUS.Sheet.Tab.${id}`), active: this.tabGroups.primary === id })),
+      tabs: this._tabIds().map((id) => ({ id, label: t(`MODULUS.Sheet.Tab.${id}`), active: this.tabGroups.primary === id })),
       tierChoices: { primary: t("MODULUS.Tier.primary"), secondary: t("MODULUS.Tier.secondary"), tertiary: t("MODULUS.Tier.tertiary") },
       statsModeChoices: { dots: t("MODULUS.NPC.StatsMode.dots"), direct: t("MODULUS.NPC.StatsMode.direct") },
       systemFields: system.schema.fields,
-      tabActive: { main: this.tabGroups.primary === "main", items: this.tabGroups.primary === "items", notes: this.tabGroups.primary === "notes" },
+      tabActive: Object.fromEntries(["main", "items", "cards", "notes"].map((id) => [id, this.tabGroups.primary === id])),
+      cards: this._prepareCards(),
       biographyHTML: await foundry.applications.ux.TextEditor.implementation.enrichHTML(system.biography, { relativeTo: actor, secrets: actor.isOwner })
     });
     return context;
+  }
+
+  get showCards() {
+    const actor = this.document;
+    return getSetting("enableDeck") && (hasCardAbilities(actor) || Object.keys(actor.getDecks()).length > 0);
+  }
+
+  _tabIds() {
+    const ids = ["main", "items"];
+    if (this.showCards) ids.push("cards");
+    ids.push("notes");
+    if (!ids.includes(this.tabGroups.primary)) this.tabGroups.primary = "main";
+    return ids;
+  }
+
+  /* ---------------- Cards (§10) ---------------- */
+
+  get deckId() {
+    const decks = this.document.getDecks();
+    if (!this._deckId || !decks[this._deckId]) this._deckId = this.document.defaultDeckId();
+    return this._deckId;
+  }
+
+  get deck() {
+    return this.deckId ? this.document.getDeck(this.deckId) : null;
+  }
+
+  _selectedHandCards() {
+    const deck = this.deck;
+    if (!deck) return [];
+    const inHand = deck.hand.filter((c) => this._selectedCards.has(c.id));
+    this._selectedCards = new Set(inHand.map((c) => c.id));
+    return inHand;
+  }
+
+  _prepareCards() {
+    if (!this.showCards) return null;
+    const t = (k) => game.i18n.localize(k);
+    const actor = this.document;
+    const decks = actor.getDecks();
+    const deck = this.deck;
+    const selected = this._selectedHandCards();
+    const hand = selected.length ? evaluateHand(selected) : null;
+    const deckChoices = Object.fromEntries(Object.keys(decks).map((id) => {
+      const combat = game.combats.get(id);
+      const label = id === STANDALONE_DECK ? t("MODULUS.Deck.Standalone") : (combat?.name || `${t("DOCUMENT.Combat")} ${id}`);
+      return [id, label];
+    }));
+    return {
+      enabled: true,
+      hasAbilities: hasCardAbilities(actor),
+      deckId: this.deckId,
+      deckChoices,
+      multipleDecks: Object.keys(decks).length > 1,
+      deck: deck && {
+        draw: deck.draw.length,
+        discard: deck.discard.length,
+        burned: deck.burned.length,
+        size: deck.size,
+        reshuffles: deck.reshuffles,
+        pendingMomentumLoss: deck.pendingMomentumLoss ?? 0,
+        hand: deck.hand.map((c) => ({ ...cardView(c), selected: this._selectedCards.has(c.id) }))
+      },
+      selectedCount: selected.length,
+      maxHand: MAX_HAND_SIZE,
+      handLabel: hand ? `${t(`MODULUS.Hand.${hand.name}`)} (${hand.rank})` : null,
+      oneSelected: selected.length === 1,
+      abilities: cardAbilities(actor).map((a) => {
+        const check = checkHandRequirement(hand, a.req);
+        return {
+          itemId: a.item.id,
+          index: a.index,
+          label: a.label,
+          minLabel: t(`MODULUS.Hand.${HAND_NAMES[a.req.minRank ?? 0]}`),
+          consumeLabel: t(`MODULUS.Deck.Consume.${a.req.consume ?? "selected"}`),
+          scaling: (a.req.scaling ?? []).map((row) => ({
+            min: t(`MODULUS.Hand.${HAND_NAMES[row.minRank ?? 0]}`),
+            text: Object.entries(row).filter(([k]) => k !== "minRank").map(([k, v]) => `${k} ${v}`).join(", ")
+          })),
+          eligible: check.ok,
+          grantText: check.grant ? Object.entries(check.grant).filter(([k]) => k !== "minRank").map(([k, v]) => `${k} ${v}`).join(", ") : ""
+        };
+      })
+    };
+  }
+
+  _onRender(context, options) {
+    super._onRender?.(context, options);
+    const select = this.element.querySelector("select.deck-select");
+    if (!select || select.dataset.bound) return;
+    select.dataset.bound = "1";
+    select.addEventListener("change", (ev) => {
+      this._deckId = ev.target.value;
+      this._selectedCards.clear();
+      this.render();
+    });
+  }
+
+  static #onSelectCard(event, target) {
+    const id = target.dataset.cardId;
+    if (this._selectedCards.has(id)) this._selectedCards.delete(id);
+    else if (this._selectedCards.size >= MAX_HAND_SIZE) {
+      ui.notifications.warn(game.i18n.format("MODULUS.Deck.MaxSelected", { n: MAX_HAND_SIZE }));
+      return;
+    } else this._selectedCards.add(id);
+    this.render({ parts: ["cards"] });
+  }
+
+  static async #onDrawCards(event, target) {
+    if (!this.isEditable || !this.deckId) return;
+    const input = this.element.querySelector("input.draw-count");
+    const n = Math.max(1, Math.floor(Number(input?.value) || 1));
+    await this.document.drawCards(n, this.deckId);
+  }
+
+  static async #onBurnSelected() {
+    if (!this.isEditable) return;
+    const ids = [...this._selectedCards];
+    if (!ids.length) return;
+    const ok = await foundry.applications.api.DialogV2.confirm({
+      window: { title: "MODULUS.Deck.Burn" },
+      content: `<p>${game.i18n.format("MODULUS.Deck.BurnConfirm", { n: ids.length })}</p>`
+    });
+    if (!ok) return;
+    this._selectedCards.clear();
+    await this.document.burnCards(ids, this.deckId);
+  }
+
+  static async #onDiscardMomentum() {
+    if (!this.isEditable) return;
+    const [card] = this._selectedHandCards();
+    if (!card || this._selectedCards.size !== 1) return;
+    let aceHigh = false;
+    if (card.rank === 14) {
+      aceHigh = await foundry.applications.api.DialogV2.wait({
+        window: { title: "MODULUS.Deck.AceValue" },
+        content: `<p>${game.i18n.localize("MODULUS.Deck.AceValueHint")}</p>`,
+        buttons: [
+          { action: "low", label: "1", callback: () => false, default: true },
+          { action: "high", label: "11", callback: () => true }
+        ],
+        rejectClose: false
+      });
+      if (aceHigh == null) return;
+    }
+    this._selectedCards.clear();
+    await this.document.discardForMomentum(card.id, { aceHigh }, this.deckId);
+  }
+
+  static async #onUseAbility(event, target) {
+    if (!this.isEditable) return;
+    const ids = [...this._selectedCards];
+    const r = await this.document.useCardAbility(target.dataset.itemId, Number(target.dataset.index), ids, this.deckId);
+    if (!r.ok) return;
+    this._selectedCards.clear();
+    this.render({ parts: ["cards"] });
+    if (r.grant?.buff || r.grant?.debuff) {
+      openRollDialog(this.document, { buff: r.grant.buff ?? 0, debuff: r.grant.debuff ?? 0 });
+    }
+  }
+
+  static async #onNewDeck() {
+    if (!game.user.isGM) return;
+    const id = this.deckId ?? game.combat?.id ?? STANDALONE_DECK;
+    if (this.deck) {
+      const ok = await foundry.applications.api.DialogV2.confirm({
+        window: { title: "MODULUS.Deck.New" },
+        content: `<p>${game.i18n.localize("MODULUS.Deck.NewConfirm")}</p>`
+      });
+      if (!ok) return;
+    }
+    this._selectedCards.clear();
+    this._deckId = id;
+    await this.document.createDeck(id);
   }
 
   /* ---------------- Allocation (§3.2) ---------------- */

@@ -6,3 +6,4 @@ export * from "./tracks.js";
 export * from "./tier.js";
 export * from "./momentum.js";
 export * from "./formula.js";
+export * from "./deck.js";

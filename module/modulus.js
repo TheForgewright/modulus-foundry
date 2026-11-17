@@ -12,6 +12,7 @@ import { ModulusActorSheet } from "./apps/actor-sheet.js";
 import { ModulusItemSheet } from "./apps/item-sheet.js";
 import { openRollDialog, buildRollPlan, rollFromPlan } from "./apps/roll-dialog.js";
 import * as rules from "./rules/index.js";
+import { registerDeckHooks } from "./deck/lifecycle.js";
 
 Hooks.once("init", () => {
   console.log("Modulus | Initializing");
@@ -42,10 +43,14 @@ Hooks.once("init", () => {
     `systems/${SYSTEM_ID}/templates/actor/main.hbs`,
     `systems/${SYSTEM_ID}/templates/actor/items.hbs`,
     `systems/${SYSTEM_ID}/templates/actor/notes.hbs`,
+    `systems/${SYSTEM_ID}/templates/actor/cards.hbs`,
+    `systems/${SYSTEM_ID}/templates/chat/hand-card.hbs`,
     `systems/${SYSTEM_ID}/templates/item/item-sheet.hbs`,
     `systems/${SYSTEM_ID}/templates/chat/roll-card.hbs`,
     `systems/${SYSTEM_ID}/templates/dialog/roll-dialog.hbs`
   ]);
+
+  registerDeckHooks();
 
   // Public API for macros and add-ons.
   game.modulus = { rules, openRollDialog, buildRollPlan, rollFromPlan, ModulusRoll };

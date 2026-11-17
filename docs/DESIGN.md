@@ -795,6 +795,14 @@ Gated by world setting `enableDeck` (default off). A GM can simply disable it. F
 - **Blind mode:** the GM and enemies can see the user's hand; the user and their allies cannot. Cash-in bonuses are doubled (**[OPEN]** meaning of "bonus"); attempting a cash-in without a valid hand discards the whole hand.
 - **[OPEN]** which actions draw; hand persistence across persistent encounters.
 
+**Decisions from 2026-11-17 (designer, supersede the lines above where they conflict):**
+
+- The deck is per character, built at encounter start only for characters with an ability that interacts with cards.
+- Abilities can add cards to or strip cards from the deck. Composition effects are collected before the deck is built.
+- When the draw pile runs dry mid-draw, cards already used in hands are reshuffled into a new deck. This replaces "no mid-encounter reshuffle".
+- Players pick cards out of their hand to form a poker hand (at most five). Hand quality is an integer from 0 (high card) to 10 (five of a kind). Abilities can require a minimum quality, consume a hand of a set quality, or grant more (for example extra dice) for better hands.
+- Implementation details and the effect format: `docs/CARD_DECK.md`.
+
 Intended economy: low starting momentum and high momentum gain per round. Pre-cash-out actions cost more momentum than vanilla equivalents. This is a "finisher" archetype that needs a long fight and cover in the early rounds.
 
 ---

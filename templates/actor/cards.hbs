@@ -1,0 +1,73 @@
+<section class="tab cards {{#if tabActive.cards}}active{{/if}}" data-tab="cards">
+  {{#with cards}}
+  <div class="deck-header">
+    {{#if multipleDecks}}
+    <select class="deck-select">{{selectOptions deckChoices selected=deckId}}</select>
+    {{/if}}
+    {{#if deck}}
+    <span class="deck-counts">
+      <span data-tooltip="MODULUS.Deck.DrawPile"><i class="fa-solid fa-layer-group"></i> {{deck.draw}}</span>
+      <span data-tooltip="MODULUS.Deck.DiscardPile"><i class="fa-solid fa-recycle"></i> {{deck.discard}}</span>
+      <span data-tooltip="MODULUS.Deck.Burned"><i class="fa-solid fa-fire"></i> {{deck.burned}}</span>
+      {{#if deck.reshuffles}}<span data-tooltip="MODULUS.Deck.Reshuffles"><i class="fa-solid fa-shuffle"></i> {{deck.reshuffles}}</span>{{/if}}
+      {{#if deck.pendingMomentumLoss}}<span class="debuff" data-tooltip="MODULUS.Deck.PendingLoss">−{{deck.pendingMomentumLoss}} <i class="fa-solid fa-bolt"></i></span>{{/if}}
+    </span>
+    {{/if}}
+    {{#if ../isGM}}
+    <button type="button" class="new-deck" data-action="newDeck"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Deck.New"}}</button>
+    {{/if}}
+  </div>
+
+  {{#if deck}}
+  <div class="hand">
+    {{#each deck.hand}}
+    <button type="button" class="playing-card {{#if red}}red{{/if}} {{#if joker}}joker{{/if}} {{#if selected}}selected{{/if}}" data-action="selectCard" data-card-id="{{id}}">
+      <span class="rank">{{rank}}</span><span class="suit">{{suit}}</span>
+    </button>
+    {{else}}
+    <p class="hint">{{localize "MODULUS.Deck.EmptyHand"}}</p>
+    {{/each}}
+  </div>
+
+  <div class="hand-eval">
+    {{#if handLabel}}
+    <strong>{{handLabel}}</strong> <span class="hint">{{selectedCount}} / {{maxHand}}</span>
+    {{else}}
+    <span class="hint">{{localize "MODULUS.Deck.SelectHint"}}</span>
+    {{/if}}
+  </div>
+
+  {{#if ../editable}}
+  <div class="deck-controls">
+    <input type="number" class="draw-count" value="1" min="1" step="1">
+    <button type="button" data-action="drawCards" {{#unless deck.draw}}{{#unless deck.discard}}disabled{{/unless}}{{/unless}}><i class="fa-solid fa-hand"></i> {{localize "MODULUS.Deck.Draw"}}</button>
+    <button type="button" data-action="discardMomentum" {{#unless oneSelected}}disabled{{/unless}}><i class="fa-solid fa-bolt"></i> {{localize "MODULUS.Deck.DiscardForMomentum"}}</button>
+    <button type="button" data-action="burnSelected" {{#unless selectedCount}}disabled{{/unless}}><i class="fa-solid fa-fire"></i> {{localize "MODULUS.Deck.Burn"}}</button>
+  </div>
+  {{/if}}
+
+  <h3>{{localize "MODULUS.Deck.Abilities"}}</h3>
+  <ul class="card-abilities">
+    {{#each abilities}}
+    <li class="card-ability {{#if eligible}}eligible{{/if}}">
+      <div class="ability-main">
+        <strong>{{label}}</strong>
+        <span class="hint">{{localize "MODULUS.Deck.Requires"}} {{minLabel}} · {{consumeLabel}}</span>
+        {{#if scaling.length}}
+        <ul class="scaling">{{#each scaling}}<li>{{min}}+: {{text}}</li>{{/each}}</ul>
+        {{/if}}
+      </div>
+      {{#if eligible}}{{#if grantText}}<span class="grant">{{grantText}}</span>{{/if}}{{/if}}
+      {{#if ../../editable}}
+      <button type="button" data-action="useAbility" data-item-id="{{itemId}}" data-index="{{index}}" {{#unless eligible}}disabled{{/unless}}>{{localize "MODULUS.Deck.Use"}}</button>
+      {{/if}}
+    </li>
+    {{else}}
+    <li class="hint">{{localize "MODULUS.Deck.NoAbilities"}}</li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p class="hint">{{localize "MODULUS.Deck.NoDeck"}}</p>
+  {{/if}}
+  {{/with}}
+</section>

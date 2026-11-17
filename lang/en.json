@@ -62,7 +62,8 @@
       "Tab": {
         "main": "Character",
         "items": "Items",
-        "notes": "Notes"
+        "notes": "Notes",
+        "cards": "Cards"
       }
     },
     "Allocation": {
@@ -391,7 +392,7 @@
       },
       "enableDeck": {
         "Name": "Enable personal card deck",
-        "Hint": "Optional subsystem (§10). Phase 6."
+        "Hint": "Optional personal 52-card deck (§10). Characters with card abilities get a deck when an encounter starts."
       },
       "roomEntryMomentum": {
         "Name": "Room entry momentum",
@@ -404,6 +405,60 @@
       "showAdvancedBonus": {
         "Name": "Show placeholder stat bonus",
         "Hint": "Shows the v0.1 per-stat flat bonus field. The designers say it will change; do not build on it."
+      }
+    },
+    "Hand": {
+      "highCard": "High card",
+      "pair": "Pair",
+      "twoPair": "Two pair",
+      "threeOfAKind": "Three of a kind",
+      "straight": "Straight",
+      "flush": "Flush",
+      "fullHouse": "Full house",
+      "fourOfAKind": "Four of a kind",
+      "straightFlush": "Straight flush",
+      "royalFlush": "Royal flush",
+      "fiveOfAKind": "Five of a kind"
+    },
+    "Deck": {
+      "Standalone": "Standalone deck",
+      "New": "New deck",
+      "NewConfirm": "Replace this deck with a freshly built and shuffled one? The current hand is lost.",
+      "DrawPile": "Draw pile",
+      "DiscardPile": "Used cards (reshuffled when the draw pile runs dry)",
+      "Burned": "Burned (out for this encounter)",
+      "Reshuffles": "Times reshuffled",
+      "PendingLoss": "Momentum lost at the start of next round",
+      "EmptyHand": "No cards in hand.",
+      "SelectHint": "Select up to five cards to form a poker hand.",
+      "MaxSelected": "A poker hand has at most {n} cards.",
+      "Draw": "Draw",
+      "DiscardForMomentum": "Discard for momentum",
+      "Burn": "Burn",
+      "BurnConfirm": "Burn {n} card(s)? They leave the deck for the rest of the encounter.",
+      "AceValue": "Ace value",
+      "AceValueHint": "Count this ace as 1 or 11 momentum?",
+      "Abilities": "Card abilities",
+      "Requires": "Requires",
+      "Use": "Use",
+      "NoAbilities": "No owned item has a pokerHand effect.",
+      "NoDeck": "No deck yet. A deck is built when an encounter starts; the GM can also create one here.",
+      "NoBlackjackValue": "That card has no blackjack value.",
+      "Consume": {
+        "selected": "Spends the cards used",
+        "hand": "Discards the whole hand",
+        "none": "Cards are kept"
+      },
+      "Fail": {
+        "noCards": "Select cards first.",
+        "tooWeak": "This ability needs at least {min}."
+      },
+      "Chat": {
+        "Drew": "{name} drew {n} card(s); {left} left in the draw pile.",
+        "Reshuffled": "The deck ran dry and the used cards were reshuffled.",
+        "Short": "{n} card(s) could not be drawn: no cards left.",
+        "Burned": "{name} burned {cards}.",
+        "DiscardMomentum": "{name} discarded {card} for {n} momentum, lost again at the start of next round."
       }
     }
   }

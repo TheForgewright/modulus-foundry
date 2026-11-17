@@ -1,0 +1,11 @@
+<div class="modulus-hand-card">
+  <header><h3>{{ability}}</h3></header>
+  <div class="hand">
+    {{#each cards}}<span class="playing-card {{#if red}}red{{/if}} {{#if joker}}joker{{/if}}"><span class="rank">{{rank}}</span><span class="suit">{{suit}}</span></span>{{/each}}
+  </div>
+  <div class="hand-name"><strong>{{handName}}</strong> ({{hand.rank}})</div>
+  {{#if grant.length}}
+  <ul class="grant">{{#each grant}}<li>{{key}}: {{value}}</li>{{/each}}</ul>
+  {{/if}}
+  <div class="note">{{localize (concat "MODULUS.Deck.Consume." consume)}}</div>
+</div>

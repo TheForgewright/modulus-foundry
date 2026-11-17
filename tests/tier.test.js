@@ -9,7 +9,7 @@ test("secondary stat, one defeated track -> rolls as tertiary", () => {
 });
 
 test("tertiary stat, two defeated tracks -> tertiary plus 2 debuff dice", () => {
-  // Each step below tertiary is one debuff die (§3.3). Test 11 in §17.2 says 1; see OPEN_QUESTIONS #42.
+  // Each step below tertiary is one debuff die (§3.3). Confirmed by the designers (OPEN_QUESTIONS #42, resolved).
   const r = effectiveTier({ baseTier: "tertiary", defeatedTracks: 2 });
   assert.equal(r.tier, "tertiary");
   assert.equal(r.extraDebuffDice, 2);

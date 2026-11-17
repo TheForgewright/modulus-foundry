@@ -29,7 +29,7 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 23 | Respec and tier-shift rules; floating points | `respecPoints` counter, manual | `respecPoints`, sheet "Re-run allocation" |
 | 24 | Scene-track bonus size and the Action/Drama/Intrigue names | 1 buff die; names provisional |  |
 | 25 | Room-entry momentum, witness effects, nested-instance linkage | Highest relationship, capped; GM adjusts |  |
-| 26 | Deck: draw formula, draw triggers, cash-in menu, blind-mode "double", hand persistence | Deck off |  |
+| 26 | Deck: draw formula, draw triggers, cash-in menu, blind-mode "double", hand persistence | Deck off by default. Reshuffle-when-dry, per-character decks and composition effects are now decided (`docs/CARD_DECK.md`). Blind mode not built. Hand persists while its encounter exists |  |
 | 27 | Opposed/contested rolls | Not built; manual GM roll |  |
 | 28 | `draining X` | Not built |  |
 | 29 | Cascade depth cap | None, guard 25 |  |
@@ -50,7 +50,16 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 
 | # | Question | Default used meanwhile | Where in code |
 |---|---|---|---|
-| 42 | §3.3 says each step below tertiary adds one debuff die, so a tertiary stat with two defeated tracks gets 2 debuff dice. Test 11 in §17.2 expects "tertiary plus 1 debuff die". Which is right? (Possibly test 11 meant a *secondary* stat with two defeated tracks.) | §3.3: one debuff die per step below tertiary (2 in that example) | `rules/tier.js`, `tests/tier.test.js` |
 | 43 | Long rest: "restores one level's segment". With a partially-lost segment on top of a fully-lost one (e.g. 5 lost at 4 per level), does a long rest restore the partial pips, a full segment's worth, or both? | Restores `perLevel` pips from the most recent loss (5 → 1) | `rules/tracks.js` `longRest` |
 | 44 | Pip display order: pips are lost segment by segment and each segment's break point is the last pip lost in it. Is that the intended reading of "the last pip of each segment is a break point"? | Yes; sheet empties pips left to right | `rules/tracks.js`, `templates/actor/main.hbs` |
 | 45 | Does a GM "clear defeat" on an empty track persist until the next change to that track? | Yes; any later pip change re-arms it | `documents/actor.js` |
+| 46 | Do cards discarded for momentum go back into the reshuffle with cards used in hands, or are they gone like burned cards? | They join the used pile and can be reshuffled | `rules/deck.js` |
+| 47 | Jokers have no blackjack value. Can a joker be discarded for momentum, and for how much? | Not allowed | `rules/deck.js` `blackjackValue` |
+| 48 | If a player selects more than five cards, should the engine find the best five, or is five a hard limit on selection? | Hard limit of five | `rules/deck.js`, Cards tab |
+| 49 | Should hands be truly hidden from other players (needs GM-held storage), or is sheet-level hiding enough? | Sheet-level only | `docs/CARD_DECK.md` |
+
+## Resolved
+
+| # | Question | Decision |
+|---|---|---|
+| 42 | Tertiary stat with two defeated tracks: 1 or 2 debuff dice? | 2. §3.3 stands (one debuff die per step below tertiary); test 11's wording was wrong. |
