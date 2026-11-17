@@ -3,7 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   standardDeck, buildDeck, createDeckState, drawCards, discardCards, burnCards, parseCard,
-  evaluateHand, HAND_RANKS as H, compareScores, blackjackValue, useHand, checkHandRequirement
+  evaluateHand, HAND_RANKS as H, compareScores, blackjackValue, useHand, checkHandRequirement,
+  applyDeckMarks, markCards, matchesSelector, normalizeMark
 } from "../module/rules/deck.js";
 
 const hand = (...codes) => codes.map((c, i) => ({ id: `${c}-${i}`, ...parseCard(c) }));
@@ -91,7 +92,7 @@ test("jokers are wild", () => {
   assert.equal(rank("9h", "9d", "9c", "9s", "X"), H.fiveOfAKind);
   assert.equal(rank("9h", "9d", "9c", "X", "X"), H.fiveOfAKind);
   assert.equal(rank("9h", "9d", "4c", "4s", "X"), H.fullHouse);
-  assert.deepEqual(evaluateHand(hand("9h", "X")).score, [H.pair, 9]);
+  assert.deepEqual(evaluateHand(hand("9h", "X")).score, [H.pair, H.pair, 9]);
 });
 
 test("scores break ties within a category", () => {
@@ -139,4 +140,101 @@ test("requirements, scaling and consumption", () => {
   const cashout = useHand(state, pair, { minRank: H.pair, consume: "hand" });
   assert.equal(cashout.state.hand.length, 0);
   assert.equal(cashout.state.discard.length, 4);
+});
+
+/* ---------------- Marks ---------------- */
+
+const marked = (code, ...marks) => ({ id: code, ...parseCard(code), marks: marks.map(normalizeMark) });
+const stateWith = (handCards, draw = []) => ({ draw, hand: handCards, discard: [], burned: [], reshuffles: 0, markUses: {} });
+
+test("selectors and deck-build marks", () => {
+  assert.ok(matchesSelector(parseCard("3h"), { suit: "all", ranks: [2, 3] }));
+  assert.ok(!matchesSelector(parseCard("Kh"), { suit: "all", ranks: "number" }));
+  assert.ok(!matchesSelector(parseCard("X"), { suit: "all", ranks: "all" }));
+  assert.ok(matchesSelector(parseCard("X"), { cards: ["X"] }));
+  const s = createDeckState([], seeded(2), [{ target: { suit: "all", ranks: [2] }, mark: { type: "burn" } }]);
+  const markedCards = s.draw.filter((c) => c.marks.length);
+  assert.deepEqual(markedCards.map((c) => c.rank), [2, 2, 2, 2]);
+  assert.deepEqual(markedCards[0].marks, [{ type: "burn", value: 0, consumable: false }]);
+  assert.throws(() => normalizeMark({ type: "explode" }));
+});
+
+test("burn mark: every card in the played hand is burned, others in hand stay", () => {
+  const st = stateWith([marked("2h", { type: "burn" }), marked("2d"), marked("Ks")]);
+  const r = useHand(st, ["2h", "2d"], { minRank: H.pair });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.state.burned.map((c) => c.id), ["2h", "2d"]);
+  assert.equal(r.state.discard.length, 0);
+  assert.deepEqual(r.state.hand.map((c) => c.id), ["Ks"]);
+  assert.equal(r.burned.length, 2);
+});
+
+test("burned cards are not reshuffled; unburned used cards are", () => {
+  let st = stateWith([marked("2h", { type: "burn" }), marked("2d"), marked("5c"), marked("5s")]);
+  st = useHand(st, ["2h", "2d"], { minRank: H.pair }).state;
+  st = useHand(st, ["5c", "5s"], { minRank: H.pair }).state;
+  const r = drawCards(st, 4);
+  assert.deepEqual(r.drawn.map((c) => c.id).sort(), ["5c", "5s"]);
+  assert.equal(r.short, 2);
+});
+
+test("burn with consume 'hand': played cards burn, the rest of the hand goes to the used pile", () => {
+  const st = stateWith([marked("2h", { type: "burn" }), marked("2d"), marked("Ks")]);
+  const r = useHand(st, ["2h", "2d"], { consume: "hand" });
+  assert.deepEqual(r.state.burned.map((c) => c.id), ["2h", "2d"]);
+  assert.deepEqual(r.state.discard.map((c) => c.id), ["Ks"]);
+});
+
+test("draw mark: fixed value, and 0 = as many cards as were played", () => {
+  const draw = [marked("Ac"), marked("Ad"), marked("Ah"), marked("As")];
+  let r = useHand(stateWith([marked("9h", { type: "draw", value: 1 }), marked("9d")], draw), ["9h", "9d"]);
+  assert.equal(r.drawn.length, 1);
+  assert.equal(r.state.hand.length, 1);
+  r = useHand(stateWith([marked("9h", { type: "draw", value: 0 }), marked("9d"), marked("9c")], draw), ["9h", "9d", "9c"]);
+  assert.equal(r.drawn.length, 3);
+});
+
+test("draw mark can reshuffle the cards just used when the deck is empty", () => {
+  const r = useHand(stateWith([marked("9h", { type: "draw" }), marked("9d")]), ["9h", "9d"]);
+  assert.equal(r.reshuffled, 1);
+  assert.equal(r.drawn.length, 2);
+  assert.equal(r.state.discard.length, 0);
+});
+
+test("rankUp mark: the hand counts one rank higher, capped at five of a kind", () => {
+  const pair = evaluateHand([marked("9h", { type: "rankUp" }), marked("9d")]);
+  assert.equal(pair.baseRank, H.pair);
+  assert.equal(pair.rank, H.twoPair);
+  assert.equal(pair.name, "twoPair");
+  const two = evaluateHand([marked("9h", { type: "rankUp" }), marked("9d", { type: "rankUp", value: 2 })]);
+  assert.equal(two.rank, H.straight); // pair (1) + 1 + 2 = 4; marks stack
+  const cap = evaluateHand([marked("9h", { type: "rankUp", value: 5 }), marked("9d"), marked("9c"), marked("9s"), marked("X")]);
+  assert.equal(cap.rank, H.fiveOfAKind);
+  // and it unlocks abilities the cards alone could not
+  const r = useHand(stateWith([marked("9h", { type: "rankUp" }), marked("9d")]), ["9h", "9d"], { minRank: H.twoPair });
+  assert.equal(r.ok, true);
+});
+
+test("consumable marks are stripped after firing; permanent ones stay", () => {
+  const st = stateWith([marked("9h", { type: "draw", value: 1, consumable: true }, { type: "rankUp" }), marked("9d")], [marked("2c")]);
+  const r = useHand(st, ["9h", "9d"]);
+  assert.equal(r.drawn.length, 1);
+  const used = r.state.discard.find((c) => c.id === "9h");
+  assert.deepEqual(used.marks, [{ type: "rankUp", value: 1, consumable: false }]);
+  assert.equal(r.marksFired.length, 2);
+});
+
+test("consume 'none' fires no burn/draw marks and strips nothing", () => {
+  const st = stateWith([marked("9h", { type: "burn", consumable: true }), marked("9d")], [marked("2c")]);
+  const r = useHand(st, ["9h", "9d"], { consume: "none" });
+  assert.equal(r.state, st);
+  assert.equal(r.marksFired.length, 0);
+});
+
+test("markCards puts a mark on cards in any pile", () => {
+  const st = stateWith([marked("9h")], [marked("2c")]);
+  const s2 = markCards(st, ["9h", "2c"], { type: "draw", value: 2, consumable: true });
+  assert.equal(s2.hand[0].marks[0].type, "draw");
+  assert.equal(s2.draw[0].marks[0].value, 2);
+  assert.equal(st.hand[0].marks.length, 0); // immutable
 });

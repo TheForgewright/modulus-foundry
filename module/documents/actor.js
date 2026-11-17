@@ -1,7 +1,7 @@
 import {
-  createDeckState, drawCards, burnCards, discardCards, blackjackValue, useHand, evaluateHand, HAND_NAMES
+  createDeckState, drawCards, burnCards, discardCards, blackjackValue, useHand, markCards, normalizeMark, HAND_NAMES
 } from "../rules/deck.js";
-import { deckModifiers, cardAbilities } from "../deck/card-effects.js";
+import { deckModifiers, deckMarks, cardAbilities, markAbilities } from "../deck/card-effects.js";
 import { SYSTEM_ID } from "../config.js";
 import { DOMAINS, parseStatKey } from "../rules/constants.js";
 import { effectiveTier, dcForTier } from "../rules/tier.js";
@@ -113,7 +113,7 @@ Object.assign(ModulusActor.prototype, {
 
   /** Build a fresh deck from the 52 standard cards plus this actor's composition effects, shuffled once. */
   async createDeck(encounterId = STANDALONE_DECK) {
-    const state = createDeckState(deckModifiers(this), rng);
+    const state = createDeckState(deckModifiers(this), rng, deckMarks(this));
     state.pendingMomentumLoss = 0;
     state.createdAt = Date.now();
     await this.saveDeck(encounterId, state);
@@ -183,7 +183,7 @@ Object.assign(ModulusActor.prototype, {
     const deck = this.getDeck(encounterId);
     const ability = cardAbilities(this).find((a) => a.item.id === itemId && a.index === effectIndex);
     if (!deck || !ability) throw new Error("Unknown deck or ability");
-    const r = useHand(deck, selectedIds, ability.req);
+    const r = useHand(deck, selectedIds, ability.req, rng);
     if (!r.ok) {
       ui.notifications.warn(game.i18n.format(`MODULUS.Deck.Fail.${r.reason}`, { min: game.i18n.localize(`MODULUS.Hand.${HAND_NAMES[ability.req.minRank ?? 0]}`) }));
       return r;
@@ -196,14 +196,59 @@ Object.assign(ModulusActor.prototype, {
       ability: ability.label,
       hand: r.hand,
       handName: game.i18n.localize(`MODULUS.Hand.${r.hand.name}`),
+      baseName: r.hand.rankUp ? game.i18n.localize(`MODULUS.Hand.${r.hand.baseName}`) : null,
       cards: r.hand.cards.map(cardView),
+      burned: r.burned.length,
+      drawn: r.drawn.length,
+      drawShort: r.drawShort,
+      reshuffled: r.reshuffled,
+      stripped: r.marksFired.filter((m) => m.consumable).length,
       consume: ability.req.consume ?? "selected",
       grant: Object.entries(grant).map(([k, v]) => ({ key: k, value: v }))
     });
     await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this }), content });
     return { ...r, grant };
+  },
+
+  /** Use a cardMark ability on cards selected in hand. Enforces per-use card count and per-encounter uses. */
+  async useMarkAbility(itemId, effectIndex, selectedIds, encounterId = this.defaultDeckId()) {
+    const deck = this.getDeck(encounterId);
+    const ability = markAbilities(this).find((a) => a.item.id === itemId && a.index === effectIndex);
+    if (!deck || !ability) throw new Error("Unknown deck or ability");
+    const used = deck.markUses?.[ability.key] ?? 0;
+    if (ability.uses && used >= ability.uses) {
+      ui.notifications.warn("MODULUS.Deck.Mark.NoUses", { localize: true });
+      return false;
+    }
+    if (!selectedIds.length || selectedIds.length > ability.count) {
+      ui.notifications.warn(game.i18n.format("MODULUS.Deck.Mark.WrongCount", { n: ability.count }));
+      return false;
+    }
+    const state = markCards(deck, selectedIds, ability.mark);
+    state.markUses = { ...(deck.markUses ?? {}), [ability.key]: used + 1 };
+    await this.saveDeck(encounterId, state);
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: this }),
+      content: `<p>${game.i18n.format("MODULUS.Deck.Chat.Marked", { name: this.name, cards: selectedIds.join(", "), mark: markText(normalizeMark(ability.mark)) })}</p>`
+    });
+    return true;
   }
 });
+
+const MARK_ICON = { burn: "fa-fire", draw: "fa-hand", rankUp: "fa-arrow-up" };
+
+/** Human-readable description of a mark. */
+export function markText(mark) {
+  const key = mark.type === "draw" && !mark.value ? "drawPlayed" : mark.type;
+  let text = game.i18n.format(`MODULUS.Deck.Mark.Type.${key}`, { n: mark.value });
+  if (mark.consumable) text += ` (${game.i18n.localize("MODULUS.Deck.Mark.Consumable")})`;
+  if (mark.label) text = `${mark.label}: ${text}`;
+  return text;
+}
+
+function markView(mark) {
+  return { icon: MARK_ICON[mark.type], consumable: mark.consumable, text: markText(mark) };
+}
 
 const SUIT_GLYPH = { c: "♣", d: "♦", h: "♥", s: "♠", x: "★" };
 const RANK_LABEL = { 0: "JKR", 10: "10", 11: "J", 12: "Q", 13: "K", 14: "A" };
@@ -215,7 +260,9 @@ export function cardView(card) {
     rank: RANK_LABEL[card.rank] ?? String(card.rank),
     suit: SUIT_GLYPH[card.suit],
     red: card.suit === "d" || card.suit === "h",
-    joker: card.rank === 0
+    joker: card.rank === 0,
+    marks: (card.marks ?? []).map(markView),
+    markTooltip: (card.marks ?? []).map(markText).join("<br>")
   };
 }
 

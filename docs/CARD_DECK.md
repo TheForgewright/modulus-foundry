@@ -91,6 +91,52 @@ Patterns:
 - **Consumes a hand of a set quality**: `"minRank": 2, "consume": "selected", "grant": { "buff": 1 }`.
 - **Scales with quality**: `scaling` as above.
 
+## Marked cards
+
+A **mark** is a special effect on a card that fires when the card is part of a hand an ability uses. A card can carry several marks. Marked cards show a gold outline and small icons in the hand; hover for details.
+
+```json
+{ "type": "burn" }
+{ "type": "draw", "value": 2 }
+{ "type": "draw", "value": 0, "consumable": true }
+{ "type": "rankUp", "value": 1 }
+```
+
+| Type | When a hand containing the card is spent |
+|---|---|
+| `burn` | Every card in that hand is burned (gone until the encounter ends) instead of going to the used pile. Good for thinning low cards out of a deck. Other cards left in the hand are not burned, even with `"consume": "hand"`. |
+| `draw` | Draw `value` cards afterwards. `0` means draw as many as the hand contained. If the deck is dry, the used pile (including the cards just played, unless they were burned) is reshuffled first. |
+| `rankUp` | The hand counts `value` ranks higher (default 1), up to five of a kind. Several `rankUp` marks in one hand add up. The Cards tab shows the result live, e.g. "Two pair (2), Pair +1". |
+
+`"consumable": true` removes the mark from its card after it fires; the card stays a plain card for the rest of the encounter. Marks without it fire every time. Every mark returns when a new deck is built for the next encounter.
+
+Abilities with `"consume": "none"` (requirements only) spend nothing, so `burn` and `draw` marks do not fire and consumable marks are not used up. `rankUp` still counts toward whether the hand qualifies.
+
+### Marking at deck creation: `deckMark`
+
+Marks every card that matches `target` when the deck is built. `target` uses the same selectors as `deckModify` (`suit` + `ranks`, or `cards`; jokers are matched only by `"cards": ["X"]`).
+
+```json
+{ "op": "deckMark", "args": { "target": { "suit": "all", "ranks": [2, 3] }, "mark": { "type": "burn" } } }
+{ "op": "deckMark", "args": { "target": { "cards": ["Ah"] }, "mark": { "type": "draw", "value": 0, "consumable": true } } }
+```
+
+### Marking during an encounter: `cardMark`
+
+An ability that lets the player mark cards they choose from their hand. It appears under **Mark cards** on the Cards tab.
+
+```json
+{ "op": "cardMark", "args": { "label": "Shave the deuces", "mark": { "type": "burn" }, "count": 2, "uses": 1 } }
+```
+
+| Field | Meaning |
+|---|---|
+| `mark` | The mark to place. |
+| `count` | Most cards marked per use (default 1). |
+| `uses` | Uses per encounter (default 1; `0` = unlimited). |
+
+Marks placed this way last until the deck is rebuilt (the next encounter).
+
 ## Visibility
 
 Deck state is stored on the actor. Foundry sends actor data to every client, so a determined player could read another character's hand through the console. The sheet only shows it to people who can open that sheet.

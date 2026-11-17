@@ -458,7 +458,28 @@
         "Reshuffled": "The deck ran dry and the used cards were reshuffled.",
         "Short": "{n} card(s) could not be drawn: no cards left.",
         "Burned": "{name} burned {cards}.",
-        "DiscardMomentum": "{name} discarded {card} for {n} momentum, lost again at the start of next round."
+        "DiscardMomentum": "{name} discarded {card} for {n} momentum, lost again at the start of next round.",
+        "Marked": "{name} marked {cards}: {mark}.",
+        "HandBurned": "Marked card: the whole hand is burned.",
+        "MarkDrew": "Marked card: drew",
+        "MarkShort": "Could not draw (no cards left):",
+        "MarksSpent": "Single-use marks spent:"
+      },
+      "CountsAs": "{base} +{n}",
+      "Mark": {
+        "Abilities": "Mark cards",
+        "Apply": "Mark selected",
+        "UpTo": "up to",
+        "UsesLeft": "uses left",
+        "Consumable": "used up once it fires",
+        "NoUses": "No uses of that ability left this encounter.",
+        "WrongCount": "Select between 1 and {n} card(s) to mark.",
+        "Type": {
+          "burn": "Burn the whole hand when played",
+          "draw": "Draw {n} when played",
+          "drawPlayed": "Draw as many cards as were played",
+          "rankUp": "Hand counts {n} rank(s) higher"
+        }
       }
     }
   }

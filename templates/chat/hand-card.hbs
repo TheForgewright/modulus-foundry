@@ -1,9 +1,13 @@
 <div class="modulus-hand-card">
   <header><h3>{{ability}}</h3></header>
   <div class="hand">
-    {{#each cards}}<span class="playing-card {{#if red}}red{{/if}} {{#if joker}}joker{{/if}}"><span class="rank">{{rank}}</span><span class="suit">{{suit}}</span></span>{{/each}}
+    {{#each cards}}<span class="playing-card {{#if red}}red{{/if}} {{#if joker}}joker{{/if}}" {{#if markTooltip}}data-tooltip="{{markTooltip}}"{{/if}}><span class="rank">{{rank}}</span><span class="suit">{{suit}}</span>{{#if marks.length}}<span class="marks">{{#each marks}}<i class="fa-solid {{icon}}"></i>{{/each}}</span>{{/if}}</span>{{/each}}
   </div>
-  <div class="hand-name"><strong>{{handName}}</strong> ({{hand.rank}})</div>
+  <div class="hand-name"><strong>{{handName}}</strong> ({{hand.rank}}){{#if baseName}} <span class="note">{{baseName}} +{{hand.rankUp}}</span>{{/if}}</div>
+  {{#if burned}}<div class="mark-result"><i class="fa-solid fa-fire"></i> {{localize "MODULUS.Deck.Chat.HandBurned"}}</div>{{/if}}
+  {{#if drawn}}<div class="mark-result"><i class="fa-solid fa-hand"></i> {{localize "MODULUS.Deck.Chat.MarkDrew"}} {{drawn}}{{#if reshuffled}} · {{localize "MODULUS.Deck.Chat.Reshuffled"}}{{/if}}</div>{{/if}}
+  {{#if drawShort}}<div class="mark-result">{{localize "MODULUS.Deck.Chat.MarkShort"}} {{drawShort}}</div>{{/if}}
+  {{#if stripped}}<div class="mark-result note">{{localize "MODULUS.Deck.Chat.MarksSpent"}} {{stripped}}</div>{{/if}}
   {{#if grant.length}}
   <ul class="grant">{{#each grant}}<li>{{key}}: {{value}}</li>{{/each}}</ul>
   {{/if}}

@@ -801,6 +801,8 @@ Gated by world setting `enableDeck` (default off). A GM can simply disable it. F
 - Abilities can add cards to or strip cards from the deck. Composition effects are collected before the deck is built.
 - When the draw pile runs dry mid-draw, cards already used in hands are reshuffled into a new deck. This replaces "no mid-encounter reshuffle".
 - Players pick cards out of their hand to form a poker hand (at most five). Hand quality is an integer from 0 (high card) to 10 (five of a kind). Abilities can require a minimum quality, consume a hand of a set quality, or grant more (for example extra dice) for better hands.
+- Cards discarded for momentum go to the used pile and can be reshuffled.
+- **Marked cards**: a mark is a special effect on a card that fires when the card is used in a hand. Marks: burn the whole hand instead of returning it to the used pile (deck thinning); draw N cards (0 = as many as the hand contained); the hand counts one rank higher. A mark can be consumable (used up for the encounter once it fires).
 - Implementation details and the effect format: `docs/CARD_DECK.md`.
 
 Intended economy: low starting momentum and high momentum gain per round. Pre-cash-out actions cost more momentum than vanilla equivalents. This is a "finisher" archetype that needs a long fight and cover in the early rounds.

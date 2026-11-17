@@ -6,9 +6,9 @@ import { SYSTEM_ID } from "../config.js";
 import { DOMAINS, EXPRESSIONS, statKey } from "../rules/constants.js";
 import { getSetting } from "../settings.js";
 import { openRollDialog } from "./roll-dialog.js";
-import { hasCardAbilities, cardAbilities } from "../deck/card-effects.js";
-import { cardView, STANDALONE_DECK } from "../documents/actor.js";
-import { evaluateHand, checkHandRequirement, HAND_NAMES, MAX_HAND_SIZE } from "../rules/deck.js";
+import { hasCardAbilities, cardAbilities, markAbilities } from "../deck/card-effects.js";
+import { cardView, markText, STANDALONE_DECK } from "../documents/actor.js";
+import { evaluateHand, checkHandRequirement, normalizeMark, HAND_NAMES, MAX_HAND_SIZE } from "../rules/deck.js";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -41,6 +41,7 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       burnSelected: ModulusActorSheet.#onBurnSelected,
       discardMomentum: ModulusActorSheet.#onDiscardMomentum,
       useAbility: ModulusActorSheet.#onUseAbility,
+      useMark: ModulusActorSheet.#onUseMark,
       newDeck: ModulusActorSheet.#onNewDeck
     }
   };
@@ -223,6 +224,20 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       selectedCount: selected.length,
       maxHand: MAX_HAND_SIZE,
       handLabel: hand ? `${t(`MODULUS.Hand.${hand.name}`)} (${hand.rank})` : null,
+      handBaseLabel: hand?.rankUp ? game.i18n.format("MODULUS.Deck.CountsAs", { base: t(`MODULUS.Hand.${hand.baseName}`), n: hand.rankUp }) : null,
+      markAbilities: markAbilities(actor).map((a) => {
+        const used = deck?.markUses?.[a.key] ?? 0;
+        const left = a.uses ? a.uses - used : null;
+        return {
+          itemId: a.item.id,
+          index: a.index,
+          label: a.label,
+          text: markText(normalizeMark(a.mark)),
+          count: a.count,
+          left,
+          eligible: (left == null || left > 0) && selected.length >= 1 && selected.length <= a.count
+        };
+      }),
       oneSelected: selected.length === 1,
       abilities: cardAbilities(actor).map((a) => {
         const check = checkHandRequirement(hand, a.req);
@@ -316,6 +331,13 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
     if (r.grant?.buff || r.grant?.debuff) {
       openRollDialog(this.document, { buff: r.grant.buff ?? 0, debuff: r.grant.debuff ?? 0 });
     }
+  }
+
+  static async #onUseMark(event, target) {
+    if (!this.isEditable) return;
+    const ids = [...this._selectedCards];
+    const ok = await this.document.useMarkAbility(target.dataset.itemId, Number(target.dataset.index), ids, this.deckId);
+    if (ok) this._selectedCards.clear();
   }
 
   static async #onNewDeck() {

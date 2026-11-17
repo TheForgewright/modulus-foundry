@@ -1,10 +1,11 @@
 /**
  * Personal card deck (§10). Pure JS, no Foundry imports.
  *
- * Cards are plain objects { id, rank, suit }:
+ * Cards are plain objects { id, rank, suit, marks }:
  *   rank 2..14 (11 J, 12 Q, 13 K, 14 A), suit "c" | "d" | "h" | "s"
  *   jokers: rank 0, suit "x"
  * Ids are "<rank><suit>" ("Ah", "Tc", "X") with a "#n" suffix for duplicates.
+ * `marks` are special effects that fire when the card is used in a hand (see MARK_TYPES).
  *
  * Deck state (one per character per encounter):
  *   { draw: Card[], hand: Card[], discard: Card[], burned: Card[], reshuffles: number }
@@ -63,11 +64,11 @@ export function parseCard(code) {
 /** Assign unique ids, suffixing duplicates. */
 function withIds(cards) {
   const seen = new Map();
-  return cards.map(({ rank, suit }) => {
+  return cards.map(({ rank, suit, marks }) => {
     const base = cardCode(rank, suit);
     const n = (seen.get(base) ?? 0) + 1;
     seen.set(base, n);
-    return { id: n === 1 ? base : `${base}#${n}`, rank, suit };
+    return { id: n === 1 ? base : `${base}#${n}`, rank, suit, marks: marks ?? [] };
   });
 }
 
@@ -139,10 +140,72 @@ export function shuffle(cards, rng = Math.random) {
   return a;
 }
 
+/* -------------------------------------------- */
+/*  Marks                                        */
+/* -------------------------------------------- */
+
+/**
+ * Mark types. A mark is { type, value, consumable, label? } on a card. Marks fire when
+ * the card is part of a hand that an ability uses:
+ *   burn    every card in that hand is burned (gone for the encounter) instead of going to the used pile
+ *   draw    draw `value` cards afterwards; value 0 = as many cards as the hand contained
+ *   rankUp  the hand counts `value` ranks higher (default 1), capped at five of a kind
+ * A consumable mark is removed from its card after it fires, for the rest of the encounter.
+ */
+export const MARK_TYPES = Object.freeze(["burn", "draw", "rankUp"]);
+
+export function normalizeMark(mark = {}) {
+  if (!MARK_TYPES.includes(mark.type)) throw new Error(`Unknown mark type: ${mark.type}`);
+  const value = Math.max(0, Math.floor(Number(mark.value ?? (mark.type === "rankUp" ? 1 : 0)) || 0));
+  const out = { type: mark.type, value, consumable: Boolean(mark.consumable) };
+  if (mark.label) out.label = String(mark.label);
+  return out;
+}
+
+/**
+ * Does a card match a selector? Selectors:
+ *   { cards: ["2h", "X"] }                       specific cards (every copy)
+ *   { suit: "h" | ["h","d"] | "all", ranks: "number" | "face" | "all" | [2, "K"] }
+ */
+export function matchesSelector(card, sel = {}) {
+  if (sel.cards) {
+    return sel.cards.some((code) => {
+      const { rank, suit } = parseCard(code);
+      return card.rank === rank && card.suit === suit;
+    });
+  }
+  if (isJoker(card)) return false; // jokers are only matched by code
+  return expandSuits(sel.suit).includes(card.suit) && expandRanks(sel.ranks).includes(card.rank);
+}
+
+function withMark(card, mark) {
+  return { ...card, marks: [...(card.marks ?? []), normalizeMark(mark)] };
+}
+
+/**
+ * Apply deck-build marks: [{ target: selector, mark: {...} }]. Marks every matching card.
+ */
+export function applyDeckMarks(cards, markDefs = []) {
+  return cards.map((card) => {
+    let c = card;
+    for (const def of markDefs) if (def?.mark && matchesSelector(card, def.target)) c = withMark(c, def.mark);
+    return c;
+  });
+}
+
+/** Put a mark on specific cards wherever they are (hand, draw pile or used pile). */
+export function markCards(state, ids, mark) {
+  const s = clone(state);
+  const set = new Set(ids);
+  for (const pile of ["hand", "draw", "discard"]) s[pile] = s[pile].map((c) => (set.has(c.id) ? withMark(c, mark) : c));
+  return s;
+}
+
 /** New deck state, shuffled once (§10). */
-export function createDeckState(modifiers = [], rng = Math.random) {
+export function createDeckState(modifiers = [], rng = Math.random, markDefs = []) {
   const { cards } = buildDeck(modifiers);
-  return { draw: shuffle(cards, rng), hand: [], discard: [], burned: [], reshuffles: 0, size: cards.length };
+  const marked = applyDeckMarks(cards, markDefs);
+  return { draw: shuffle(marked, rng), hand: [], discard: [], burned: [], reshuffles: 0, size: cards.length, markUses: {} };
 }
 
 function clone(state) {
@@ -267,9 +330,12 @@ const ALL_FACES = SUITS.flatMap((suit) => RANKS.map((rank) => ({ rank, suit })))
 /**
  * Evaluate the best poker hand from up to 5 selected cards. Jokers are wild:
  * each joker becomes whichever card gives the best result (duplicates allowed,
- * so five of a kind is possible). Aces are high or low.
- * @returns {{rank: number, name: string, score: number[], cards: Card[], size: number}|null}
- *   `rank` is the HAND_RANKS integer. null for an empty selection.
+ * so five of a kind is possible). Aces are high or low. `rankUp` marks on the
+ * cards raise the result, capped at five of a kind.
+ * @returns {{rank, name, baseRank, baseName, rankUp, score, cards, size}|null}
+ *   `rank` is the HAND_RANKS integer the hand counts as; `baseRank` is what the cards
+ *   actually make. `score` is the tie-break array with the counted rank first.
+ *   null for an empty selection.
  */
 export function evaluateHand(cards) {
   if (!cards?.length) return null;
@@ -286,7 +352,19 @@ export function evaluateHand(cards) {
     for (const f of ALL_FACES) search([...chosen, f], left - 1);
   };
   search([], jokers);
-  return { rank: best[0], name: HAND_NAMES[best[0]], score: best, cards: [...cards], size: cards.length };
+  const rankUp = cards.reduce((n, c) => n + (c.marks ?? []).filter((m) => m.type === "rankUp").reduce((a, m) => a + (m.value ?? 1), 0), 0);
+  const baseRank = best[0];
+  const rank = Math.min(HAND_RANKS.fiveOfAKind, baseRank + rankUp);
+  return {
+    rank,
+    name: HAND_NAMES[rank],
+    baseRank,
+    baseName: HAND_NAMES[baseRank],
+    rankUp: rank - baseRank,
+    score: [rank, ...best],
+    cards: [...cards],
+    size: cards.length
+  };
 }
 
 /* -------------------------------------------- */
@@ -315,19 +393,54 @@ export function checkHandRequirement(hand, req = {}) {
 }
 
 /**
- * Spend a hand for an ability. Evaluates the selected cards, checks the requirement,
- * and moves cards to the discard pile per `consume`.
- * @returns {{ok, reason, hand, grant, state}}  state is unchanged when !ok or consume = "none".
+ * Spend a hand for an ability. Evaluates the selected cards (rankUp marks included),
+ * checks the requirement, moves cards per `consume`, then fires the played cards' marks:
+ *   burn  -> the played cards are burned instead of going to the used pile
+ *   draw  -> draw afterwards (value 0 = as many as were played); may reshuffle the used pile
+ * Consumable marks that fired are stripped from their cards.
+ * With consume "none" nothing is spent, so burn and draw marks do not fire and nothing is
+ * stripped; rankUp still counts toward the hand.
+ * @returns {{ok, reason, hand, grant, state, burned: Card[], drawn: Card[], drawShort: number,
+ *            reshuffled: number, marksFired: object[]}}
  */
-export function useHand(state, selectedIds, req = {}) {
+export function useHand(state, selectedIds, req = {}, rng = Math.random) {
   const selected = selectedIds.map((id) => state.hand.find((c) => c.id === id));
   if (selected.some((c) => !c)) throw new Error("Card not in hand");
   const hand = selected.length ? evaluateHand(selected) : null;
   const check = checkHandRequirement(hand, req);
-  if (!check.ok) return { ...check, hand, state };
+  const empty = { burned: [], drawn: [], drawShort: 0, reshuffled: 0, marksFired: [] };
+  if (!check.ok) return { ...check, hand, state, ...empty };
   const consume = req.consume ?? "selected";
-  let next = state;
-  if (consume === "selected") next = discardCards(state, selectedIds);
-  else if (consume === "hand") next = discardCards(state, state.hand.map((c) => c.id));
-  return { ...check, hand, state: next };
+  if (consume === "none") return { ...check, hand, state, ...empty };
+
+  // Which marks fire, and strip the consumable ones from the played cards.
+  const marksFired = [];
+  const played = selected.map((card) => {
+    for (const m of card.marks ?? []) marksFired.push({ cardId: card.id, ...m });
+    const kept = (card.marks ?? []).filter((m) => !m.consumable);
+    return kept.length === (card.marks ?? []).length ? card : { ...card, marks: kept };
+  });
+  const burn = marksFired.some((m) => m.type === "burn");
+
+  let s = clone(state);
+  const playedIds = new Set(selectedIds);
+  const others = consume === "hand" ? s.hand.filter((c) => !playedIds.has(c.id)) : [];
+  s.hand = consume === "hand" ? [] : s.hand.filter((c) => !playedIds.has(c.id));
+  s.discard.push(...others);
+  if (burn) s.burned.push(...played);
+  else s.discard.push(...played);
+
+  let drawCount = 0;
+  for (const m of marksFired) if (m.type === "draw") drawCount += m.value > 0 ? m.value : selected.length;
+  let drawn = [];
+  let drawShort = 0;
+  let reshuffled = 0;
+  if (drawCount) {
+    const r = drawCards(s, drawCount, rng);
+    s = r.state;
+    drawn = r.drawn;
+    drawShort = r.short;
+    reshuffled = r.reshuffled;
+  }
+  return { ...check, hand, state: s, burned: burn ? played : [], drawn, drawShort, reshuffled, marksFired };
 }
