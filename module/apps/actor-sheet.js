@@ -188,7 +188,9 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
   _selectedHandCards() {
     const deck = this.deck;
     if (!deck) return [];
-    const inHand = deck.hand.filter((c) => this._selectedCards.has(c.id));
+    // Keep the order the player picked cards in: it decides which mark is exhausted.
+    const byId = new Map(deck.hand.map((c) => [c.id, c]));
+    const inHand = [...this._selectedCards].map((id) => byId.get(id)).filter(Boolean);
     this._selectedCards = new Set(inHand.map((c) => c.id));
     return inHand;
   }

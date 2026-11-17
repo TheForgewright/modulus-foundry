@@ -151,6 +151,8 @@ export function shuffle(cards, rng = Math.random) {
  *   draw    draw `value` cards afterwards; value 0 = as many cards as the hand contained
  *   rankUp  the hand counts `value` ranks higher (default 1), capped at five of a kind
  * A consumable mark is removed from its card after it fires, for the rest of the encounter.
+ *
+ * Each mark type applies at most once per hand (see resolveMarks).
  */
 export const MARK_TYPES = Object.freeze(["burn", "draw", "rankUp"]);
 
@@ -176,6 +178,31 @@ export function matchesSelector(card, sel = {}) {
   }
   if (isJoker(card)) return false; // jokers are only matched by code
   return expandSuits(sel.suit).includes(card.suit) && expandRanks(sel.ranks).includes(card.rank);
+}
+
+/**
+ * Decide which marks fire for a hand. Each mark type applies once per hand, however
+ * many cards carry it. Among the copies of a type, in the order the player picked
+ * the cards (then the order marks were added to a card):
+ *   - if any copy is permanent, the first permanent copy applies and nothing is exhausted;
+ *   - otherwise the first copy applies and only that one is exhausted.
+ * @param {Card[]} cards  in selection order
+ * @returns {Array<{type, value, consumable, cardId, markIndex, exhaust}>} one entry per type present
+ */
+export function resolveMarks(cards) {
+  const byType = new Map();
+  cards.forEach((card) => (card.marks ?? []).forEach((m, markIndex) => {
+    if (!byType.has(m.type)) byType.set(m.type, []);
+    byType.get(m.type).push({ ...m, cardId: card.id, markIndex });
+  }));
+  const out = [];
+  for (const type of MARK_TYPES) {
+    const copies = byType.get(type);
+    if (!copies) continue;
+    const permanent = copies.find((m) => !m.consumable);
+    out.push(permanent ? { ...permanent, exhaust: false } : { ...copies[0], exhaust: true });
+  }
+  return out;
 }
 
 function withMark(card, mark) {
@@ -331,7 +358,7 @@ const ALL_FACES = SUITS.flatMap((suit) => RANKS.map((rank) => ({ rank, suit })))
  * Evaluate the best poker hand from up to 5 selected cards. Jokers are wild:
  * each joker becomes whichever card gives the best result (duplicates allowed,
  * so five of a kind is possible). Aces are high or low. `rankUp` marks on the
- * cards raise the result, capped at five of a kind.
+ * cards raise the result once per hand (resolveMarks), capped at five of a kind.
  * @returns {{rank, name, baseRank, baseName, rankUp, score, cards, size}|null}
  *   `rank` is the HAND_RANKS integer the hand counts as; `baseRank` is what the cards
  *   actually make. `score` is the tie-break array with the counted rank first.
@@ -352,7 +379,8 @@ export function evaluateHand(cards) {
     for (const f of ALL_FACES) search([...chosen, f], left - 1);
   };
   search([], jokers);
-  const rankUp = cards.reduce((n, c) => n + (c.marks ?? []).filter((m) => m.type === "rankUp").reduce((a, m) => a + (m.value ?? 1), 0), 0);
+  const rankUpMark = resolveMarks(cards).find((m) => m.type === "rankUp");
+  const rankUp = rankUpMark ? rankUpMark.value ?? 1 : 0;
   const baseRank = best[0];
   const rank = Math.min(HAND_RANKS.fiveOfAKind, baseRank + rankUp);
   return {
@@ -397,7 +425,7 @@ export function checkHandRequirement(hand, req = {}) {
  * checks the requirement, moves cards per `consume`, then fires the played cards' marks:
  *   burn  -> the played cards are burned instead of going to the used pile
  *   draw  -> draw afterwards (value 0 = as many as were played); may reshuffle the used pile
- * Consumable marks that fired are stripped from their cards.
+ * Each mark type fires once per hand; at most one consumable copy is exhausted (resolveMarks).
  * With consume "none" nothing is spent, so burn and draw marks do not fire and nothing is
  * stripped; rankUp still counts toward the hand.
  * @returns {{ok, reason, hand, grant, state, burned: Card[], drawn: Card[], drawShort: number,
@@ -413,12 +441,11 @@ export function useHand(state, selectedIds, req = {}, rng = Math.random) {
   const consume = req.consume ?? "selected";
   if (consume === "none") return { ...check, hand, state, ...empty };
 
-  // Which marks fire, and strip the consumable ones from the played cards.
-  const marksFired = [];
+  // Which marks fire (once per type), and strip the single exhausted copy of each.
+  const marksFired = resolveMarks(selected);
   const played = selected.map((card) => {
-    for (const m of card.marks ?? []) marksFired.push({ cardId: card.id, ...m });
-    const kept = (card.marks ?? []).filter((m) => !m.consumable);
-    return kept.length === (card.marks ?? []).length ? card : { ...card, marks: kept };
+    const drop = new Set(marksFired.filter((m) => m.exhaust && m.cardId === card.id).map((m) => m.markIndex));
+    return drop.size ? { ...card, marks: card.marks.filter((_, i) => !drop.has(i)) } : card;
   });
   const burn = marksFired.some((m) => m.type === "burn");
 
@@ -431,7 +458,7 @@ export function useHand(state, selectedIds, req = {}, rng = Math.random) {
   else s.discard.push(...played);
 
   let drawCount = 0;
-  for (const m of marksFired) if (m.type === "draw") drawCount += m.value > 0 ? m.value : selected.length;
+  for (const m of marksFired) if (m.type === "draw") drawCount = m.value > 0 ? m.value : selected.length;
   let drawn = [];
   let drawShort = 0;
   let reshuffled = 0;

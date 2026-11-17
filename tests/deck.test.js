@@ -206,8 +206,8 @@ test("rankUp mark: the hand counts one rank higher, capped at five of a kind", (
   assert.equal(pair.baseRank, H.pair);
   assert.equal(pair.rank, H.twoPair);
   assert.equal(pair.name, "twoPair");
-  const two = evaluateHand([marked("9h", { type: "rankUp" }), marked("9d", { type: "rankUp", value: 2 })]);
-  assert.equal(two.rank, H.straight); // pair (1) + 1 + 2 = 4; marks stack
+  const two = evaluateHand([marked("9h", { type: "rankUp" }), marked("9d", { type: "rankUp" })]);
+  assert.equal(two.rank, H.twoPair); // once per hand: two rankUp marks still count +1
   const cap = evaluateHand([marked("9h", { type: "rankUp", value: 5 }), marked("9d"), marked("9c"), marked("9s"), marked("X")]);
   assert.equal(cap.rank, H.fiveOfAKind);
   // and it unlocks abilities the cards alone could not
@@ -222,6 +222,48 @@ test("consumable marks are stripped after firing; permanent ones stay", () => {
   const used = r.state.discard.find((c) => c.id === "9h");
   assert.deepEqual(used.marks, [{ type: "rankUp", value: 1, consumable: false }]);
   assert.equal(r.marksFired.length, 2);
+});
+
+test("each mark type applies once per hand", () => {
+  const draw = [marked("2c"), marked("3c"), marked("4c"), marked("5c")];
+  const st = stateWith([marked("9h", { type: "draw", value: 1 }), marked("9d", { type: "draw", value: 1 })], draw);
+  const r = useHand(st, ["9h", "9d"]);
+  assert.equal(r.drawn.length, 1);
+  assert.equal(r.marksFired.length, 1);
+});
+
+test("all copies consumable: only the first-picked one is exhausted", () => {
+  const st = stateWith([
+    marked("9h", { type: "draw", value: 1, consumable: true }),
+    marked("9d", { type: "draw", value: 1, consumable: true })
+  ], [marked("2c"), marked("3c")]);
+  // the player picked 9d first
+  const r = useHand(st, ["9d", "9h"]);
+  assert.equal(r.drawn.length, 1);
+  const pile = Object.fromEntries(r.state.discard.map((c) => [c.id, c.marks.length]));
+  assert.deepEqual(pile, { "9d": 0, "9h": 1 });
+});
+
+test("any permanent copy: it applies and nothing is exhausted", () => {
+  const st = stateWith([
+    marked("9h", { type: "draw", value: 1, consumable: true }),
+    marked("9d", { type: "draw", value: 2 })
+  ], [marked("2c"), marked("3c"), marked("4c")]);
+  const r = useHand(st, ["9h", "9d"]);
+  assert.equal(r.drawn.length, 2); // the permanent mark's value
+  assert.equal(r.marksFired[0].exhaust, false);
+  assert.ok(r.state.discard.every((c) => c.marks.length === 1));
+});
+
+test("rankUp follows the same rule", () => {
+  const st = stateWith([
+    marked("9h", { type: "rankUp", consumable: true }),
+    marked("9d", { type: "rankUp", consumable: true })
+  ]);
+  const r = useHand(st, ["9h", "9d"], { minRank: H.twoPair });
+  assert.equal(r.ok, true);
+  assert.equal(r.hand.rank, H.twoPair);
+  assert.deepEqual(r.state.discard.map((c) => c.marks.length), [0, 1]);
 });
 
 test("consume 'none' fires no burn/draw marks and strips nothing", () => {

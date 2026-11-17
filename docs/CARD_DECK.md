@@ -106,9 +106,16 @@ A **mark** is a special effect on a card that fires when the card is part of a h
 |---|---|
 | `burn` | Every card in that hand is burned (gone until the encounter ends) instead of going to the used pile. Good for thinning low cards out of a deck. Other cards left in the hand are not burned, even with `"consume": "hand"`. |
 | `draw` | Draw `value` cards afterwards. `0` means draw as many as the hand contained. If the deck is dry, the used pile (including the cards just played, unless they were burned) is reshuffled first. |
-| `rankUp` | The hand counts `value` ranks higher (default 1), up to five of a kind. Several `rankUp` marks in one hand add up. The Cards tab shows the result live, e.g. "Two pair (2), Pair +1". |
+| `rankUp` | The hand counts `value` ranks higher (default 1), up to five of a kind. The Cards tab shows the result live, e.g. "Two pair (2), Pair +1". |
 
 `"consumable": true` removes the mark from its card after it fires; the card stays a plain card for the rest of the encounter. Marks without it fire every time. Every mark returns when a new deck is built for the next encounter.
+
+**Once per hand.** Each mark type applies at most once per hand, however many played cards carry it. When several cards carry the same type:
+
+- If any copy is permanent, it applies (the first one picked, if several) and no copy is used up.
+- If every copy is consumable, the copy on the card the player picked first applies, and only that one is used up. The others stay on their cards.
+
+Different types in the same hand each apply once, so a hand with a `burn` card and a `draw` card both burns and draws.
 
 Abilities with `"consume": "none"` (requirements only) spend nothing, so `burn` and `draw` marks do not fire and consumable marks are not used up. `rankUp` still counts toward whether the hand qualifies.
 

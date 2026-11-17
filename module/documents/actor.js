@@ -202,7 +202,7 @@ Object.assign(ModulusActor.prototype, {
       drawn: r.drawn.length,
       drawShort: r.drawShort,
       reshuffled: r.reshuffled,
-      stripped: r.marksFired.filter((m) => m.consumable).length,
+      stripped: r.marksFired.filter((m) => m.exhaust).length,
       consume: ability.req.consume ?? "selected",
       grant: Object.entries(grant).map(([k, v]) => ({ key: k, value: v }))
     });
