@@ -227,7 +227,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     this.combat = combat;
     this.combatant = combatant;
     this.note = note;
-    this.state = {
+    this.choice = {
       action: prefill?.actionUuid ?? "",
       words: [...(prefill?.wordUuids ?? [])],
       target: prefill?.target ? ActionBuilder.targetKey(prefill.target) : (mode === "standalone" ? "token" : "none"),
@@ -288,7 +288,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** Resolve the target select into what the rules need. */
   _target() {
-    const key = this.state.target;
+    const key = this.choice.target;
     if (key === "self") return { mode: "self", actor: null, stack: { kind: "self" } };
     if (key === "token") {
       const actor = game.user.targets.first()?.actor ?? null;
@@ -304,9 +304,9 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
 
   _current() {
     const { actions, words } = availableVocabulary(this.actor);
-    const action = actions.find((i) => i.uuid === this.state.action) ?? actions[0] ?? null;
-    if (action) this.state.action = action.uuid;
-    const chosen = this.state.words.map((u) => words.find((w) => w.uuid === u)).filter(Boolean);
+    const action = actions.find((i) => i.uuid === this.choice.action) ?? actions[0] ?? null;
+    if (action) this.choice.action = action.uuid;
+    const chosen = this.choice.words.map((u) => words.find((w) => w.uuid === u)).filter(Boolean);
     return { actions, words, action, chosen, target: this._target() };
   }
 
@@ -315,7 +315,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!action) return null;
     return buildDeclaration(this.actor, {
       action, words: chosen, target: target.actor, targetMode: target.mode,
-      sceneTrack: this.state.sceneTrack || undefined, momentum: this.momentum
+      sceneTrack: this.choice.sceneTrack || undefined, momentum: this.momentum
     });
   }
 
@@ -324,7 +324,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     const { actions, words, action, chosen, target } = this._current();
     const maxWords = this.actor.system.maxWords;
     const slots = Array.from({ length: Math.max(maxWords, chosen.length) + 1 }, (_, i) => ({
-      index: i, value: this.state.words[i] ?? "", over: i >= maxWords
+      index: i, value: this.choice.words[i] ?? "", over: i >= maxWords
     }));
     const ctx = {
       actor: this.actor,
@@ -336,9 +336,9 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       actionOptions: Object.fromEntries(actions.map((i) => [i.uuid, i.name])),
       wordOptions: Object.fromEntries(words.map((i) => [i.uuid, `${i.name} (${i.system.momentumModifier >= 0 ? "+" : ""}${i.system.momentumModifier})`])),
       slots,
-      state: this.state,
+      state: this.choice,
       targetOptions: this._targetOptions(),
-      targetHint: this.state.target === "token" ? (target.actor?.name ?? t("MODULUS.Builder.NoTarget")) : "",
+      targetHint: this.choice.target === "token" ? (target.actor?.name ?? t("MODULUS.Builder.NoTarget")) : "",
       sceneTracks: { "": "—", physical: t("MODULUS.Domain.physical"), mental: t("MODULUS.Domain.mental"), social: t("MODULUS.Domain.social") },
       isGM: game.user.isGM,
       momentum: this.momentum,
@@ -381,7 +381,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       warnings: a.warnings.map((w) => game.i18n.format(`MODULUS.Builder.Warning.${w.code}`, w)),
       valid: a.valid
     };
-    ctx.canResolve = a.valid || (game.user.isGM && this.state.override);
+    ctx.canResolve = a.valid || (game.user.isGM && this.choice.override);
     return ctx;
   }
 
@@ -392,10 +392,10 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
         const key = ev.target.dataset.state;
         const value = ev.target.type === "checkbox" ? ev.target.checked : ev.target.value;
         if (key === "word") {
-          const words = [...this.state.words];
+          const words = [...this.choice.words];
           words[Number(ev.target.dataset.index)] = value;
-          this.state.words = words.filter(Boolean); // a blank slot removes the word
-        } else this.state[key] = value;
+          this.choice.words = words.filter(Boolean); // a blank slot removes the word
+        } else this.choice[key] = value;
         this.render();
       });
     }
@@ -428,7 +428,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       actionUuid: action.uuid,
       wordUuids: chosen.map((w) => w.uuid),
       target: target.stack,
-      sceneTrack: this.state.sceneTrack || ""
+      sceneTrack: this.choice.sceneTrack || ""
     };
   }
 
@@ -443,15 +443,15 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     const { action, chosen, target } = this._current();
     if (!action) return;
     const plan = buildDeclaration(this.actor, {
-      action, words: chosen, target: target.actor, targetMode: target.mode, sceneTrack: this.state.sceneTrack || undefined
+      action, words: chosen, target: target.actor, targetMode: target.mode, sceneTrack: this.choice.sceneTrack || undefined
     });
-    if (!plan.assembled.valid && !(game.user.isGM && this.state.override)) return;
-    await resolveDeclaration(this.actor, plan, { spend: this.state.spend });
+    if (!plan.assembled.valid && !(game.user.isGM && this.choice.override)) return;
+    await resolveDeclaration(this.actor, plan, { spend: this.choice.spend });
   }
 
   static #onSubmit() {
     const plan = this._plan();
-    if (!plan || (!plan.assembled.valid && !(game.user.isGM && this.state.override))) return;
+    if (!plan || (!plan.assembled.valid && !(game.user.isGM && this.choice.override))) return;
     this._finish({ type: "declare", payload: this._payload() });
   }
 

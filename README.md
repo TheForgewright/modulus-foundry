@@ -63,6 +63,20 @@ npm run build:packs
 
 To try it in Foundry, symlink or copy this folder into your Foundry data directory as `Data/systems/modulus`, then create a world using the Modulus system.
 
+## Build and deploy
+
+```bash
+./build.sh 0.1.1
+```
+
+Runs every check, zips the system to `dist/modulus-v0.1.1.zip` and deploys it to the Foundry server over SSH, keeping the replaced version as a backup and restarting Foundry. It needs a `docs/patch-notes.md` section for the version and a `deploy.local.conf` (copy `deploy.local.conf.example`). Add `--no-deploy` to only build.
+
+```bash
+./deploy.sh --rollback
+```
+
+Puts the previous version back.
+
 ## Macro API
 
 `game.modulus` exposes `rules` (the pure engine), `openRollDialog(actor, defaults)`, `buildRollPlan`, `rollFromPlan` and `ModulusRoll`.

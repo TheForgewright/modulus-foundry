@@ -6,3 +6,8 @@ packs/**/LOCK
 packs/**/LOG
 packs/**/LOG.old
 !packs/**/*.log
+
+# Build output and local deploy settings
+dist/
+*.zip
+deploy.local.conf

@@ -5,10 +5,14 @@
   "description": "Modulus game system for Foundry VTT",
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
-    "build:packs": "node scripts/build-packs.mjs"
+    "build:packs": "node scripts/build-packs.mjs",
+    "load": "node harness/load-check.mjs",
+    "actions": "node harness/actions-check.mjs",
+    "check": "node harness/load-check.mjs && node harness/actions-check.mjs && node --test \"tests/**/*.test.js\""
   },
   "devDependencies": {
-    "@foundryvtt/foundryvtt-cli": "3.0.5"
+    "@foundryvtt/foundryvtt-cli": "3.0.5",
+    "yazl": "^3.3.1"
   },
   "engines": {
     "node": ">=20"

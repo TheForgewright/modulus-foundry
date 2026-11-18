@@ -1,0 +1,6 @@
+# Copy to deploy.local.conf (not committed) and fill in. If Modulus goes on the same server as your
+# other system, the first three values are the same as that project's deploy.local.conf.
+DEPLOY_HOST=bellows
+DEPLOY_DATA=/home/forge/foundrydata
+DEPLOY_SERVICE=foundry
+DEPLOY_BACKUPS=/home/forge/modulus-backups
