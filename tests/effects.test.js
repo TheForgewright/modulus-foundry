@@ -35,3 +35,15 @@ test("descriptions read as plain language", () => {
   assert.equal(describeEffect({ trigger: "declare", op: "dice", args: { buff: 2, debuff: 1 }, to: "self" }), "When declared: 2 buff dice and 1 debuff die on your roll.");
   assert.equal(describeEffect({ trigger: "onHit", op: "momentum", args: { set: 3 }, to: "self" }), "On hit: set your momentum to 3.");
 });
+
+test("change team effect: modes, validation and description", () => {
+  const e = (mode, to = "target", name) => ({ trigger: "onHit", op: "team", args: { mode, ...(name ? { name } : {}) }, to });
+  assert.deepEqual(validateEffect(e("set"), { isStatKey }), ["teamNeedsName"]);
+  assert.deepEqual(validateEffect(e("set", "target", "Crown"), { isStatKey }), []);
+  assert.deepEqual(validateEffect(e("clear"), { isStatKey }), []);
+  assert.equal(describeEffect(e("joinActor")), "On hit: the target joins your team.");
+  assert.equal(describeEffect(e("joinTarget", "self")), "On hit: you join the target's team.");
+  assert.equal(describeEffect(e("clear", "self")), "On hit: you drop into free for all.");
+  assert.equal(describeEffect(e("set", "target", "Crown")), "On hit: the target joins team Crown.");
+  assert.deepEqual(coerceEffect({ trigger: "onHit", op: "team", args: { mode: "bogus", name: "" } }).args, { mode: "clear" });
+});

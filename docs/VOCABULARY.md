@@ -32,6 +32,7 @@ Every action, word, status and talent has an Effects list. Each row is *when* (t
 | Apply / remove status | mode, name, value | |
 | Pips | amount, track | Positive is damage, negative heals. |
 | Restrict tag | tag, until, break roll / break vs | e.g. a joint lock forbids `two-handed` until a Power-vs-Power break. |
+| Change team | mode, name | The participant's apparent team in this encounter: set to a named team, drop into free for all, join the acting character's team (recruit, convert), or join the target's team (defect, infiltrate). The change is the *Team changed* talent trigger. |
 | Note for the GM | text | Anything the engine cannot adjudicate. |
 | Card ops | JSON | See `CARD_DECK.md`. |
 

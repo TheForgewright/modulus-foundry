@@ -50,6 +50,11 @@ export const EFFECT_OPS = Object.freeze({
     layer: "restrictions",
     args: [{ key: "tag", type: "tag" }, { key: "until", type: "text" }, { key: "breakRoll", type: "stat", optional: true }, { key: "breakTarget", type: "stat", optional: true }]
   },
+  // Changes a participant's apparent team in the encounter (reveal, betrayal, recruitment, stealth).
+  team: {
+    layer: "outcomes",
+    args: [{ key: "mode", type: "select", options: ["clear", "set", "joinActor", "joinTarget"] }, { key: "name", type: "text", optional: true }]
+  },
   note: { layer: "notes", args: [{ key: "text", type: "text" }] },
   deckModify: { layer: "cards", json: true, args: [] },
   deckMark: { layer: "cards", json: true, args: [] },
@@ -127,6 +132,7 @@ export function validateEffect(effect, { isStatKey = () => true } = {}) {
     if (a.type === "text" && a.key !== "until" && !String(v ?? "").trim() && effect.op !== "move") errors.push(`emptyText:${a.key}`);
   }
   if (effect.op === "dc" && effect.args?.value == null && !effect.args?.task) errors.push("dcNeedsValue");
+  if (effect.op === "team" && effect.args?.mode === "set" && !String(effect.args?.name ?? "").trim()) errors.push("teamNeedsName");
   return errors;
 }
 
@@ -177,6 +183,16 @@ export function describeEffect(effect, { stat = (k) => k } = {}) {
     case "status": body = `${a.mode === "remove" ? "remove" : "apply"} ${a.name}${a.value ? ` ${a.value}` : ""} ${a.mode === "remove" ? "from" : "to"} ${who}`; break;
     case "pips": body = `${who} ${a.delta >= 0 ? "lose" : "recover"} ${plural(Math.abs(a.delta), "pip")}${a.track && a.track !== "choice" ? ` of ${a.track}` : ""}`; break;
     case "restrict": body = `${who} cannot use ${a.tag} actions${a.until ? ` until ${a.until}` : ""}${a.breakRoll ? ` (break: ${stat(a.breakRoll)} vs ${stat(a.breakTarget || a.breakRoll)})` : ""}`; break;
+    case "team": {
+      const subject = effect?.to === "target" ? "the target" : "you";
+      body = {
+        set: `${subject} ${subject === "you" ? "join" : "joins"} team ${a.name || "?"}`,
+        clear: `${subject} ${subject === "you" ? "drop" : "drops"} into free for all`,
+        joinActor: `${subject === "you" ? "you stay on your own team" : "the target joins your team"}`,
+        joinTarget: `${subject === "you" ? "you join the target's team" : "the target keeps its team"}`
+      }[a.mode] ?? "change team";
+      break;
+    }
     case "note": body = a.text; break;
     case "deckModify": case "deckMark": case "cardMark": case "pokerHand":
       body = `card effect (${effect.op})`; break;

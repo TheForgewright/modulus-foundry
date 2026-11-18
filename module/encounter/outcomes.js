@@ -94,6 +94,14 @@ export async function applyEffect(effect, { actor, target, actorCombatant, targe
     case "draw":
       if (who?.getDeck?.(combat?.id)) await who.drawCards(a.count ?? 1, combat.id);
       break;
+    case "team": {
+      // The apparent team in this encounter; the change itself is the teamChanged trigger.
+      if (!whoCombatant) break;
+      const label = { set: String(a.name ?? "").trim(), clear: "", joinActor: actorCombatant?.team ?? "", joinTarget: targetCombatant?.team ?? "" }[a.mode];
+      if (label === undefined || label === whoCombatant.team) break;
+      await whoCombatant.setFlag(SYSTEM_ID, "team", label);
+      break;
+    }
     default:
       // note, move, dice, tierShift and others are for the GM to adjudicate.
       break;

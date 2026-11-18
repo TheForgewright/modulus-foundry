@@ -201,3 +201,19 @@ test("talents: a conditional effect triggered at declaration raises the defender
   await ctl.endRound();
   assert.equal(combat.encounterState.condfx.instances.length, 0);
 });
+
+test("change team outcome sets the apparent team in the encounter", async () => {
+  const { applyEffect } = await import("../module/encounter/outcomes.js");
+  const flags = {};
+  const mk = (id, team) => ({ id, team, async setFlag(ns, key, v) { flags[id] = v; this.team = v; } });
+  const spy = mk("s", ""), mark = mk("m", "Crown"), boss = mk("b", "Guild");
+  const run = (args, to, actorCombatant, targetCombatant) => applyEffect({ op: "team", args, to }, { actorCombatant, targetCombatant, actor: {}, target: {} });
+  await run({ mode: "joinTarget" }, "self", spy, mark);      // infiltrate: the spy takes the mark's apparent side
+  assert.equal(spy.team, "Crown");
+  await run({ mode: "joinActor" }, "target", boss, mark);    // recruit: the mark joins the boss
+  assert.equal(mark.team, "Guild");
+  await run({ mode: "clear" }, "self", spy, mark);           // vanish into stealth
+  assert.equal(spy.team, "");
+  await run({ mode: "set", name: "Rebels" }, "target", boss, mark);
+  assert.equal(mark.team, "Rebels");
+});

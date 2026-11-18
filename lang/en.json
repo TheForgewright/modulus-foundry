@@ -537,7 +537,8 @@
         "deckModify": "Deck: change cards",
         "deckMark": "Deck: mark cards",
         "cardMark": "Cards: mark ability",
-        "pokerHand": "Cards: use a hand"
+        "pokerHand": "Cards: use a hand",
+        "team": "Change team"
       },
       "Arg": {
         "delta": "Amount",
@@ -567,7 +568,11 @@
         "physical": "Physical",
         "mental": "Mental",
         "social": "Social",
-        "choice": "Player choice"
+        "choice": "Player choice",
+        "set": "Set to the named team",
+        "clear": "Drop into free for all",
+        "joinActor": "Join the acting character's team",
+        "joinTarget": "Join the target's team"
       },
       "Error": {
         "unknownOp": "Unknown effect type.",
@@ -576,7 +581,8 @@
         "badStat": "Pick a stat for {arg}.",
         "emptyTag": "Enter a tag for {arg}.",
         "emptyText": "Enter text for {arg}.",
-        "dcNeedsValue": "Enter a DC or tick the default task DC."
+        "dcNeedsValue": "Enter a DC or tick the default task DC.",
+        "teamNeedsName": "Name the team to set."
       }
     },
     "Vocab": {
