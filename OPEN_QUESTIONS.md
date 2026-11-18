@@ -88,3 +88,4 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 3a | How are talents acquired? | For now, each talent has its own XP cost, set on the talent (`xpCost`). Phase 4 spends it from the character's XP when a talent is taken. |
 | 3b | How do skills affect actions? | A skill adds its rank as a flat bonus to rolls of the actions it modifies; one of the few flat bonus sources. Which actions: #68. |
 | 35 | Teams: is there an ally/enemy distinction? | Team labels per participant. Ally = same team; enemy = only someone on an opposing team. No label = free for all: no allies, no enemies, nobody's enemy (a stealthed character's target is a victim, not an opponent). Changing a label (reveal, betrayal, slipping into stealth) is the `teamChanged` trigger. |
+| 35a | Can a participant have a hidden team only the GM sees? | No. Labels are the apparent team, visible to all; mechanics (reveals, betrayals) change the apparent team. |
