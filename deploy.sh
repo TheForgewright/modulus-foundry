@@ -53,6 +53,21 @@ unzip -l "$ZIP" "$SYSTEM/system.json" >/dev/null || { echo "$ZIP has no $SYSTEM/
 mkdir -p "$BACKUPS"
 STAGE=$(mktemp -d)
 unzip -q "$ZIP" -d "$STAGE"
+# Every compendium the manifest lists must have arrived whole, or nothing is replaced.
+check_packs() {
+  local dir="$1" bad=0 n=0
+  for p in $(grep -o '"path": *"packs/[^"]*"' "$dir/system.json" | grep -o 'packs/[^"]*'); do
+    n=$((n + 1))
+    if [ ! -f "$dir/$p/CURRENT" ] || ! ls "$dir/$p"/MANIFEST-* >/dev/null 2>&1; then
+      echo "Compendium $p is missing or incomplete in $dir"
+      bad=1
+    fi
+  done
+  [ "$n" -gt 0 ] || { echo "No compendiums listed in $dir/system.json"; bad=1; }
+  [ "$bad" = 0 ] && echo "Compendiums present: $n"
+  return "$bad"
+}
+check_packs "$STAGE/$SYSTEM" || { echo "Not installed: the zip's compendiums are incomplete."; exit 1; }
 sudo systemctl stop "$SERVICE"
 if [ -d "${SYSTEMS:?}/${SYSTEM:?}" ]; then
   OLD=$(grep -o '"version": *"[^"]*"' "$SYSTEMS/$SYSTEM/system.json" | grep -o '[0-9][^"]*' || echo unknown)
@@ -61,6 +76,7 @@ if [ -d "${SYSTEMS:?}/${SYSTEM:?}" ]; then
 fi
 mv "${STAGE:?}/${SYSTEM:?}" "${SYSTEMS:?}/${SYSTEM:?}"
 rmdir "$STAGE"
+check_packs "${SYSTEMS:?}/${SYSTEM:?}" || echo "WARNING: compendiums incomplete after install; run ./deploy.sh --rollback"
 rm -f "${ZIP:?}"
 sudo systemctl start "$SERVICE"
 sleep 3

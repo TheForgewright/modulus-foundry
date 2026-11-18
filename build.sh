@@ -4,8 +4,8 @@
 #   ./build.sh <version> [--no-deploy]
 #
 # Checks docs/patch-notes.md has a section for the version, sets the version in system.json, builds the
-# compendium packs, runs every check (any failure stops the build), zips the system as
-# dist/modulus-v<version>.zip, records the pass in dist/build-<version>.json, then deploys it to the
+# compendium packs from packs/_source, runs every check (any failure stops the build), zips the system as
+# dist/modulus-v<version>.zip, checks every compendium in the zip matches its sources, records the pass in dist/build-<version>.json, then deploys it to the
 # Foundry server with deploy.sh.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -40,6 +40,7 @@ node scripts/set-version.mjs "$VERSION"
 
 step "Compendium packs"
 node scripts/build-packs.mjs
+node harness/compendium-check.mjs
 
 step "Module load"
 node harness/load-check.mjs
@@ -54,6 +55,9 @@ step "Zip"
 ZIP="dist/modulus-v$VERSION.zip"
 rm -f "$ZIP"
 node scripts/make-zip.mjs "$ZIP"
+
+step "Compendiums in the zip"
+node harness/compendium-check.mjs "$ZIP"
 cp system.json "dist/system-$VERSION.json"
 
 SHA=$(sha256sum "$ZIP" | cut -d' ' -f1)

@@ -69,7 +69,7 @@ To try it in Foundry, symlink or copy this folder into your Foundry data directo
 ./build.sh 0.1.1
 ```
 
-Runs every check, zips the system to `dist/modulus-v0.1.1.zip` and deploys it to the Foundry server over SSH, keeping the replaced version as a backup and restarting Foundry. It needs a `docs/patch-notes.md` section for the version and a `deploy.local.conf` (copy `deploy.local.conf.example`). Add `--no-deploy` to only build.
+Rebuilds the compendiums from `packs/_source/`, runs every check (including that each compendium in the zip matches its sources), zips the system to `dist/modulus-v0.1.1.zip` and deploys it to the Foundry server over SSH, keeping the replaced version as a backup and restarting Foundry. It needs a `docs/patch-notes.md` section for the version and a `deploy.local.conf` (copy `deploy.local.conf.example`). Add `--no-deploy` to only build.
 
 ```bash
 ./deploy.sh --rollback

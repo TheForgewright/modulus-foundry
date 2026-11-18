@@ -14,6 +14,7 @@ A Foundry VTT **v14** game system (`modulus`). The rules and the implementation 
 
 - **Only release through `./build.sh <version>`.** It checks `docs/patch-notes.md` has a `## <version>` section, sets the version in `system.json`, builds the compendium packs, runs the load check, the actions check and the unit tests, zips the system as `dist/modulus-v<version>.zip`, and records the pass in `dist/build-<version>.json`. Any failure stops it.
 - **Every passing build deploys to the owner's Foundry server** (`deploy.sh`, run by `build.sh`; it restarts Foundry, players being disconnected is fine). `./deploy.sh --rollback` restores the previous version. Server details live in the untracked `deploy.local.conf` (see `deploy.local.conf.example`). `--no-deploy` builds without deploying.
+- **Compendiums ship on every deploy.** `build.sh` recompiles every pack from `packs/_source/` (never trusts the committed binaries), checks each compiled pack holds exactly its sources, then checks the packs read back out of the zip match too; `deploy.sh` refuses to install a zip whose compendiums are incomplete. Edit compendium content in `packs/_source/` (or author in the world and export with the Vocabulary Editor): changes made inside Foundry to the system's own compendiums are replaced by the next deploy.
 - Bump the patch version for each delivered change (0.1.1, 0.1.2…). Before building, add the version's section at the top of `docs/patch-notes.md`: plain English, what changed for players and GMs.
 - After each feature: commit, push to `origin`, and tell the owner what changed in a few plain sentences.
 
@@ -21,6 +22,7 @@ A Foundry VTT **v14** game system (`modulus`). The rules and the implementation 
 
 - `npm test`: unit tests for everything under `module/rules/` (pure JS, no Foundry imports; `tests/purity.test.js` enforces it), plus the language-key test and the end-to-end encounter round against mocked documents.
 - `harness/load-check.mjs`: imports every module with stand-in Foundry globals, runs the init hook, and checks every template, manifest path and document type it registers exists.
+- `harness/compendium-check.mjs [zip]`: every pack in `system.json` matches its sources, in `packs/` and, given a zip, in the zip.
 - `harness/actions-check.mjs`: every `data-action` in a template is registered on the window that renders it; no class assigns ApplicationV2's own `state`, `rendered`, `element`, `form` or `window`.
 
 ## Layout
