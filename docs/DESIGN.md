@@ -134,6 +134,7 @@ They need not be in the same domain. Words can override either. This produces th
 - **No passive bonuses.** A bonus may exist only if gated by (a) a successful prior action against an uncertain situation, or (b) a momentum expenditure.
 - **Prefer dice to flat numbers.** The preferred bonus language is buff dice, debuff dice, tier shifts and rerolls.
 - **Flat bonuses that do exist** (for example Duelist, §7.5) are gated and small.
+- **Skills are an exception [RULE, 2026-11-18]:** a skill adds its rank as a flat bonus to rolls of the actions it modifies (§3.6). It is one of the few flat bonus sources, and is not gated.
 - A sheet-level integer `bonus` per stat exists as a v0.1 placeholder the designers said "will change later". Implement it, default 0, hidden behind an "advanced" toggle, and do not build features on it.
 - Round down by default wherever a calculation produces a fraction.
 
@@ -214,6 +215,7 @@ Cumulative XP needed to reach each level (the cost from the previous level is 10
 ### 3.6 Skills [carried, partially superseded]
 
 - Buying skill rank *r* costs `10 × r` XP (so rank 2 costs 30 total).
+- **Skills modify actions [RULE, 2026-11-18]:** a skill gives its rank as a flat bonus to rolls of the actions it applies to (kept die + rank ≥ DC). **[OPEN #68]** which actions a skill applies to, and whether two skills applying to one roll stack.
 - **Superseded:** the original "choose a specialization at rank 6 and 11" branching. Progression structure is now the talent tier system (§8).
 - **Kept:** skills as the XP sink and as the source of vocabulary. A skill carries a pool of words (the designers suggest around 30 per skill set, with heavy overlap between skills, so the whole game has on the order of 100–150 unique words). Picking up a skill rank grants 1–2 words from its pool; some purchases grant specific words or none.
 - The original skill taxonomy (Brawn, Ranged, Endurance, Athletics, Subtlety, Persuasion and so on, listed under each stat) is **content**. Designers will re-author it in the vocabulary editor; do not hard-code it.

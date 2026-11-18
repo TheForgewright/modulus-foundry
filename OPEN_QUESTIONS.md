@@ -72,6 +72,7 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 65 | Can momentum be edited mid-round? It is read at the start of declaration for ordering. | Yes; edits after declaration starts affect costs and later rounds, not this round's order | `rules/encounter.js` `beginDeclaration` |
 | 66 | On-hit effects with ops the engine cannot apply directly (dice, tier shifts imposed on a target) | Offered as GM notes until conditional effects (Phase 4) exist | `encounter/outcomes.js` |
 | 67 | When a compendium entry changes and a world copy of it was also edited in the world, which wins? | The world edit, until the GM chooses to replace it (Sync from compendiums) | `rules/compendium-sync.js` |
+| 68 | Which actions does a skill modify (listed actions, actions with a tag, actions using a stat?), and do two skills on one roll stack? | Not built yet | `data/item.js` SkillData |
 
 ## Resolved
 
@@ -82,3 +83,4 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 51 | Do several marks of the same type in one hand stack? | No. Each mark type applies once per hand. |
 | 54 | Which copy of a mark type is used, and whose value applies? | The copy on the card the player picked first, regardless of permanence. Its value applies; it is exhausted only if consumable. |
 | 3a | How are talents acquired? | For now, each talent has its own XP cost, set on the talent (`xpCost`). Phase 4 spends it from the character's XP when a talent is taken. |
+| 3b | How do skills affect actions? | A skill adds its rank as a flat bonus to rolls of the actions it modifies; one of the few flat bonus sources. Which actions: #68. |
