@@ -72,7 +72,7 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 65 | Can momentum be edited mid-round? It is read at the start of declaration for ordering. | Yes; edits after declaration starts affect costs and later rounds, not this round's order | `rules/encounter.js` `beginDeclaration` |
 | 66 | On-hit effects with ops the engine cannot apply directly (dice, tier shifts imposed on a target) | Offered as GM notes until conditional effects (Phase 4) exist | `encounter/outcomes.js` |
 | 67 | When a compendium entry changes and a world copy of it was also edited in the world, which wins? | The world edit, until the GM chooses to replace it (Sync from compendiums) | `rules/compendium-sync.js` |
-| 68 | Which actions does a skill modify (listed actions, actions with a tag, actions using a stat?), and do two skills on one roll stack? | Not built yet | `data/item.js` SkillData |
+| 68 | Which actions does a skill modify (listed actions, actions with a tag, actions using a stat?), and do two skills on one roll stack? **Deferred:** skills may be removed entirely; the designers are deciding whether to focus on talents instead. | Not built; no further skill work until decided | `data/item.js` SkillData |
 
 ## Resolved
 

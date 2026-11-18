@@ -215,7 +215,7 @@ Cumulative XP needed to reach each level (the cost from the previous level is 10
 ### 3.6 Skills [carried, partially superseded]
 
 - Buying skill rank *r* costs `10 × r` XP (so rank 2 costs 30 total).
-- **Skills modify actions [RULE, 2026-11-18]:** a skill gives its rank as a flat bonus to rolls of the actions it applies to (kept die + rank ≥ DC). **[OPEN #68]** which actions a skill applies to, and whether two skills applying to one roll stack.
+- **Skills modify actions [RULE, 2026-11-18]:** a skill gives its rank as a flat bonus to rolls of the actions it applies to (kept die + rank ≥ DC). **[OPEN #68]** which actions a skill applies to, and whether two skills applying to one roll stack. **Deferred:** skills may be removed entirely in favour of talents; no further skill work until the designers decide.
 - **Superseded:** the original "choose a specialization at rank 6 and 11" branching. Progression structure is now the talent tier system (§8).
 - **Kept:** skills as the XP sink and as the source of vocabulary. A skill carries a pool of words (the designers suggest around 30 per skill set, with heavy overlap between skills, so the whole game has on the order of 100–150 unique words). Picking up a skill rank grants 1–2 words from its pool; some purchases grant specific words or none.
 - The original skill taxonomy (Brawn, Ranged, Endurance, Athletics, Subtlety, Persuasion and so on, listed under each stat) is **content**. Designers will re-author it in the vocabulary editor; do not hard-code it.
