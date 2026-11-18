@@ -617,7 +617,7 @@ Talents replace branching skill trees. A **talent** has a **domain** (physical, 
 - Talents that push a secondary up a tier situationally are a legitimate build axis (via the `tierShift` effect).
 - Counter-relationships between talent groups suggest synergies: the group that thrives under conditions another group creates (for example one that burns word slots, and one that needs few words) is a natural cross-prerequisite.
 
-Talent fields: `domain`, `tier`, `prereqTalent`, `crossPrereq` (optional, tier 3), `xpCost` (**[OPEN]** acquisition model, Appendix D #3), `effects`, `grantsWords`, `grantsActions`, `affectsTags` (informational), `description`.
+Talent fields: `domain`, `tier`, `prereqTalent`, `crossPrereq` (optional, tier 3), `xpCost` (**[RULE, 2026-11-18]** talents are bought with XP; each talent has its own XP cost, set by the designer on the talent), `effects`, `grantsWords`, `grantsActions`, `affectsTags` (informational), `description`.
 
 Tree names, roster and example trees discussed in design sessions are **brainstorm, not canon**. Do not ship them.
 
@@ -1135,7 +1135,7 @@ Carried from the original doc for a later "ability builder". It predates the act
 |---|---|---|
 | 1 | DC preset: 14/11/8 or 13/11/9 | 14/11/8 |
 | 2 | DC for unopposed tasks | GM-entered; suggest 11 |
-| 3 | How are talents acquired (XP per talent, tied to skill ranks, free)? How do skills, talents and word packs relate? | Talents carry an optional `xpCost`; eligibility counts talents owned regardless of source |
+| 3 | ~~How are talents acquired?~~ **Decided 2026-11-18:** each talent has its own XP cost. Still open: how do skills, talents and word packs relate? | Eligibility counts talents owned regardless of source |
 | 4 | Word packs vs skill word lists vs talents granting words | All three can grant words; no automatic pack selection |
 | 5 | `maxWords` formula and the extra-word penalty | `2 + floor(level/4)`; one debuff die per extra word |
 | 6 | Focus bonus magnitude | Off |

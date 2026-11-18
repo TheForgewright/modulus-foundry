@@ -6,7 +6,7 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 |---|---|---|---|
 | 1 | DC preset: 14/11/8 or 13/11/9 | 14/11/8 | settings `dc.*` |
 | 2 | DC for unopposed tasks | GM-entered; suggest 11 | setting `defaultTaskDC`, roll dialog |
-| 3 | How are talents acquired (XP per talent, tied to skill ranks, free)? How do skills, talents and word packs relate? | Talents carry an optional `xpCost`; eligibility counts talents owned regardless of source |  |
+| 3 | How do skills, talents and word packs relate? (Acquisition is decided: see Resolved.) | Eligibility counts talents owned regardless of source |  |
 | 4 | Word packs vs skill word lists vs talents granting words | All three can grant words; no automatic pack selection |  |
 | 5 | `maxWords` formula and the extra-word penalty | `2 + floor(level/4)`; one debuff die per extra word | setting `maxWordsFormula`, `extraWordPenalty` |
 | 6 | Focus bonus magnitude | Off |  |
@@ -81,3 +81,4 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 46 | Do cards discarded for momentum go back into the reshuffle? | Yes, they join the used pile. |
 | 51 | Do several marks of the same type in one hand stack? | No. Each mark type applies once per hand. |
 | 54 | Which copy of a mark type is used, and whose value applies? | The copy on the card the player picked first, regardless of permanence. Its value applies; it is exhausted only if consumable. |
+| 3a | How are talents acquired? | For now, each talent has its own XP cost, set on the talent (`xpCost`). Phase 4 spends it from the character's XP when a talent is taken. |
