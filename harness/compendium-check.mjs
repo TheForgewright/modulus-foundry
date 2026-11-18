@@ -9,7 +9,7 @@
  */
 import { extractPack } from "@foundryvtt/foundryvtt-cli";
 import yauzl from "yauzl";
-import { mkdtempSync, readdirSync, readFileSync, existsSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, existsSync, mkdirSync, writeFileSync, rmSync, cpSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -33,9 +33,16 @@ function readDocs(dir) {
   return docs;
 }
 
+/**
+ * Read a pack's documents from a copy: opening a LevelDB rewrites its manifest and log files,
+ * and the shipped packs must only ever be written by the pack build.
+ */
 async function packDocs(packDir, label) {
+  const copy = join(scratch, `${label}-db`);
+  cpSync(packDir, copy, { recursive: true });
+  rmSync(join(copy, "LOCK"), { force: true });
   const out = join(scratch, label);
-  await extractPack(packDir, out, { log: false });
+  await extractPack(copy, out, { log: false });
   return readDocs(out);
 }
 
