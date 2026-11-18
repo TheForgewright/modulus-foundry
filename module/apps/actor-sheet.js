@@ -10,6 +10,7 @@ import { openActionBuilder } from "./action-builder.js";
 import { hasCardAbilities, cardAbilities, markAbilities } from "../deck/card-effects.js";
 import { cardView, markText, STANDALONE_DECK } from "../documents/actor.js";
 import { evaluateHand, checkHandRequirement, normalizeMark, HAND_NAMES, MAX_HAND_SIZE } from "../rules/deck.js";
+import { sourceOf } from "../compendium/sync.js";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -375,6 +376,25 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
     this._selectedCards.clear();
     this._deckId = id;
     await this.document.createDeck(id);
+  }
+
+  /**
+   * Items dropped from elsewhere become copies on this actor. A copy from a Modulus compendium
+   * (directly, or via a world Item that came from one) records its source, so system updates to
+   * that compendium entry reach it (compendium/sync.js). Drops from this actor keep core sorting.
+   */
+  async _onDropItem(event, item) {
+    if (!this.isEditable || !item) return null;
+    if (item.parent === this.document) return super._onDropItem(event, item);
+    const data = item.toObject();
+    delete data._id;
+    const src = item.pack?.startsWith(`${SYSTEM_ID}.`) ? item.uuid : sourceOf(item);
+    if (src) {
+      foundry.utils.setProperty(data, "_stats.compendiumSource", src);
+      foundry.utils.setProperty(data, `flags.${SYSTEM_ID}.compendiumSource`, src);
+    }
+    const [created] = await this.document.createEmbeddedDocuments("Item", [data]);
+    return created ?? null;
   }
 
   /* ---------------- Allocation (§3.2) ---------------- */

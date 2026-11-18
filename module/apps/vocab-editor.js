@@ -9,6 +9,7 @@ import { formatTags, normalizeTagName, ENGINE_TAGS } from "../rules/tags.js";
 import { describeEffect } from "../rules/effects.js";
 import { getSetting, tagRegistry } from "../settings.js";
 import { statLabel } from "./item-sheet.js";
+import { openSyncDialog } from "../compendium/sync.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
@@ -32,7 +33,8 @@ export class VocabularyEditor extends HandlebarsApplicationMixin(ApplicationV2) 
       exportJSON: VocabularyEditor.#onExport,
       importJSON: VocabularyEditor.#onImport,
       addTag: VocabularyEditor.#onAddTag,
-      deleteTag: VocabularyEditor.#onDeleteTag
+      deleteTag: VocabularyEditor.#onDeleteTag,
+      syncCompendiums: () => openSyncDialog()
     }
   };
 

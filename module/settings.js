@@ -48,7 +48,8 @@ const DEFINITIONS = [
   ["condFx.shiftsAffectDefense", Boolean, true],
   ["enableDeck", Boolean, false],
   ["roomEntryMomentum", String, "highestCapped", { choices: ["highestCapped", "baseline"] }],
-  ["showAdvancedBonus", Boolean, false]
+  ["showAdvancedBonus", Boolean, false],
+  ["autoSyncCompendiums", Boolean, true]
 ];
 
 export function registerSettings() {
@@ -79,6 +80,9 @@ export function registerSettings() {
     }
     game.settings.register(SYSTEM_ID, key, setting);
   }
+
+  // Compendium copies (compendium/sync.js): the system version they were last synced for.
+  game.settings.register(SYSTEM_ID, "compendiumSyncedVersion", { scope: "world", config: false, type: String, default: "" });
 
   // Designer tag registry (§6.4): engine tags are built in; this holds the custom ones.
   game.settings.register(SYSTEM_ID, "tagRegistry", {

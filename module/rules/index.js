@@ -12,3 +12,4 @@ export * from "./effects.js";
 export * from "./assembly.js";
 export * from "./vocab-io.js";
 export * from "./encounter.js";
+export * from "./compendium-sync.js";

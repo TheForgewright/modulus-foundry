@@ -20,6 +20,7 @@ import { EncounterManager } from "./apps/encounter-manager.js";
 import { encounterController } from "./encounter/controller.js";
 import { registerQueries } from "./encounter/queries.js";
 import { decorateChatMessage } from "./encounter/outcomes.js";
+import { registerSyncHooks, openSyncDialog, syncCompendiumCopies, syncPlan } from "./compendium/sync.js";
 
 Hooks.once("init", () => {
   console.log("Modulus | Initializing");
@@ -65,6 +66,7 @@ Hooks.once("init", () => {
 
   registerDeckHooks();
   registerQueries();
+  registerSyncHooks();
 
   game.settings.registerMenu(SYSTEM_ID, "vocabularyEditor", {
     name: "MODULUS.Vocab.Title",
@@ -80,7 +82,8 @@ Hooks.once("init", () => {
     rules, openRollDialog, buildRollPlan, rollFromPlan, ModulusRoll,
     VocabularyEditor, openVocabularyEditor: () => VocabularyEditor.open(),
     ActionBuilder, openActionBuilder, buildDeclaration, resolveDeclaration,
-    EncounterManager, openEncounterManager: (combatId) => EncounterManager.open(combatId), encounterController
+    EncounterManager, openEncounterManager: (combatId) => EncounterManager.open(combatId), encounterController,
+    syncCompendiums: openSyncDialog, syncCompendiumCopies, syncPlan
   };
 });
 

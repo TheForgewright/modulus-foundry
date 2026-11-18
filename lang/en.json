@@ -408,6 +408,10 @@
       "showAdvancedBonus": {
         "Name": "Show placeholder stat bonus",
         "Hint": "Shows the v0.1 per-stat flat bonus field. The designers say it will change; do not build on it."
+      },
+      "autoSyncCompendiums": {
+        "Name": "Update compendium copies on system updates",
+        "Hint": "When a new system version is installed, items in this world that came from the system compendiums (in the Items sidebar and on actors) are updated to match, unless they were edited here. Edited ones are listed for the GM to review."
       }
     },
     "Hand": {
@@ -794,6 +798,19 @@
         "roundEnd": "Round {round} ended."
       },
       "ContinueCharging": "You are charging {label} ({n} round(s) so far). Declare it again to keep charging; anything else resets the count."
+    },
+    "Sync": {
+      "Title": "Sync from compendiums",
+      "Hint": "Update world copies of compendium entries to the current compendium.",
+      "Run": "Update",
+      "ReportTitle": "Compendium updates for Modulus {version}",
+      "Updated": "Updated {n} item(s) to match the compendium:",
+      "EditedWaiting": "{n} item(s) were edited in this world, so they were left as they are. Review them in Vocabulary Editor → Sync from compendiums:",
+      "Orphans": "{n} item(s) came from compendium entries that no longer exist; they were left as they are.",
+      "AllCurrent": "All {n} compendium copies are current.",
+      "Done": "Updated {n} item(s) from the compendiums.",
+      "DialogUnedited": "{n} item(s) have not been changed in this world and will be updated to match the compendium.",
+      "DialogEdited": "These were edited in this world. Tick the ones to replace with the compendium version (a skill rank, a status's remaining rounds and worn armor are kept):"
     }
   }
 }
