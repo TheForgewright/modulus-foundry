@@ -5,7 +5,7 @@
  */
 import { SYSTEM_ID } from "../config.js";
 import { STAT_KEYS, isStatKey } from "../rules/constants.js";
-import { EFFECT_OPS, EFFECT_TRIGGERS, EFFECT_TARGETS, coerceEffect, validateEffect, describeEffect, newEffect, defaultArgs } from "../rules/effects.js";
+import { EFFECT_OPS, EFFECT_TRIGGERS, EFFECT_TARGETS, OUTCOME_TRIGGERS, coerceEffect, validateEffect, describeEffect, newEffect, defaultArgs } from "../rules/effects.js";
 import { normalizeTag } from "../rules/tags.js";
 import { tagRegistry } from "../settings.js";
 import { editorRows, recordsFromForm, newRecord } from "../talents/condfx-editor.js";
@@ -83,6 +83,8 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
           op: e.op,
           to: e.to,
           json: !def || def.json,
+          canDelay: OUTCOME_TRIGGERS.includes(e.trigger),
+          delay: e.delay ?? 0,
           argsJSON: JSON.stringify(e.args ?? {}, null, 2),
           args: (def?.args ?? []).map((a) => ({
             ...a,
@@ -187,7 +189,7 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
             args = prev.args ?? {};
           }
         }
-        return coerceEffect({ trigger: row.trigger, op: row.op, to: row.to, args });
+        return coerceEffect({ trigger: row.trigger, op: row.op, to: row.to, args, delay: OUTCOME_TRIGGERS.includes(row.trigger) ? row.delay : 0 });
       });
     }
     delete data._fx;

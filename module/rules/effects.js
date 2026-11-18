@@ -14,6 +14,9 @@
 export const EFFECT_TRIGGERS = Object.freeze(["declare", "finalize", "onHit", "onMiss", "onResolve", "while"]);
 export const EFFECT_TARGETS = Object.freeze(["self", "target", "room"]);
 
+/** Triggers whose effects are applied at resolution, and so can be delayed by some rounds. */
+export const OUTCOME_TRIGGERS = Object.freeze(["onHit", "onMiss", "onResolve"]);
+
 /** Arg types: int, stat, tag, text, bool, select (with options). */
 export const EFFECT_OPS = Object.freeze({
   cost: { layer: "economy", args: [{ key: "delta", type: "int" }] },
@@ -99,6 +102,9 @@ export function coerceEffect(effect) {
     args: {},
     to: EFFECT_TARGETS.includes(effect?.to) ? effect.to : "self"
   };
+  // Delay (rounds): an outcome effect applied this many rounds later, at the start of that round.
+  const delay = Math.max(0, Math.trunc(Number(effect?.delay) || 0));
+  if (delay) out.delay = delay;
   const src = effect?.args ?? {};
   if (!def || def.json) {
     out.args = typeof src === "object" && src !== null ? src : {};
@@ -133,6 +139,7 @@ export function validateEffect(effect, { isStatKey = () => true } = {}) {
   }
   if (effect.op === "dc" && effect.args?.value == null && !effect.args?.task) errors.push("dcNeedsValue");
   if (effect.op === "team" && effect.args?.mode === "set" && !String(effect.args?.name ?? "").trim()) errors.push("teamNeedsName");
+  if (effect.delay && !OUTCOME_TRIGGERS.includes(effect.trigger)) errors.push("delayNeedsOutcome");
   return errors;
 }
 
@@ -156,11 +163,13 @@ export function describeEffect(effect, { stat = (k) => k } = {}) {
   const a = effect?.args ?? {};
   const who = effect?.to === "target" ? "the target" : effect?.to === "room" ? "everyone in the room" : "you";
   const whose = effect?.to === "target" ? "the target's" : effect?.to === "room" ? "the room's" : "your";
+  // Verb agreement: "you lose", "the target loses", "everyone in the room loses".
+  const v = (verb) => (who === "you" ? verb : verb.endsWith("y") ? `${verb.slice(0, -1)}ies` : verb.endsWith("e") || !/(s|sh|ch|x)$/.test(verb) ? `${verb}s` : `${verb}es`);
   let body;
   switch (effect?.op) {
     case "cost": body = `cost ${signed(a.delta)} momentum`; break;
-    case "momentum": body = a.set != null ? `set ${whose} momentum to ${a.set}` : `${who} ${a.delta >= 0 ? "gain" : "lose"} ${Math.abs(a.delta)} momentum`; break;
-    case "draw": body = `${who} draw ${plural(a.count, "card")}`; break;
+    case "momentum": body = a.set != null ? `set ${whose} momentum to ${a.set}` : `${who} ${v(a.delta >= 0 ? "gain" : "lose")} ${Math.abs(a.delta)} momentum`; break;
+    case "draw": body = `${who} ${v("draw")} ${plural(a.count, "card")}`; break;
     case "rollStat": body = `roll with ${stat(a.stat)}`; break;
     case "targetStat": body = `test the target's ${stat(a.stat)}`; break;
     case "dice": {
@@ -173,7 +182,7 @@ export function describeEffect(effect, { stat = (k) => k } = {}) {
     case "tierShift": {
       const s = a.stat ? stat(a.stat) : "the rolling stat";
       const scope = a.appliesTo === "defense" ? " for defense" : a.appliesTo === "attackers" ? " for anyone attacking them" : "";
-      body = `${who} ${a.delta >= 0 ? "rise" : "drop"} ${plural(Math.abs(a.delta), "tier")} in ${s}${scope}`;
+      body = `${who} ${v(a.delta >= 0 ? "rise" : "drop")} ${plural(Math.abs(a.delta), "tier")} in ${s}${scope}`;
       break;
     }
     case "dc": body = a.task ? "use the default task DC" : `use DC ${a.value}`; break;
@@ -181,7 +190,7 @@ export function describeEffect(effect, { stat = (k) => k } = {}) {
     case "addTag": body = `add tag ${a.name}${a.value ? ` ${a.value}` : ""}`; break;
     case "move": body = `movement: ${a.text}`; break;
     case "status": body = `${a.mode === "remove" ? "remove" : "apply"} ${a.name}${a.value ? ` ${a.value}` : ""} ${a.mode === "remove" ? "from" : "to"} ${who}`; break;
-    case "pips": body = `${who} ${a.delta >= 0 ? "lose" : "recover"} ${plural(Math.abs(a.delta), "pip")}${a.track && a.track !== "choice" ? ` of ${a.track}` : ""}`; break;
+    case "pips": body = `${who} ${v(a.delta >= 0 ? "lose" : "recover")} ${plural(Math.abs(a.delta), "pip")}${a.track && a.track !== "choice" ? ` of ${a.track}` : ""}`; break;
     case "restrict": body = `${who} cannot use ${a.tag} actions${a.until ? ` until ${a.until}` : ""}${a.breakRoll ? ` (break: ${stat(a.breakRoll)} vs ${stat(a.breakTarget || a.breakRoll)})` : ""}`; break;
     case "team": {
       const subject = effect?.to === "target" ? "the target" : "you";
@@ -198,5 +207,7 @@ export function describeEffect(effect, { stat = (k) => k } = {}) {
       body = `card effect (${effect.op})`; break;
     default: body = `unknown effect ${effect?.op}`;
   }
-  return `${TRIGGER_TEXT[effect?.trigger] ?? effect?.trigger}: ${body}.`;
+  const when = TRIGGER_TEXT[effect?.trigger] ?? effect?.trigger;
+  const later = effect?.delay ? `, ${effect.delay === 1 ? "next round" : `${effect.delay} rounds later`}` : "";
+  return `${when}${later}: ${body}.`;
 }

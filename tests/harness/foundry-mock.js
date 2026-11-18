@@ -49,18 +49,32 @@ export function installFoundryMock({ settingDefaults }) {
     },
     data: { fields: {} },
     dice: { Roll },
-    utils: { escapeHTML: (s) => String(s), randomID: () => Math.random().toString(36).slice(2, 6), debounce: (f) => f, setProperty: () => {} }
+    utils: {
+      escapeHTML: (s) => String(s), randomID: () => Math.random().toString(36).slice(2, 6), debounce: (f) => f, setProperty: () => {},
+      getProperty: (o, p) => p.split(".").reduce((x, k) => x?.[k], o)
+    }
   };
   globalThis.CONFIG = { Dice: { randomUniform: Math.random }, queries: {} };
   globalThis.Hooks = { on: () => 0, off: () => {}, callAll: () => {} };
   globalThis.ui = { notifications: { info: () => {}, warn: (m) => messages.push({ warn: m }), error: (m) => messages.push({ error: m }) } };
   globalThis.ChatMessage = {
     create: async (data) => {
-      const m = { ...data, getFlag: () => null, setFlag: async () => {} };
+      const m = {
+        flags: {},
+        ...data,
+        getFlag(ns, key) { return key.split(".").reduce((o, k) => o?.[k], this.flags?.[ns]) ?? null; },
+        async setFlag(ns, key, value) {
+          const keys = key.split(".");
+          let o = (this.flags[ns] ??= {});
+          for (const k of keys.slice(0, -1)) o = o[k] ??= {};
+          o[keys.at(-1)] = value;
+        }
+      };
       messages.push(m);
       return m;
     },
-    getSpeaker: () => ({})
+    getSpeaker: ({ actor } = {}) => ({ actor }),
+    getSpeakerActor: (speaker) => speaker?.actor ?? null
   };
   globalThis.game = {
     settings: { get: (ns, key) => settings.get(key) },

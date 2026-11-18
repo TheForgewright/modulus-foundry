@@ -582,7 +582,8 @@
         "emptyTag": "Enter a tag for {arg}.",
         "emptyText": "Enter text for {arg}.",
         "dcNeedsValue": "Enter a DC or tick the default task DC.",
-        "teamNeedsName": "Name the team to set."
+        "teamNeedsName": "Name the team to set.",
+        "delayNeedsOutcome": "Only on-hit, on-miss and on-resolution effects can be delayed."
       }
     },
     "Vocab": {
@@ -1080,6 +1081,16 @@
         "2": "Also needs 5 tier-1 talents in this talent's domain.",
         "3": "Also needs 5 tier-2 talents in this talent's domain."
       }
+    },
+    "Delayed": {
+      "Title": "Delayed effects",
+      "Schedule": "Schedule",
+      "Pending": "(scheduled)",
+      "Cancel": "Cancel this delayed effect",
+      "Fires": "{source} takes effect",
+      "Scheduled": "Delayed effect scheduled in round {round}.",
+      "ScheduledNote": "{source}: a delayed effect will take effect at the start of round {round}.",
+      "FieldHint": "Delay in rounds: 0 = now; 1 = at the start of next round. Only applies inside an encounter."
     }
   }
 }

@@ -14,7 +14,7 @@ Every action, word, status and talent has an Effects list. Each row is *when* (t
 | Trigger | Meaning |
 |---|---|
 | When declared / When finalized | Applies while the action is being put together: stat overrides, cost, dice, tags, fixed DC. |
-| On hit / On miss / On resolution | Offered to the GM when the action resolves. Not applied automatically (auto-apply is a Phase 3 setting). |
+| On hit / On miss / On resolution | Offered to the GM when the action resolves (or applied at once with the *Auto-apply outcomes* setting). These can be **delayed**: the hourglass box on the row sets a number of rounds. |
 | While active | Passive while a status is on the character (status effects only). |
 
 | Op | Arguments | Notes |
@@ -35,6 +35,12 @@ Every action, word, status and talent has an Effects list. Each row is *when* (t
 | Change team | mode, name | The participant's apparent team in this encounter: set to a named team, drop into free for all, join the acting character's team (recruit, convert), or join the target's team (defect, infiltrate). The change is the *Team changed* talent trigger. |
 | Note for the GM | text | Anything the engine cannot adjudicate. |
 | Card ops | JSON | See `CARD_DECK.md`. |
+
+## Delayed effects
+
+An on-hit, on-miss or on-resolution effect with a delay (the hourglass box on its row, in rounds) is not applied when it is applied: it is **scheduled**. At the start of the round it falls due it takes effect, posted to chat with its Apply button (or applied straight away with *Auto-apply outcomes*). A delay of 1 means the start of next round. The preview reads "On hit, 2 rounds later: the target loses 1 pip of physical."
+
+The Encounter Manager lists pending delayed effects with the round they fall due; the GM can cancel one (dispelled, interrupted). Delays only exist inside an encounter: outside one, a delayed effect applies immediately. Pending delayed effects end with their encounter.
 
 ## Tags
 

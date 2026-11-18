@@ -217,3 +217,44 @@ test("change team outcome sets the apparent team in the encounter", async () => 
   await run({ mode: "set", name: "Rebels" }, "target", boss, mark);
   assert.equal(mark.team, "Rebels");
 });
+
+test("delayed effects: scheduled from the outcome button, fire at the start of the due round, and can be cancelled", async () => {
+  const A = makeActor("Jin"), B = makeActor("Kat");
+  const combat = makeCombat([["j", A, 5], ["k", B, 6]]);
+  combat.id = "C5";
+  const ctl = encounterController(combat);
+  await ctl.startRound(); // round 1
+  const { applyOutcome } = await import("../module/encounter/outcomes.js");
+  // An outcome card whose effect is "on resolution, 2 rounds later: you gain 3 momentum".
+  const card = await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor: A }),
+    flags: { modulus: { context: { encounter: { combatId: "C5" }, outcomeEffects: [
+      { trigger: "onResolve", source: "Second Wind", text: "Second Wind: On resolution, 2 rounds later: you gain 3 momentum.", effect: { trigger: "onResolve", op: "momentum", args: { delta: 3 }, to: "self", delay: 2 } }
+    ] } } }
+  });
+  game.combats.set("C5", combat);
+  await applyOutcome(card, 0);
+  assert.equal(card.flags.modulus.applied[0], "scheduled");
+  assert.equal(combat.encounterState.delayed.length, 1);
+  assert.equal(combat.encounterState.delayed[0].dueRound, 3);
+  assert.equal(combat.combatants.get("j").momentum, 5); // nothing yet
+
+  mock.settings.set("autoApplyOutcomes", true);
+  try {
+    await ctl.endRound();
+    await ctl.startRound(); // round 2: not due
+    assert.equal(combat.combatants.get("j").momentum, 6); // only the round-2 gain
+    await ctl.endRound();
+    await ctl.startRound(); // round 3: fires
+    assert.equal(combat.combatants.get("j").momentum, 7 + 3);
+    assert.equal(combat.encounterState.delayed.length, 0);
+  } finally {
+    mock.settings.set("autoApplyOutcomes", false);
+  }
+
+  await ctl.scheduleDelayed({ effect: { trigger: "onResolve", op: "momentum", args: { delta: 9 }, to: "self", delay: 1 }, actorPid: "j", source: "Dispelled" });
+  await ctl.cancelDelayed(combat.encounterState.delayed[0].id);
+  await ctl.endRound();
+  await ctl.startRound();
+  assert.equal(combat.combatants.get("j").momentum, 10); // above the ceiling, so no gain; the cancelled +9 never came
+});

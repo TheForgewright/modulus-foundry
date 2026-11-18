@@ -338,3 +338,8 @@
 .modulus-roll-card .talent-sources { margin: 4px 0 0; padding-left: 16px; font-size: 11px; }
 .modulus .em-fx { border-color: #c58b16; } .modulus .em-fx a { cursor: pointer; }
 .modulus .em-team { width: 80px; height: 20px; font-size: 11px; margin-left: 4px; }
+.modulus .effect-delay { display: flex; align-items: center; gap: 3px; flex: 0 0 auto; }
+.modulus .effect-delay input { width: 44px; }
+.modulus .em-delayed ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
+.modulus .em-delayed a { cursor: pointer; margin-left: 4px; }
+.modulus-outcomes li.scheduled span:first-child { font-style: italic; }

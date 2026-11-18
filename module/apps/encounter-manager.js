@@ -38,6 +38,7 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
       setOut: EncounterManager.#onSetOut,
       endRound: EncounterManager.#onEndRound,
       openSheet: EncounterManager.#onOpenSheet,
+      cancelDelayed: EncounterManager.#onCancelDelayed,
       removeEffect: EncounterManager.#onRemoveEffect
     }
   };
@@ -158,7 +159,12 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
         isCurrent: current?.id === e.id,
         prompted: s.queue.some((q) => q.entryId === e.id)
       })),
-      log: s.log.slice(-8).reverse().map((l) => this.#logLine(s, l))
+      log: s.log.slice(-8).reverse().map((l) => this.#logLine(s, l)),
+      delayed: (s.delayed ?? []).map((d) => ({
+        id: d.id, source: d.source, text: d.text, dueRound: d.dueRound,
+        inRounds: d.dueRound - s.round,
+        target: names[d.targetPid] ?? (d.effect.to === "self" ? names[d.actorPid] : null)
+      })).sort((a, b) => a.dueRound - b.dueRound)
     };
     return ctx;
   }
@@ -380,6 +386,10 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
 
   static #onEndRound() {
     this.controller.endRound();
+  }
+
+  static #onCancelDelayed(event, target) {
+    this.controller.cancelDelayed(target.closest("[data-delayed-id]").dataset.delayedId);
   }
 
   static #onRemoveEffect(event, target) {

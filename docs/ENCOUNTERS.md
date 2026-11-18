@@ -26,6 +26,8 @@ How the encounter stack (§7 of `DESIGN.md`) works at the table.
 | **Execution** | Entries resolve top to bottom. **Resolve** looks up the DC now (the target may have changed), rolls, posts the card, and spends the cost from encounter momentum (Determined refunds on a miss). The card lists the hit, miss or always effects with **Apply** buttons; *Auto-apply outcomes* in settings applies them immediately. | **Resolve**, **Interrupt** (cancels an entry; it spends nothing). |
 | **Surrender check** | Participants defeated on a track, below zero momentum, or with every track empty are flagged. Nobody is removed automatically. | Mark someone **out**, or bring them back, then **End round**. |
 
+Delayed effects scheduled in earlier rounds take effect at the start of the round they fall due (listed under *Delayed effects* in the manager, where the GM can cancel them).
+
 At the end of a round the stack clears, Taxing cooldowns tick, statuses with a duration in rounds count down, and *until next turn* statuses clear when the next round starts.
 
 ## Stack entry badges

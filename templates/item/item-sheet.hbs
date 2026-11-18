@@ -46,6 +46,7 @@
         <select name="_fx.{{index}}.trigger" data-tooltip="MODULUS.Effect.TriggerLabel">{{selectOptions ../triggerOptions selected=trigger}}</select>
         <select name="_fx.{{index}}.op" data-tooltip="MODULUS.Effect.OpLabel">{{selectOptions ../opOptions selected=op}}</select>
         <select name="_fx.{{index}}.to" data-tooltip="MODULUS.Effect.ToLabel">{{selectOptions ../targetOptions selected=to}}</select>
+        {{#if canDelay}}<label class="effect-delay" data-tooltip="MODULUS.Delayed.FieldHint"><i class="fa-solid fa-hourglass-half"></i> <input type="number" name="_fx.{{index}}.delay" value="{{delay}}" min="0" step="1"></label>{{/if}}
         {{#if ../editable}}
         <span class="effect-controls">
           <a data-action="moveEffect" data-dir="-1" data-tooltip="MODULUS.Effect.MoveUp"><i class="fa-solid fa-arrow-up"></i></a>

@@ -8,7 +8,8 @@ import * as E from "../rules/encounter.js";
 import { getSetting } from "../settings.js";
 import { declarationFromPayload } from "./declaration.js";
 import { resolveDeclaration } from "../apps/action-builder.js";
-import { applyAllOutcomes } from "./outcomes.js";
+import { applyAllOutcomes, fireDelayed } from "./outcomes.js";
+import { scheduleDelayed as scheduleDelayedRule, takeDueDelayed, cancelDelayed } from "../rules/delayed.js";
 import * as FX from "./condfx-bridge.js";
 import { resolutionOrder } from "../rules/encounter.js";
 
@@ -79,6 +80,19 @@ export class EncounterController {
     return this.run(async () => this.save(FX.remove(this.state, instanceId)));
   }
 
+  /** Delayed effects: scheduled now, fired at the start of their due round. */
+  scheduleDelayed(data) {
+    return this.run(async () => {
+      const { state, entry } = scheduleDelayedRule(this.state, data);
+      await this.save(state);
+      await this.chat(game.i18n.format("MODULUS.Delayed.ScheduledNote", { source: entry.source, round: entry.dueRound }));
+    });
+  }
+
+  cancelDelayed(id) {
+    return this.run(async () => this.save(cancelDelayed(this.state, id)));
+  }
+
   async chat(content) {
     return ChatMessage.create({
       content: `<div class="modulus-encounter-note"><strong>${foundry.utils.escapeHTML(this.combat.label)}</strong><p>${content}</p></div>`,
@@ -106,11 +120,14 @@ export class EncounterController {
       await this.tickStatuses("roundStart");
       this.asked.clear();
       state = FX.expire(state, "roundStart");
+      const due = takeDueDelayed(state);
+      state = due.state;
       state = await this.fire(state, [
         state.round === 1 ? { id: `enc-start`, type: "encounterStart" } : null,
         { id: `round-${state.round}-start`, type: "roundStart" }
       ]);
       await this.save(state);
+      for (const d of due.due) await fireDelayed(this.combat, d, { autoApply: getSetting("autoApplyOutcomes") });
       await this.requestParticipation();
     });
   }

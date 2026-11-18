@@ -139,6 +139,21 @@
       </ol>
     </fieldset>
 
+    {{#if delayed.length}}
+    <fieldset class="em-delayed">
+      <legend>{{localize "MODULUS.Delayed.Title"}}</legend>
+      <ul>
+        {{#each delayed}}
+        <li data-delayed-id="{{id}}">
+          <span class="em-badge">{{localize "MODULUS.Encounter.Round"}} {{dueRound}}</span>
+          {{text}}{{#if target}} <span class="hint">→ {{target}}</span>{{/if}}
+          {{#if ../../isGM}}<a data-action="cancelDelayed" data-tooltip="MODULUS.Delayed.Cancel"><i class="fa-solid fa-xmark"></i></a>{{/if}}
+        </li>
+        {{/each}}
+      </ul>
+    </fieldset>
+    {{/if}}
+
     {{#if log.length}}
     <details class="em-log"><summary>{{localize "MODULUS.Encounter.LogTitle"}}</summary><ul>{{#each log}}<li>{{this}}</li>{{/each}}</ul></details>
     {{/if}}

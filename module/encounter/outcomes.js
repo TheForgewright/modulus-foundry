@@ -27,7 +27,14 @@ function participants(message) {
   const target = ctx.targetUuid ? fromUuidSync(ctx.targetUuid) : null;
   const combat = ctx.encounter ? game.combats.get(ctx.encounter.combatId) : null;
   const find = (a) => (combat && a ? combat.combatants.find((c) => c.actor === a || c.actorId === a.id) : null);
-  return { ctx, actor, target, combat, actorCombatant: find(actor), targetCombatant: find(target) };
+  // Cards that know the participants' encounter ids (delayed effects) use them directly.
+  const actorCombatant = (ctx.actorPid && combat?.combatants.get(ctx.actorPid)) || find(actor);
+  const targetCombatant = (ctx.targetPid && combat?.combatants.get(ctx.targetPid)) || find(target);
+  return {
+    ctx, combat, actorCombatant, targetCombatant,
+    actor: actor ?? actorCombatant?.actor ?? null,
+    target: target ?? targetCombatant?.actor ?? null
+  };
 }
 
 async function adjustMomentum(actor, combatant, { delta, set }) {
@@ -113,8 +120,51 @@ export async function applyOutcome(message, index) {
   const p = participants(message);
   const row = p.ctx?.outcomeEffects?.[index];
   if (!row) return;
+  if (row.effect.delay > 0 && p.combat) {
+    // Delayed: scheduled in the encounter; it fires at the start of a later round.
+    const { encounterController } = await import("./controller.js");
+    await encounterController(p.combat).scheduleDelayed({
+      effect: row.effect,
+      source: row.source,
+      text: row.text,
+      actorPid: p.actorCombatant?.id ?? null,
+      targetPid: p.targetCombatant?.id ?? null,
+      actorUuid: p.actor?.uuid ?? null,
+      targetUuid: p.target?.uuid ?? null
+    });
+    await message.setFlag(SYSTEM_ID, `applied.${index}`, "scheduled");
+    return;
+  }
+  // Outside an encounter there are no rounds to wait for, so a delayed effect applies now.
   await applyEffect(row.effect, { ...p, round: p.combat?.encounterState.round });
   await message.setFlag(SYSTEM_ID, `applied.${index}`, true);
+}
+
+/**
+ * A delayed effect falls due: apply it now (auto-apply) or post it with an Apply button.
+ * The card carries the same context as an outcome card, so the usual buttons work.
+ */
+export async function fireDelayed(combat, d, { autoApply = false } = {}) {
+  const actor = combat.combatants.get(d.actorPid)?.actor ?? (d.actorUuid ? await fromUuid(d.actorUuid) : null);
+  const target = combat.combatants.get(d.targetPid)?.actor ?? (d.targetUuid ? await fromUuid(d.targetUuid) : null);
+  const context = {
+    label: game.i18n.format("MODULUS.Delayed.Fires", { source: d.source }),
+    encounter: { combatId: combat.id },
+    actorPid: d.actorPid,
+    targetPid: d.targetPid,
+    targetUuid: target?.uuid ?? null,
+    outcomeEffects: [{ trigger: "onResolve", source: d.source, effect: d.effect, text: d.text }],
+    action: { onResolve: [] }
+  };
+  const content = `<div class="modulus-roll-card"><header><h3>${foundry.utils.escapeHTML(context.label)}</h3></header>
+    <div class="roll-meta note">${foundry.utils.escapeHTML(game.i18n.format("MODULUS.Delayed.Scheduled", { round: d.scheduledRound }))}</div></div>`;
+  const message = await ChatMessage.create({
+    speaker: actor ? ChatMessage.getSpeaker({ actor }) : { alias: combat.label },
+    content,
+    flags: { [SYSTEM_ID]: { context } }
+  });
+  if (autoApply && message) await applyOutcome(message, 0);
+  return message;
 }
 
 export async function applyAllOutcomes(message) {
@@ -136,14 +186,16 @@ export function decorateChatMessage(message, html) {
   for (const r of rows) {
     const li = document.createElement("li");
     const done = applied[r.index];
-    li.className = done ? "applied" : "";
-    li.innerHTML = `<span>${foundry.utils.escapeHTML(r.text)}</span>`;
+    const scheduled = done === "scheduled";
+    li.className = done ? (scheduled ? "scheduled" : "applied") : "";
+    li.innerHTML = `<span>${foundry.utils.escapeHTML(r.text)}</span>${scheduled ? ` <span class="note">${game.i18n.localize("MODULUS.Delayed.Pending")}</span>` : ""}`;
     if (game.user.isGM) {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "outcome-apply";
       b.disabled = Boolean(done);
-      b.innerHTML = done ? '<i class="fa-solid fa-check"></i>' : `<i class="fa-solid fa-play"></i> ${game.i18n.localize("MODULUS.Outcome.Apply")}`;
+      b.innerHTML = done ? `<i class="fa-solid ${scheduled ? "fa-hourglass-half" : "fa-check"}"></i>`
+        : `<i class="fa-solid ${r.effect.delay ? "fa-hourglass-start" : "fa-play"}"></i> ${game.i18n.localize(r.effect.delay ? "MODULUS.Delayed.Schedule" : "MODULUS.Outcome.Apply")}`;
       b.addEventListener("click", async (ev) => {
         ev.preventDefault();
         b.disabled = true;
