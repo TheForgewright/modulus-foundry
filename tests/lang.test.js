@@ -6,6 +6,7 @@ import path from "node:path";
 import { EFFECT_OPS, EFFECT_TRIGGERS, EFFECT_TARGETS } from "../module/rules/effects.js";
 import { HAND_NAMES } from "../module/rules/deck.js";
 import { PHASES, ENTRY_STATES } from "../module/rules/encounter.js";
+import { TRIGGERS, ACTOR_SCOPES, APPLY_TO, CONDITION_TYPES } from "../module/rules/condfx.js";
 
 // Every `log(s, "<type>")` call in the engine.
 const ENCOUNTER_LOG_TYPES = [...readFileSync("module/rules/encounter.js", "utf8").matchAll(/log\(s(?:tate)?, "(\w+)"/g)].map((m) => m[1]);
@@ -21,10 +22,21 @@ test("static keys in code and templates exist", () => {
   const missing = [];
   for (const f of [...files("module"), ...files("templates")]) {
     for (const m of readFileSync(f, "utf8").matchAll(/"((?:MODULUS|TYPES)\.[A-Za-z0-9_.]+[A-Za-z0-9_])"/g)) {
-      if (typeof get(m[1]) !== "string") missing.push(`${m[1]} (${f})`);
+      const v = get(m[1]);
+      // A string naming a group (e.g. a prefix passed to an option-list helper) is fine.
+      if (typeof v !== "string" && !(v && typeof v === "object")) missing.push(`${m[1]} (${f})`);
     }
   }
   assert.deepEqual(missing, []);
+});
+
+test("every option value in the talent editor has a label", () => {
+  const src = readFileSync("module/talents/condfx-editor.js", "utf8");
+  const values = new Set();
+  for (const m of src.matchAll(/opts\(\[([^\]]*)\],\s*"MODULUS\.Talent\.Option"\)/g)) for (const v of m[1].matchAll(/"(\w+)"/g)) values.add(v[1]);
+  for (const m of src.matchAll(/\["\w+", \[([^\]]*)\]\]/g)) for (const v of m[1].matchAll(/"(\w+)"/g)) values.add(v[1]);
+  assert.ok(values.size > 10);
+  assert.deepEqual([...values].filter((v) => typeof get(`MODULUS.Talent.Option.${v}`) !== "string"), []);
 });
 
 test("dynamic catalog keys exist", () => {
@@ -44,7 +56,15 @@ test("dynamic catalog keys exist", () => {
     ...["declare", "reconfirm", "duelist"].map((k) => `MODULUS.Encounter.Waiting.${k}`),
     ...["noAction", "taxingCooldown", "noSuchEntry", "ownEntry", "notYourTurn", "notPrompted", "notDuelistTurn"].map((k) => `MODULUS.Encounter.Error.${k}`),
     ...ENCOUNTER_LOG_TYPES.map((k) => `MODULUS.Encounter.Log.${k}`),
-    ...["standard", "relationship", "investigation", "ordeal"].map((k) => `MODULUS.Encounter.Kind.${k}`)
+    ...["standard", "relationship", "investigation", "ordeal"].map((k) => `MODULUS.Encounter.Kind.${k}`),
+    ...Object.keys(TRIGGERS).map((k) => `MODULUS.Talent.Trigger.${k}`),
+    ...Object.values(TRIGGERS).flatMap((d) => d.params.flatMap((p) => [`MODULUS.Talent.Field.${p.key}`, ...(p.options ?? []).map((o) => `MODULUS.Talent.Option.${o}`)])),
+    ...ACTOR_SCOPES.map((k) => `MODULUS.Talent.Actor.${k}`),
+    ...APPLY_TO.map((k) => `MODULUS.Talent.ApplyTo.${k}`),
+    ...CONDITION_TYPES.map((k) => `MODULUS.Talent.Condition.${k}`),
+    ...["needSameDomain", "noPrereqSet", "needPrereq", "needCross", "needXP"].map((k) => `MODULUS.Talent.Reason.${k}`),
+    ...["noId", "duplicateId", "badTier", "noDomain", "tier1HasPrereq", "crossOnlyTier3", "noPrereqSet", "prereqNotFound", "prereqWrongTier", "crossNotFound", "crossWrongTier", "crossIsParentsOwn"].map((k) => `MODULUS.Talent.Issue.${k}`),
+    ...["noTrigger", "unknownTrigger", "emptyGrant", "outcomeNeedsResolve", "badStat", "zeroDelta", "passiveBonus"].map((k) => `MODULUS.Talent.Check.${k}`)
   ];
   assert.deepEqual(keys.filter((k) => typeof get(k) !== "string"), []);
 });

@@ -46,6 +46,7 @@ const DEFINITIONS = [
   ["condFx.defaultLimitPerRound", Number, 1],
   ["condFx.chainDepth", Number, 3],
   ["condFx.shiftsAffectDefense", Boolean, true],
+  ["condFx.disabledTriggers", String, ""],
   ["enableDeck", Boolean, false],
   ["roomEntryMomentum", String, "highestCapped", { choices: ["highestCapped", "baseline"] }],
   ["showAdvancedBonus", Boolean, false],
@@ -96,6 +97,17 @@ export function registerSettings() {
 /** Full tag registry: engine tags, common labels and the designers' custom tags. */
 export function tagRegistry() {
   return buildRegistry(getSetting("tagRegistry") ?? []);
+}
+
+/** Conditional-effect settings (§8.1) read from the world settings. */
+export function condFxSettings() {
+  return {
+    defaultDuration: getSetting("condFx.defaultDuration"),
+    defaultLimitPerRound: getSetting("condFx.defaultLimitPerRound"),
+    chainDepth: getSetting("condFx.chainDepth"),
+    shiftsAffectDefense: getSetting("condFx.shiftsAffectDefense"),
+    disabledTriggers: String(getSetting("condFx.disabledTriggers") ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+  };
 }
 
 /** Assembly settings (§6.6) read from the world settings. */

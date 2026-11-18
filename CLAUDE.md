@@ -36,9 +36,10 @@ module/documents/    Actor, Item, Roll, Combat, Combatant classes
 module/apps/         sheets and windows (ApplicationV2)
 module/encounter/    GM controller, player queries, outcome application
 module/deck/         card-deck effects and lifecycle
+module/talents/      talents on characters, the conditional-effects editor model
 packs/_source/       compendium sources as JSON (npm run build:packs)
 harness/  tests/     checks, not shipped
-docs/                DESIGN.md, VOCABULARY.md, ENCOUNTERS.md, CARD_DECK.md, patch-notes.md
+docs/                DESIGN.md, VOCABULARY.md, ENCOUNTERS.md, TALENTS.md, CARD_DECK.md, patch-notes.md
 ```
 
 ## Architecture
@@ -46,5 +47,6 @@ docs/                DESIGN.md, VOCABULARY.md, ENCOUNTERS.md, CARD_DECK.md, patc
 - **Pure first.** Rules logic goes in `module/rules/` as pure functions with tests; Foundry code stays thin.
 - **Encounters** are Combats; the engine state is JSON text in `flags.modulus.state` (saved wholesale, never merged). Momentum, participation and scene track are combatant flags. The GM client runs `encounter/controller.js`; players only answer user queries (`encounter/queries.js`). Never rely on `game.combat`.
 - **Compendium copies** carry `flags.modulus.compendiumSource` and a `syncHash` fingerprint set on creation (`preCreateItem`) and on every sync; the character sheet's item drop records the source too.
+- **Talents** (`rules/talents.js`, `talents/talents.js`) are linked by `system.talentId`, never by name or document id. **Conditional effects** (`rules/condfx.js`) live in the encounter state as `condfx`; the controller emits events at each step of the round, `encounter/events.js` emits the rest (track, momentum, pips, statuses, cards, rests, manual), and `encounter/condfx-bridge.js` turns combat facts into matcher context and supplies roll-time shifts. New triggers: add a `TRIGGERS` row, an emitter, and its labels.
 - **Effects** are `{trigger, op, args, to}` rows described by `rules/effects.js`; outcomes are offered to the GM as chat buttons (`encounter/outcomes.js`).
 - **Verify Foundry APIs** against the v14 type definitions (`@league-of-foundry-developers/foundry-vtt-types`) before using them.

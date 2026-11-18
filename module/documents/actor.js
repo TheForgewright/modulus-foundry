@@ -3,6 +3,7 @@ import {
 } from "../rules/deck.js";
 import { deckModifiers, deckMarks, cardAbilities, markAbilities } from "../deck/card-effects.js";
 import { SYSTEM_ID } from "../config.js";
+import { requestEmit } from "../encounter/events.js";
 import { DOMAINS, parseStatKey } from "../rules/constants.js";
 import { effectiveTier, dcForTier } from "../rules/tier.js";
 import { applyPips, shortRest, longRest } from "../rules/tracks.js";
@@ -35,8 +36,8 @@ export class ModulusActor extends Actor {
   }
 
   /** Defense DC when this actor is the target of an action testing `key` (§2.3). */
-  getDefenseDC(key) {
-    const eff = this.getEffectiveTier(key, { defense: true });
+  getDefenseDC(key, { shifts = [] } = {}) {
+    const eff = this.getEffectiveTier(key, { defense: true, shifts });
     return { dc: dcForTier(eff.tier, dcTable()), ...eff };
   }
 
@@ -72,6 +73,7 @@ export class ModulusActor extends Actor {
       }
     }
     if (Object.keys(update).length) await this.update(update);
+    await requestEmit(this, { type: "restTaken", params: { kind } });
   }
 
   async clearDefeat(domain) {
@@ -140,6 +142,7 @@ Object.assign(ModulusActor.prototype, {
     const deck = this.getDeck(encounterId);
     const names = deck.hand.filter((c) => ids.includes(c.id)).map((c) => c.id);
     await this.saveDeck(encounterId, burnCards(deck, ids));
+    await requestEmit(this, { type: "cardEvent", params: { kind: "burned" } });
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
       content: `<p>${game.i18n.format("MODULUS.Deck.Chat.Burned", { name: this.name, cards: names.join(", ") })}</p>`
@@ -159,6 +162,7 @@ Object.assign(ModulusActor.prototype, {
     state.pendingMomentumLoss = (deck.pendingMomentumLoss ?? 0) + value;
     await this.saveDeck(encounterId, state);
     await this.adjustEncounterMomentum(encounterId, value);
+    await requestEmit(this, { type: "cardEvent", params: { kind: "discarded" } });
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
       content: `<p>${game.i18n.format("MODULUS.Deck.Chat.DiscardMomentum", { name: this.name, card: card.id, n: value })}</p>`
@@ -214,6 +218,7 @@ Object.assign(ModulusActor.prototype, {
       grant: Object.entries(grant).map(([k, v]) => ({ key: k, value: v }))
     });
     await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this }), content });
+    if ((ability.req.consume ?? "selected") !== "none") await requestEmit(this, { type: "cardEvent", params: { kind: "cashed", rank: r.hand.rank } });
     return { ...r, grant };
   },
 

@@ -63,7 +63,8 @@
         "main": "Character",
         "items": "Items",
         "notes": "Notes",
-        "cards": "Cards"
+        "cards": "Cards",
+        "talents": "Talents"
       }
     },
     "Allocation": {
@@ -211,7 +212,8 @@
       "category": "Category",
       "equipped": "Equipped",
       "defendsAgainst": "Defends against",
-      "penalty": "Penalty"
+      "penalty": "Penalty",
+      "talentId": "Talent id (prerequisites point at this)"
     },
     "Settings": {
       "dc": {
@@ -391,6 +393,10 @@
         "shiftsAffectDefense": {
           "Name": "Tier shifts affect defense",
           "Hint": "[OPEN] Used from Phase 4."
+        },
+        "disabledTriggers": {
+          "Name": "Disabled talent triggers",
+          "Hint": "[OPEN #38] Comma-separated trigger ids that never fire, e.g. stackPosition, cardEvent. Blank = all on."
         }
       },
       "enableDeck": {
@@ -643,7 +649,8 @@
         "resistance": "Target resistance",
         "aid": "Aid",
         "hinder": "Hinder",
-        "duelist": "Duelist"
+        "duelist": "Duelist",
+        "talents": "Talent effects"
       },
       "Error": {
         "tooManyWords": "Too many words (max {max}).",
@@ -797,7 +804,9 @@
         "cancel": "{name}: {label} interrupted.",
         "roundEnd": "Round {round} ended."
       },
-      "ContinueCharging": "You are charging {label} ({n} round(s) so far). Declare it again to keep charging; anything else resets the count."
+      "ContinueCharging": "You are charging {label} ({n} round(s) so far). Declare it again to keep charging; anything else resets the count.",
+      "Team": "team",
+      "TeamHint": "Optional team label. Talents that say \"an ally\" or \"an enemy\" use it: same label = ally."
     },
     "Sync": {
       "Title": "Sync from compendiums",
@@ -811,6 +820,250 @@
       "Done": "Updated {n} item(s) from the compendiums.",
       "DialogUnedited": "{n} item(s) have not been changed in this world and will be updated to match the compendium.",
       "DialogEdited": "These were edited in this world. Tick the ones to replace with the compendium version (a skill rank, a status's remaining rounds and worn armor are kept):"
+    },
+    "Talent": {
+      "Speaker": "Talents",
+      "AllStats": "every stat",
+      "OnDefense": "on defense",
+      "Until": {
+        "encounter": "until the encounter ends",
+        "nextTurn": "until their next turn",
+        "nextRoll": "for the next roll",
+        "round": "until the end of the round"
+      },
+      "Trigger": {
+        "actionUsed": "Action used",
+        "actionTargeted": "Targeted by an action",
+        "actionHit": "Action hits",
+        "actionMissed": "Action misses",
+        "wordUsed": "Word used",
+        "breakPointHit": "Break point reached",
+        "sceneTrackChanged": "Scene track changed",
+        "statusApplied": "Status applied",
+        "statusRemoved": "Status removed",
+        "defeatedOnTrack": "Defeated on a track",
+        "recoveredOnTrack": "Recovered on a track",
+        "pipsLost": "Pips lost",
+        "momentumCrossed": "Momentum crosses a value",
+        "stackPosition": "Stack position",
+        "reconfirmed": "Re-confirmed",
+        "interrupted": "Interrupted",
+        "interrupts": "Interrupts",
+        "reactionResolved": "Reaction resolved",
+        "roundStart": "Round start",
+        "roundEnd": "Round end",
+        "encounterStart": "Encounter start",
+        "encounterEnd": "Encounter end",
+        "participantJoined": "Participant joined",
+        "participantLeft": "Participant left",
+        "surrendered": "Surrendered",
+        "tierChanged": "Tier changed",
+        "extendedMomentum": "Extended encounter momentum",
+        "cardEvent": "Card event",
+        "restTaken": "Rest taken",
+        "manual": "Manual button"
+      },
+      "Actor": {
+        "self": "This character",
+        "other": "Another participant",
+        "any": "Anyone",
+        "targetsMe": "Someone targeting this character",
+        "targetedByMe": "Someone this character targets",
+        "ally": "An ally (team label)",
+        "enemy": "An enemy (team label)"
+      },
+      "ApplyTo": {
+        "self": "This character",
+        "triggeringActor": "Whoever triggered it",
+        "target": "The action's target",
+        "allEncounter": "Everyone in the encounter"
+      },
+      "Condition": {
+        "momentum": "Momentum",
+        "status": "Has / lacks a status",
+        "pips": "Pips at or below",
+        "round": "Round number",
+        "stat": "Action stat",
+        "stackPosition": "Stack position",
+        "firstUse": "First use this round"
+      },
+      "Stat": {
+        "rollStat": "The rolling stat",
+        "targetStat": "The target stat"
+      },
+      "Reason": {
+        "needSameDomain": "Needs {missing} more {domain} tier-{tier} talent(s) ({have} of {need}).",
+        "noPrereqSet": "No tier-{tier} prerequisite is set on this talent yet.",
+        "needPrereq": "Needs {name}.",
+        "needCross": "Needs {name} as well.",
+        "needXP": "Costs {cost} XP; {have} available."
+      },
+      "Issue": {
+        "noId": "{name} has no talent id.",
+        "duplicateId": "{name}: another talent has the id {talentId}.",
+        "badTier": "{name}: tier must be 1, 2 or 3.",
+        "noDomain": "{name} has no domain.",
+        "tier1HasPrereq": "{name} is tier 1, so it takes no prerequisite.",
+        "crossOnlyTier3": "{name}: only tier-3 talents take a second (cross) prerequisite.",
+        "noPrereqSet": "{name} needs a tier-{tier} prerequisite.",
+        "prereqNotFound": "{name}: its prerequisite {id} does not exist.",
+        "prereqWrongTier": "{name}: its prerequisite is tier {tier}; it must be tier {need}.",
+        "crossNotFound": "{name}: its cross prerequisite {id} does not exist.",
+        "crossWrongTier": "{name}: its cross prerequisite must be tier 1 (it is tier {tier}).",
+        "crossIsParentsOwn": "{name}: the cross prerequisite must be a different tier-1 talent from its parent's own."
+      },
+      "XPAvailable": "XP available",
+      "TierN": "Tier {n}",
+      "ActiveEffects": "Active talent effects",
+      "Owned": "Talents",
+      "Available": "Talents to take",
+      "NoneOwned": "No talents yet.",
+      "NoneKnown": "No talents exist yet. Create them in the Vocabulary Editor or a compendium.",
+      "Take": "Take",
+      "Grant": "Grant",
+      "GrantHint": "GM: give this talent even though it is locked (XP is still spent).",
+      "ManualHint": "Set off this talent effect (the GM sees it in the encounter).",
+      "Remove": "Remove talent",
+      "RemoveConfirm": "Remove {name}?",
+      "RemoveRefund": "Remove and refund its XP",
+      "RemoveNoRefund": "Remove without refund",
+      "Graph": "Talent graph",
+      "GraphHint": "Every talent in the world and the system compendiums, by domain: tier 1, the tier-2 talents that need it, and the tier-3 talents above those.",
+      "GraphIssues": "Problems",
+      "GraphValid": "The prerequisite graph is valid.",
+      "Unattached": "Prerequisite missing",
+      "Prerequisites": "Prerequisites",
+      "CrossPrereq": "Second prerequisite (optional, tier 1 from another tree)",
+      "Tier1Open": "Tier 1 is open: no prerequisites.",
+      "PrinciplesTitle": "Authoring principles",
+      "Principle": {
+        "1": "Bonuses live at tier 1, if anywhere. A tier-1 effect reads \"gain X when you do Y\" and is gated.",
+        "2": "Higher tiers widen the circumstances, not the size. Tier 2: \"when Y or Z\". Tier 3: \"…even when [unusual condition]\". The bonus never grows.",
+        "3": "Tier 3 is more focused, not more powerful. A tier-3 effect that works in every circumstance is a design failure; it needs a ceiling that creates real blind spots.",
+        "4": "A tier-1 circumstance sets the identity of everything above it.",
+        "5": "Talents that push a secondary up a tier situationally are a legitimate build axis.",
+        "6": "Groups that thrive under conditions another group creates are natural cross-prerequisites."
+      },
+      "When": "When",
+      "If": "Only if",
+      "Gives": "Gives",
+      "For": "For",
+      "NoConditions": "No extra conditions.",
+      "AddCondition": "Condition",
+      "AddShift": "Tier shift",
+      "AddDice": "Dice",
+      "NoCfx": "No conditional effects.",
+      "AddCfx": "Add conditional effect",
+      "Field": {
+        "label": "Label",
+        "event": "Event",
+        "actor": "Who",
+        "tagsAll": "Action has all these tags",
+        "timing": "Timing",
+        "outcome": "Outcome",
+        "condition": "Condition",
+        "stat": "Stat",
+        "delta": "Tiers (+/−)",
+        "applyTo": "Lands on",
+        "appliesToRolls": "Applies to",
+        "rounds": "Rounds (0 = next roll)",
+        "until": "Until",
+        "stacking": "If it triggers again",
+        "maxStacks": "Max stacks",
+        "limitPerRound": "Times per round (0 = no limit)",
+        "victim": "Victim",
+        "words": "Words (all of)",
+        "track": "Track",
+        "to": "To",
+        "from": "From",
+        "name": "Name",
+        "min": "At least",
+        "value": "Value",
+        "direction": "Direction",
+        "position": "Position",
+        "tag": "Tag",
+        "changed": "Changed it",
+        "round": "Round",
+        "every": "Every N rounds",
+        "kind": "Kind",
+        "minRank": "Hand rank at least",
+        "who": "Whose",
+        "op": "Is",
+        "has": "Has it",
+        "atMost": "At most",
+        "exact": "Exactly",
+        "atLeast": "At least",
+        "which": "Which stat",
+        "is": "Is",
+        "relation": "Subject sits"
+      },
+      "Option": {
+        "any": "Any",
+        "self": "This character",
+        "other": "Someone else",
+        "physical": "Physical",
+        "mental": "Mental",
+        "social": "Social",
+        "all": "All",
+        "none": "None (first choice)",
+        "action": "Action",
+        "drama": "Drama",
+        "intrigue": "Intrigue",
+        "up": "Upward",
+        "down": "Downward",
+        "top": "Top of the stack",
+        "bottom": "Bottom of the stack",
+        "directlyAbove": "Directly above an entry with tag",
+        "directlyBelow": "Directly below an entry with tag",
+        "yes": "Yes",
+        "no": "No",
+        "relationship": "Relationship",
+        "investigation": "Investigation",
+        "ordeal": "Ordeal",
+        "cashed": "Hand cashed",
+        "burned": "Card burned",
+        "discarded": "Card discarded",
+        "short": "Short",
+        "long": "Long",
+        "declare": "When declared",
+        "resolve": "When resolved",
+        "hit": "Hit",
+        "miss": "Miss",
+        "owner": "This character",
+        "subject": "Whoever triggered it",
+        "above": "Above",
+        "below": "Below",
+        "atLeast": "At least",
+        "atMost": "At most",
+        "rollStat": "Rolling stat",
+        "targetStat": "Target stat",
+        "attack": "Own rolls only",
+        "defense": "Defense only",
+        "byRounds": "By rounds",
+        "endOfRound": "End of the round",
+        "startOfOwnerNextTurn": "Start of their next turn",
+        "encounterEnd": "End of the encounter",
+        "refresh": "Refresh the duration",
+        "stack": "Stack",
+        "ignore": "Ignore"
+      },
+      "Check": {
+        "noTrigger": "Pick an event.",
+        "unknownTrigger": "Unknown event.",
+        "emptyGrant": "Add a tier shift or dice.",
+        "outcomeNeedsResolve": "A hit or miss outcome needs timing \"When resolved\".",
+        "badStat": "Pick a stat for each tier shift.",
+        "zeroDelta": "A tier shift of 0 does nothing.",
+        "passiveBonus": "This fires every round with no conditions: it is a passive bonus, which the bonus rules forbid (§2.5)."
+      },
+      "PrereqFor": {
+        "2": "Tier-1 prerequisite (any domain)",
+        "3": "Tier-2 parent"
+      },
+      "RequiresTier": {
+        "2": "Also needs 5 tier-1 talents in this talent's domain.",
+        "3": "Also needs 5 tier-2 talents in this talent's domain."
+      }
     }
   }
 }

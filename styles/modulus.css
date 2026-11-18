@@ -297,3 +297,44 @@
 .modulus-outcomes li.applied span { opacity: 0.6; text-decoration: line-through; }
 .modulus-outcomes .outcome-apply, .outcome-apply-all { width: auto; flex: 0 0 auto; line-height: 18px; font-size: 11px; padding: 0 6px; }
 .modulus-em-button, .modulus-vocab-button { margin: 4px 0; }
+
+/* ---------- Talents (Phase 4) ---------- */
+.modulus .talent-summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.modulus .talent-counts { width: auto; font-size: 12px; }
+.modulus .talent-counts td, .modulus .talent-counts th { padding: 0 6px; text-align: center; }
+.modulus .talent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.modulus .talent-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 2px 0; }
+.modulus .talent-row img { border: none; }
+.modulus .talent-row .talent-name { cursor: pointer; font-weight: bold; }
+.modulus .talent-row button { width: auto; flex: 0 0 auto; line-height: 20px; font-size: 12px; padding: 0 6px; }
+.modulus .talent-row.locked { opacity: 0.85; }
+.modulus .talent-locked { flex-basis: 100%; font-size: 11px; color: var(--mod-danger); display: flex; flex-direction: column; padding-left: 30px; }
+.modulus .talent-remove { margin-left: auto; cursor: pointer; }
+.modulus .talent-active ul { margin: 0; padding-left: 16px; font-size: 12px; }
+.modulus-condfx-note ul { margin: 2px 0; padding-left: 16px; font-size: 12px; }
+.modulus .cfx-row { border: 1px solid var(--mod-border); border-radius: 6px; padding: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
+.modulus .cfx-row.invalid { border-color: var(--mod-danger); }
+.modulus .cfx-head { display: flex; gap: 6px; align-items: center; }
+.modulus .cfx-head a, .modulus .cfx-sub a, .modulus .cfx-add { cursor: pointer; }
+.modulus .cfx-section > strong { font-size: 12px; }
+.modulus .cfx-fields { display: flex; flex-wrap: wrap; gap: 6px; align-items: end; }
+.modulus .cfx-sub { padding-left: 10px; border-left: 2px solid var(--mod-border); margin: 2px 0; }
+.modulus .cfx-field { display: flex; flex-direction: column; font-size: 11px; flex: 1 1 110px; }
+.modulus .cfx-field input[type="checkbox"] { align-self: flex-start; }
+.modulus .cfx-add { font-size: 11px; margin-right: 10px; }
+.modulus .talent-principles { font-size: 12px; margin: 4px 0; }
+.modulus .talent-principles ul { margin: 4px 0; padding-left: 18px; }
+.modulus .talent-prereqs button { width: auto; }
+.modulus .graph-domains { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.modulus .graph-domain h3 { margin: 4px 0; }
+.modulus .tree, .modulus .tree ul { list-style: none; margin: 0; padding-left: 14px; }
+.modulus .tree { padding-left: 0; }
+.modulus .tnode { margin: 2px 0; }
+.modulus .tnode > a { cursor: pointer; }
+.modulus .tnode ul { border-left: 1px dashed var(--mod-border); }
+.modulus .tnode.problem > a { color: var(--mod-danger); }
+.modulus .graph-issues ul { margin: 0; padding-left: 16px; font-size: 12px; }
+.modulus .graph-issues a { cursor: pointer; }
+.modulus-roll-card .talent-sources { margin: 4px 0 0; padding-left: 16px; font-size: 11px; }
+.modulus .em-fx { border-color: #c58b16; } .modulus .em-fx a { cursor: pointer; }
+.modulus .em-team { width: 80px; height: 20px; font-size: 11px; margin-left: 4px; }

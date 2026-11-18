@@ -1,0 +1,32 @@
+<div class="talent-graph-body">
+  {{#*inline "tnode"}}
+  <li class="tnode {{#if problem}}problem{{/if}}" data-uuid="{{uuid}}">
+    <a data-action="openTalent"><span class="tier-badge">{{tier}}</span> {{name}}</a>
+    <span class="hint">{{xpCost}} XP{{#if cross}} · + {{cross.name}}{{#if cross.missing}} (?){{/if}}{{/if}}</span>
+    {{#if children.length}}<ul>{{#each children}}{{> tnode}}{{/each}}</ul>{{/if}}
+  </li>
+  {{/inline}}
+  <p class="hint">{{localize "MODULUS.Talent.GraphHint"}} ({{count}})</p>
+  {{#if issues.length}}
+  <fieldset class="graph-issues">
+    <legend>{{localize "MODULUS.Talent.GraphIssues"}}</legend>
+    <ul>{{#each issues}}<li data-uuid="{{uuid}}"><a data-action="openTalent">{{text}}</a></li>{{/each}}</ul>
+  </fieldset>
+  {{else}}
+  <p class="buff"><i class="fa-solid fa-check"></i> {{localize "MODULUS.Talent.GraphValid"}}</p>
+  {{/if}}
+  <div class="graph-domains">
+    {{#each domains}}
+    <section class="graph-domain">
+      <h3>{{label}}</h3>
+      <ul class="tree">{{#each roots}}{{> tnode}}{{else}}<li class="hint">—</li>{{/each}}</ul>
+    </section>
+    {{/each}}
+  </div>
+  {{#if loose.length}}
+  <section class="graph-domain">
+    <h3>{{localize "MODULUS.Talent.Unattached"}}</h3>
+    <ul class="tree">{{#each loose}}{{> tnode}}{{/each}}</ul>
+  </section>
+  {{/if}}
+</div>

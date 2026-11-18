@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { installFoundryMock, Collection } from "./harness/foundry-mock.js";
 import { SETTING_DEFAULTS } from "../module/settings.js";
 import { newEncounterState } from "../module/rules/encounter.js";
+import { effectiveTier, dcForTier } from "../module/rules/tier.js";
 
 let mock;
 let encounterController;
@@ -25,12 +26,14 @@ function makeActor(name, tiers = {}) {
       defeatedTracks: 0,
       allDepleted: false
     },
-    getEffectiveTier(key) {
-      const tier = tiers[key] ?? "secondary";
-      return { tier, baseTier: tier, extraDebuffDice: 0, extraBuffDice: 0, defeatedTracks: 0 };
+    getEffectiveTier(key, { shifts = [] } = {}) {
+      const base = tiers[key] ?? "secondary";
+      const r = effectiveTier({ baseTier: base, shifts });
+      return { ...r, baseTier: base, defeatedTracks: 0 };
     },
-    getDefenseDC(key) {
-      return { dc: 11, tier: tiers[key] ?? "secondary", defeatedTracks: 0 };
+    getDefenseDC(key, { shifts = [] } = {}) {
+      const r = this.getEffectiveTier(key, { shifts });
+      return { dc: dcForTier(r.tier), tier: r.tier, defeatedTracks: 0 };
     },
     applyPips: async () => {}
   };
@@ -161,4 +164,40 @@ test("Duelist asks for a drop; interrupts cancel without spending", async () => 
   assert.equal(combat.encounterState.phase, "surrender");
   assert.equal(combat.combatants.get("f").momentum, 5); // interrupted: nothing spent
   assert.equal(combat.combatants.get("g").momentum, 7);
+});
+
+test("talents: a conditional effect triggered at declaration raises the defender's DC at resolution, shows on the card, and expires at round end", async () => {
+  const A = makeActor("Hal"), B = makeActor("Ida");
+  // Ida: when another participant declares an action targeting her, +1 tier in physical finesse (defense) this round.
+  B.items.set("t1", {
+    id: "t1", type: "talent", name: "Braced When Marked",
+    system: { talentId: "braced", conditionalEffects: [{
+      id: "cfx_1", label: "Braced",
+      trigger: { event: "actionTargeted", actor: "other" },
+      grant: { tierShifts: [{ stat: "physical.finesse", delta: 1 }], appliesToRolls: "defense" },
+      duration: { rounds: 1 }
+    }] }
+  });
+  const combat = makeCombat([["h", A, 5], ["i", B, 4]]);
+  combat.id = "C4";
+  const ctl = encounterController(combat);
+  await ctl.startRound();
+  await ctl.beginDeclarations();
+  await ctl.submitDeclaration("i", { type: "pass" });
+  const before = mock.messages.length;
+  await ctl.submitDeclaration("h", strike({ kind: "actor", pid: "i" }));
+  const fx = combat.encounterState.condfx.instances;
+  assert.equal(fx.length, 1);
+  assert.equal(fx[0].applyToId, "i");
+  assert.ok(mock.messages.slice(before).some((m) => String(m.content ?? "").includes("Braced")));
+
+  await ctl.resolveNext();
+  const roll = mock.messages.filter((m) => m.rolls).at(-1).rolls[0];
+  assert.equal(roll.options.modulus.dc, 14); // secondary finesse 11 -> primary 14
+  const sources = roll.options.modulus.context.talentEffects;
+  assert.equal(sources.length, 1);
+  assert.equal(sources[0].defense, true);
+
+  await ctl.endRound();
+  assert.equal(combat.encounterState.condfx.instances.length, 0);
 });

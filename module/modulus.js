@@ -21,6 +21,9 @@ import { encounterController } from "./encounter/controller.js";
 import { registerQueries } from "./encounter/queries.js";
 import { decorateChatMessage } from "./encounter/outcomes.js";
 import { registerSyncHooks, openSyncDialog, syncCompendiumCopies, syncPlan } from "./compendium/sync.js";
+import { registerEncounterEvents, requestEmit } from "./encounter/events.js";
+import { registerTalentHooks } from "./talents/talents.js";
+import { TalentGraph } from "./apps/talent-graph.js";
 
 Hooks.once("init", () => {
   console.log("Modulus | Initializing");
@@ -54,6 +57,8 @@ Hooks.once("init", () => {
     `systems/${SYSTEM_ID}/templates/actor/items.hbs`,
     `systems/${SYSTEM_ID}/templates/actor/notes.hbs`,
     `systems/${SYSTEM_ID}/templates/actor/cards.hbs`,
+    `systems/${SYSTEM_ID}/templates/actor/talents.hbs`,
+    `systems/${SYSTEM_ID}/templates/apps/talent-graph.hbs`,
     `systems/${SYSTEM_ID}/templates/chat/hand-card.hbs`,
     `systems/${SYSTEM_ID}/templates/chat/action-card.hbs`,
     `systems/${SYSTEM_ID}/templates/apps/vocab-editor.hbs`,
@@ -67,6 +72,8 @@ Hooks.once("init", () => {
   registerDeckHooks();
   registerQueries();
   registerSyncHooks();
+  registerEncounterEvents();
+  registerTalentHooks();
 
   game.settings.registerMenu(SYSTEM_ID, "vocabularyEditor", {
     name: "MODULUS.Vocab.Title",
@@ -83,7 +90,9 @@ Hooks.once("init", () => {
     VocabularyEditor, openVocabularyEditor: () => VocabularyEditor.open(),
     ActionBuilder, openActionBuilder, buildDeclaration, resolveDeclaration,
     EncounterManager, openEncounterManager: (combatId) => EncounterManager.open(combatId), encounterController,
-    syncCompendiums: openSyncDialog, syncCompendiumCopies, syncPlan
+    syncCompendiums: openSyncDialog, syncCompendiumCopies, syncPlan,
+    emitEvent: requestEmit,
+    openTalentGraph: () => TalentGraph.open()
   };
 });
 

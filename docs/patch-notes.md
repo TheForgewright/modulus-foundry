@@ -2,6 +2,12 @@
 
 Newest first. Every build adds a section for its version (`build.sh` checks for it).
 
+## 0.1.1
+- **Talents.** A Talents tab on the character sheet shows the talents a character has and every talent they could take, with its XP cost. Locked talents say exactly what they still need. Taking a talent spends its XP; removing one can refund it. The GM can grant a locked talent.
+- **Talent editor.** Talent sheets pick their prerequisites from lists of the right tier, flag problems in the prerequisite graph, and show the authoring principles. A Talent graph window (talent sheet or Vocabulary Editor) shows every talent as trees by domain.
+- **Conditional effects.** Talents can give tier shifts (or dice) when something happens in an encounter: an action used, being targeted, a hit or miss, a break point, a scene track change, a status, round start, and more. Each effect is built from lists and previewed as a plain sentence. Active effects show in chat, in the Encounter Manager (the GM can remove them) and on the sheet, and every roll card lists the talent effects that changed it.
+- **Teams.** An optional team label per participant in the Encounter Manager, for talents that say "an ally" or "an enemy".
+
 ## 0.1.0
 - **First test build.** Character and NPC sheets with the dot allocator, three pip tracks with break points, momentum, and the 3d20 keep-one roll with buff and debuff dice.
 - **Vocabulary.** Actions, words, statuses, talents and skills with a typed effects editor and tag chips; the Vocabulary Editor (Items sidebar) with JSON import and export; the Act window to build an action from words and see its cost, dice and chance before rolling.

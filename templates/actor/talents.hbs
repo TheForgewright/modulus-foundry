@@ -1,0 +1,57 @@
+<section class="tab talents {{#if tabActive.talents}}active{{/if}}" data-tab="talents">
+  {{#with talents}}
+  <div class="talent-summary">
+    <span class="xp">{{localize "MODULUS.Talent.XPAvailable"}} <strong>{{xp.available}}</strong> <span class="hint">({{xp.spent}} / {{xp.total}})</span></span>
+    <table class="talent-counts">
+      <tr><th></th><th>{{localize "MODULUS.Talent.TierN" n=1}}</th><th>{{localize "MODULUS.Talent.TierN" n=2}}</th><th>{{localize "MODULUS.Talent.TierN" n=3}}</th></tr>
+      {{#each counts}}<tr><td>{{domain}}</td><td>{{t1}}</td><td>{{t2}}</td><td>{{t3}}</td></tr>{{/each}}
+    </table>
+  </div>
+
+  {{#if active.length}}
+  <fieldset class="talent-active">
+    <legend>{{localize "MODULUS.Talent.ActiveEffects"}}</legend>
+    <ul>{{#each active}}<li><strong>{{label}}</strong> <span class="buff">{{text}}</span>{{#if stacks}} ×{{stacks}}{{/if}} <span class="hint">· {{until}} · {{encounter}}</span></li>{{/each}}</ul>
+  </fieldset>
+  {{/if}}
+
+  <fieldset>
+    <legend>{{localize "MODULUS.Talent.Owned"}}</legend>
+    <ul class="talent-list">
+      {{#each owned}}
+      <li class="talent-row" data-item-id="{{id}}">
+        <img src="{{img}}" alt="" width="24" height="24">
+        <span class="tier-badge">{{localize "MODULUS.Talent.TierN" n=tier}}</span>
+        <a class="talent-name" data-action="openTalent">{{name}}</a>
+        <span class="hint">{{domain}} · {{cost}} XP</span>
+        {{#each manual}}<button type="button" class="talent-manual" data-action="manualTrigger" data-effect-id="{{effectId}}" data-tooltip="MODULUS.Talent.ManualHint"><i class="fa-solid fa-bolt"></i> {{label}}</button>{{/each}}
+        {{#if ../../editable}}<a class="talent-remove" data-action="removeTalent" data-tooltip="MODULUS.Talent.Remove"><i class="fa-solid fa-trash"></i></a>{{/if}}
+      </li>
+      {{else}}
+      <li class="hint">{{localize "MODULUS.Talent.NoneOwned"}}</li>
+      {{/each}}
+    </ul>
+  </fieldset>
+
+  <fieldset>
+    <legend>{{localize "MODULUS.Talent.Available"}}</legend>
+    {{#if none}}<p class="hint">{{localize "MODULUS.Talent.NoneKnown"}}</p>{{/if}}
+    <ul class="talent-list">
+      {{#each available}}
+      <li class="talent-row {{#if eligible}}eligible{{else}}locked{{/if}}" data-talent-id="{{talentId}}" data-uuid="{{uuid}}">
+        <img src="{{img}}" alt="" width="24" height="24">
+        <span class="tier-badge">{{localize "MODULUS.Talent.TierN" n=tier}}</span>
+        <a class="talent-name" data-action="openTalent">{{name}}</a>
+        <span class="hint">{{domain}} · {{cost}} XP{{#if fromPack}} · {{fromPack}}{{/if}}</span>
+        {{#if eligible}}
+        {{#if ../../editable}}<button type="button" data-action="takeTalent"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Talent.Take"}}</button>{{/if}}
+        {{else}}
+        <span class="talent-locked"><i class="fa-solid fa-lock"></i> {{#each reasons}}<span>{{this}}</span>{{/each}}</span>
+        {{#if ../../isGM}}<button type="button" class="secondary" data-action="grantTalent" data-tooltip="MODULUS.Talent.GrantHint">{{localize "MODULUS.Talent.Grant"}}</button>{{/if}}
+        {{/if}}
+      </li>
+      {{/each}}
+    </ul>
+  </fieldset>
+  {{/with}}
+</section>

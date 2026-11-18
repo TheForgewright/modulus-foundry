@@ -11,6 +11,10 @@ import { hasCardAbilities, cardAbilities, markAbilities } from "../deck/card-eff
 import { cardView, markText, STANDALONE_DECK } from "../documents/actor.js";
 import { evaluateHand, checkHandRequirement, normalizeMark, HAND_NAMES, MAX_HAND_SIZE } from "../rules/deck.js";
 import { sourceOf } from "../compendium/sync.js";
+import { knownTalents, ownedTalents, eligibilityFor, reasonText, takeTalent, removeTalent, xpAvailable } from "../talents/talents.js";
+import { requestEmit } from "../encounter/events.js";
+import { describeInstance } from "../encounter/condfx-bridge.js";
+import { normalizeCondFx } from "../rules/condfx.js";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -46,7 +50,12 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       discardMomentum: ModulusActorSheet.#onDiscardMomentum,
       useAbility: ModulusActorSheet.#onUseAbility,
       useMark: ModulusActorSheet.#onUseMark,
-      newDeck: ModulusActorSheet.#onNewDeck
+      newDeck: ModulusActorSheet.#onNewDeck,
+      takeTalent: ModulusActorSheet.#onTakeTalent,
+      grantTalent: ModulusActorSheet.#onGrantTalent,
+      removeTalent: ModulusActorSheet.#onRemoveTalent,
+      manualTrigger: ModulusActorSheet.#onManualTrigger,
+      openTalent: ModulusActorSheet.#onOpenTalent
     }
   };
 
@@ -54,6 +63,7 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
     header: { template: T("header") },
     nav: { template: T("nav") },
     main: { template: T("main") },
+    talents: { template: T("talents"), scrollable: [""] },
     items: { template: T("items"), scrollable: [""] },
     cards: { template: T("cards"), scrollable: [""] },
     notes: { template: T("notes") }
@@ -157,7 +167,8 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       tierChoices: { primary: t("MODULUS.Tier.primary"), secondary: t("MODULUS.Tier.secondary"), tertiary: t("MODULUS.Tier.tertiary") },
       statsModeChoices: { dots: t("MODULUS.NPC.StatsMode.dots"), direct: t("MODULUS.NPC.StatsMode.direct") },
       systemFields: system.schema.fields,
-      tabActive: Object.fromEntries(["main", "items", "cards", "notes"].map((id) => [id, this.tabGroups.primary === id])),
+      tabActive: Object.fromEntries(["main", "talents", "items", "cards", "notes"].map((id) => [id, this.tabGroups.primary === id])),
+      talents: this.tabGroups.primary === "talents" ? await this._prepareTalents() : null,
       cards: this._prepareCards(),
       encounters: game.combats.filter((c) => c.combatants.some((x) => x.actor === actor)).map((c) => {
         const combatant = c.combatants.find((x) => x.actor === actor);
@@ -178,11 +189,97 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
   }
 
   _tabIds() {
-    const ids = ["main", "items"];
+    const ids = ["main", "talents", "items"];
     if (this.showCards) ids.push("cards");
     ids.push("notes");
     if (!ids.includes(this.tabGroups.primary)) this.tabGroups.primary = "main";
     return ids;
+  }
+
+  /* ---------------- Talents (§8) ---------------- */
+
+  async _prepareTalents() {
+    const t = (k) => game.i18n.localize(k);
+    const actor = this.document;
+    this._known = await knownTalents();
+    const owned = ownedTalents(actor);
+    const ownedIds = new Set(owned.map((o) => o.talentId));
+    const domainLabel = (d) => (d ? t(`MODULUS.Domain.${d}`) : "—");
+    const ownedRows = actor.items.filter((i) => i.type === "talent").map((item) => ({
+      id: item.id,
+      name: item.name,
+      img: item.img,
+      tier: item.system.tier,
+      domain: domainLabel(item.system.domain),
+      cost: item.getFlag(SYSTEM_ID, "xpPaid") ?? item.system.xpCost ?? 0,
+      manual: (item.system.conditionalEffects ?? []).map((d) => normalizeCondFx(d)).filter((d) => d.trigger.event === "manual").map((d) => ({ effectId: d.id, label: d.label || item.name }))
+    })).sort((a, b) => a.tier - b.tier || a.domain.localeCompare(b.domain) || a.name.localeCompare(b.name));
+    const available = [...this._known.values()].filter((k) => !ownedIds.has(k.talentId)).map((k) => {
+      const e = eligibilityFor(actor, k, this._known);
+      return {
+        talentId: k.talentId, uuid: k.uuid, name: k.name, img: k.img, tier: k.tier, domain: domainLabel(k.domain), cost: e.cost,
+        eligible: e.eligible, reasons: e.reasons.map(reasonText), fromPack: k.fromPack
+      };
+    }).sort((a, b) => (b.eligible - a.eligible) || a.tier - b.tier || a.domain.localeCompare(b.domain) || a.name.localeCompare(b.name));
+    // Active conditional effects on this character, per encounter.
+    const active = [];
+    for (const c of game.combats) {
+      const combatant = c.combatants.find((x) => x.actor === actor);
+      if (!combatant) continue;
+      const st = c.encounterState;
+      const names = { ...Object.fromEntries(c.combatants.map((x) => [x.id, x.name])), ...st.names };
+      for (const i of st.condfx?.instances ?? []) if (i.applyToId === combatant.id) active.push({ ...describeInstance(i, names), encounter: c.label });
+    }
+    const counts = Object.fromEntries(["physical", "mental", "social"].map((d) => [d, [1, 2, 3].map((tier) => owned.filter((o) => o.domain === d && o.tier === tier).length)]));
+    return {
+      owned: ownedRows,
+      available,
+      active,
+      xp: { total: actor.system.xp.total, spent: actor.system.xp.spent, available: xpAvailable(actor) },
+      counts: Object.entries(counts).map(([d, c]) => ({ domain: domainLabel(d), t1: c[0], t2: c[1], t3: c[2] })),
+      none: !this._known.size
+    };
+  }
+
+  static async #onTakeTalent(event, target) {
+    if (!this.isEditable) return;
+    const talent = this._known?.get(target.closest("[data-talent-id]").dataset.talentId);
+    if (talent) await takeTalent(this.document, talent, this._known);
+  }
+
+  static async #onGrantTalent(event, target) {
+    if (!game.user.isGM) return;
+    const talent = this._known?.get(target.closest("[data-talent-id]").dataset.talentId);
+    if (talent) await takeTalent(this.document, talent, this._known, { force: true });
+  }
+
+  static async #onRemoveTalent(event, target) {
+    if (!this.isEditable) return;
+    const item = this.document.items.get(target.closest("[data-item-id]").dataset.itemId);
+    if (!item) return;
+    const refund = await foundry.applications.api.DialogV2.wait({
+      window: { title: "MODULUS.Talent.Remove" },
+      content: `<p>${game.i18n.format("MODULUS.Talent.RemoveConfirm", { name: foundry.utils.escapeHTML(item.name) })}</p>`,
+      buttons: [
+        { action: "refund", label: "MODULUS.Talent.RemoveRefund", default: true, callback: () => true },
+        { action: "keep", label: "MODULUS.Talent.RemoveNoRefund", callback: () => false }
+      ],
+      rejectClose: false
+    });
+    if (refund == null) return;
+    await removeTalent(this.document, item, { refund });
+  }
+
+  static async #onManualTrigger(event, target) {
+    const item = this.document.items.get(target.closest("[data-item-id]").dataset.itemId);
+    if (!item) return;
+    await requestEmit(this.document, { type: "manual", params: { talentId: item.system.talentId, effectId: target.dataset.effectId } });
+  }
+
+  static async #onOpenTalent(event, target) {
+    const uuid = target.closest("[data-uuid]")?.dataset.uuid;
+    const item = uuid ? await fromUuid(uuid) : this.document.items.get(target.closest("[data-item-id]")?.dataset.itemId);
+    item?.sheet.render(true);
   }
 
   /* ---------------- Cards (§10) ---------------- */

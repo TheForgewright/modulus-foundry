@@ -13,3 +13,5 @@ export * from "./assembly.js";
 export * from "./vocab-io.js";
 export * from "./encounter.js";
 export * from "./compendium-sync.js";
+export * from "./talents.js";
+export * from "./condfx.js";

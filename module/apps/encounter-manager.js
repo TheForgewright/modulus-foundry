@@ -9,6 +9,7 @@ import { resolutionOrder, nextStep, surrenderFlags, currentEntry } from "../rule
 import { ENCOUNTER_KINDS } from "../documents/combat.js";
 import { encounterController } from "../encounter/controller.js";
 import { ActionBuilder } from "./action-builder.js";
+import { describeInstance } from "../encounter/condfx-bridge.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
@@ -36,7 +37,8 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
       interrupt: EncounterManager.#onInterrupt,
       setOut: EncounterManager.#onSetOut,
       endRound: EncounterManager.#onEndRound,
-      openSheet: EncounterManager.#onOpenSheet
+      openSheet: EncounterManager.#onOpenSheet,
+      removeEffect: EncounterManager.#onRemoveEffect
     }
   };
 
@@ -88,6 +90,8 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
     const current = currentEntry(s);
     const tracks = { "": "—", physical: t("MODULUS.Domain.physical"), mental: t("MODULUS.Domain.mental"), social: t("MODULUS.Domain.social") };
     const declared = new Set(s.stack.map((e) => e.pid));
+    const names = { ...Object.fromEntries(combat.combatants.map((c) => [c.id, c.name])), ...s.names };
+    const effectsOn = (pid) => (s.condfx?.instances ?? []).filter((i) => i.applyToId === pid).map((i) => describeInstance(i, names));
 
     const waiting = controller?.waitingOn() ?? (step && step.type !== "done" ? { step, name: s.names[step.pid] ?? s.stack.find((e) => e.id === step.entryId)?.name } : null);
     if (waiting) Object.assign(waiting, { isDeclare: waiting.step.type === "declare", isReconfirm: waiting.step.type === "reconfirm", isDuelist: waiting.step.type === "duelist" });
@@ -126,7 +130,9 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
           taxing: mem?.taxing || 0,
           charge: mem?.charge?.count || 0,
           inevitable: mem?.inevitable?.count || 0,
-          player: c.playerOwners[0]?.name ?? null
+          player: c.playerOwners[0]?.name ?? null,
+          effects: effectsOn(c.id),
+          team: c.team
         };
       }).sort((a, b) => (b.momentum - a.momentum) || a.name.localeCompare(b.name)),
       stack: [...resolutionOrder(s), ...s.stack.filter((e) => e.cancelled)].map((e) => ({
@@ -191,6 +197,9 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
     }
     for (const box of this.element.querySelectorAll("input.em-active")) {
       box.addEventListener("change", (ev) => encounterController(combat).setParticipating(ev.target.dataset.id, ev.target.checked));
+    }
+    for (const input of this.element.querySelectorAll("input.em-team")) {
+      input.addEventListener("change", (ev) => combat.combatants.get(ev.target.dataset.id)?.setFlag(SYSTEM_ID, "team", ev.target.value.trim()));
     }
     for (const sel of this.element.querySelectorAll("select.em-track")) {
       sel.addEventListener("change", (ev) => combat.combatants.get(ev.target.dataset.id)?.setFlag(SYSTEM_ID, "sceneTrack", ev.target.value));
@@ -371,6 +380,10 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
 
   static #onEndRound() {
     this.controller.endRound();
+  }
+
+  static #onRemoveEffect(event, target) {
+    this.controller.removeEffect(target.dataset.fxId);
   }
 
   static #onOpenSheet(event, target) {

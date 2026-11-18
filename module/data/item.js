@@ -55,13 +55,15 @@ export class TalentData extends ModulusItemData {
   static defineSchema() {
     return {
       ...super.defineSchema(),
+      // Stable key other talents point at as a prerequisite; survives copies and renames.
+      talentId: str("talentId"),
       domain: domainField({ label: L("domain") }),
       tier: intField(1, { min: 1, max: 3, label: L("talentTier") }),
       prereqTalent: str("prereqTalent"),
       crossPrereq: str("crossPrereq"),
-      xpCost: optInt("xpCost", { min: 0 }), // [OPEN #3]
+      xpCost: intField(0, { min: 0, label: L("xpCost") }),
       effects: effectsField(),
-      conditionalEffects: effectsField("conditionalEffects"), // §8.1, editor in Phase 4
+      conditionalEffects: effectsField("conditionalEffects"), // §8.1
       grantsWords: new fields.ArrayField(new fields.StringField(), { label: L("grantsWords") }),
       grantsActions: new fields.ArrayField(new fields.StringField(), { label: L("grantsActions") }),
       affectsTags: new fields.ArrayField(new fields.StringField(), { label: L("affectsTags") }),

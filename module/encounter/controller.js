@@ -9,6 +9,8 @@ import { getSetting } from "../settings.js";
 import { declarationFromPayload } from "./declaration.js";
 import { resolveDeclaration } from "../apps/action-builder.js";
 import { applyAllOutcomes } from "./outcomes.js";
+import * as FX from "./condfx-bridge.js";
+import { resolutionOrder } from "../rules/encounter.js";
 
 const QUERY_TIMEOUT = 30 * 60 * 1000;
 const rng = () => CONFIG.Dice.randomUniform();
@@ -54,6 +56,29 @@ export class EncounterController {
     return this.combat.combatants.get(pid);
   }
 
+  names(state = this.state) {
+    return { ...Object.fromEntries(this.combat.combatants.map((c) => [c.id, c.name])), ...state.names };
+  }
+
+  /** Run events through the participants' talents (§8.1) and announce what applied. */
+  async fire(state, events) {
+    const { state: next, applied } = FX.processEvents(this.combat, state, events);
+    if (applied.length) await FX.announce(this.combat, applied, this.names(next));
+    return next;
+  }
+
+  /** Events from outside the round flow (track, momentum, status and card changes; manual buttons). */
+  emit(events) {
+    return this.run(async () => {
+      if (this.state.round < 1) return;
+      await this.save(await this.fire(this.state, [].concat(events)));
+    });
+  }
+
+  removeEffect(instanceId) {
+    return this.run(async () => this.save(FX.remove(this.state, instanceId)));
+  }
+
   async chat(content) {
     return ChatMessage.create({
       content: `<div class="modulus-encounter-note"><strong>${foundry.utils.escapeHTML(this.combat.label)}</strong><p>${content}</p></div>`,
@@ -74,10 +99,17 @@ export class EncounterController {
         gain: c.actor?.system.momentum.gainPerTurn ?? getSetting("momentum.gainDefault"),
         ceiling: c.actor?.system.momentum.ceiling ?? 99
       }));
-      const { state, gains } = E.startRound(this.state, participants);
+      const started = E.startRound(this.state, participants);
+      const gains = started.gains;
+      let state = started.state;
       for (const [pid, value] of Object.entries(gains)) await this.combatant(pid)?.setMomentum(value);
       await this.tickStatuses("roundStart");
       this.asked.clear();
+      state = FX.expire(state, "roundStart");
+      state = await this.fire(state, [
+        state.round === 1 ? { id: `enc-start`, type: "encounterStart" } : null,
+        { id: `round-${state.round}-start`, type: "roundStart" }
+      ]);
       await this.save(state);
       await this.requestParticipation();
     });
@@ -149,7 +181,20 @@ export class EncounterController {
       if (s.phase === "declaring") {
         const step = E.nextStep(s);
         if (step.type === "done") {
-          await this.save(E.beginFinalization(s).state);
+          let next = E.beginFinalization(s).state;
+          const order = resolutionOrder(next);
+          next = await this.fire(next, order.map((e, k) => ({
+            id: `${e.id}:position`,
+            type: "stackPosition",
+            actorId: e.pid,
+            params: {
+              top: k === 0,
+              bottom: k === order.length - 1,
+              aboveTags: (order[k - 1]?.decl.tagList ?? []).map((t) => t.name),
+              belowTags: (order[k + 1]?.decl.tagList ?? []).map((t) => t.name)
+            }
+          })));
+          await this.save(next);
           continue;
         }
         return this.ask(step);
@@ -259,7 +304,7 @@ export class EncounterController {
       }
       const r = E.declare(s, pid, decl, rng, engineSettings());
       if (r.errors.length) return this.reject(pid, r.errors.map((e) => game.i18n.format(`MODULUS.Encounter.Error.${e.code}`, e)));
-      await this.save(r.state);
+      await this.save(await this.fire(r.state, [FX.actionEvent(r.state, r.entry, { timing: "declare" })]));
       if (r.prompted.length) {
         await this.chat(game.i18n.format("MODULUS.Encounter.Cascade", {
           name: combatant.name, names: r.prompted.map((id) => r.state.stack.find((e) => e.id === id).name).join(", ")
@@ -282,7 +327,9 @@ export class EncounterController {
       const s = this.state;
       if (!s.queue.some((q) => q.entryId === entryId)) return;
       if (answer.type === "keep") {
-        await this.save(E.reconfirm(s, entryId, null).state);
+        const kept = E.reconfirm(s, entryId, null).state;
+        const pid = s.stack.find((e) => e.id === entryId)?.pid;
+        await this.save(await this.fire(kept, [{ id: `${entryId}:kept:${s.seq}`, type: "reconfirmed", actorId: pid, params: { changed: false } }]));
         return this._pump();
       }
       const entry = s.stack.find((e) => e.id === entryId);
@@ -291,7 +338,11 @@ export class EncounterController {
       if (errors.length || !decl) return this.reject(entry.pid, errors);
       const r = E.reconfirm(s, entryId, decl, rng, engineSettings());
       if (r.errors.length) return this.reject(entry.pid, r.errors.map((e) => game.i18n.format(`MODULUS.Encounter.Error.${e.code}`, e)));
-      await this.save(r.state);
+      const changed = r.state.stack.find((e) => e.id === entryId);
+      await this.save(await this.fire(r.state, [
+        { id: `${entryId}:changed:${r.state.seq}`, type: "reconfirmed", actorId: entry.pid, params: { changed: true } },
+        { ...FX.actionEvent(r.state, changed, { timing: "declare" }), id: `${entryId}:declare:${r.state.seq}` }
+      ]));
       if (r.prompted.length) {
         await this.chat(game.i18n.format("MODULUS.Encounter.Cascade", {
           name: combatant.name, names: r.prompted.map((id) => r.state.stack.find((e) => e.id === id).name).join(", ")
@@ -330,28 +381,41 @@ export class EncounterController {
     const entry = s.stack.find((e) => e.id === entryId);
     const combatant = this.combatant(entry.pid);
     let hit = null;
+    let usedFx = [];
     if (entry.state === "CHARGING") {
       await this.chat(game.i18n.format("MODULUS.Encounter.Charging", { name: entry.name, label: entry.decl.label, n: entry.chargeCount, of: entry.decl.charge }));
     } else if (combatant?.actor) {
       // DC and dice are looked up now, at resolution (§6.6 step 7); affordability was checked at declaration.
+      const targetPid = FX.targetIdsOf(s, entry.decl)[0] ?? null;
       const { plan } = await declarationFromPayload(this.combat, combatant, entry.decl.payload, {
-        momentum: Number.MAX_SAFE_INTEGER, extraDice: entry.mods, extraFlat: entry.duelistBonus
+        momentum: Number.MAX_SAFE_INTEGER, extraDice: entry.mods, extraFlat: entry.duelistBonus,
+        condFx: FX.rollModifiers(s, entry.pid, targetPid)
       });
       if (plan) {
         const res = await resolveDeclaration(combatant.actor, plan, { encounter: { combatId: this.combat.id, entryId } });
         hit = res.hit;
+        usedFx = plan.condFxSources.map((i) => i.id);
         if (getSetting("autoApplyOutcomes") && res.message) await applyAllOutcomes(res.message);
       }
     }
     const r = E.resolveEntry(this.state, entryId, { hit });
     if (r.momentumChange && combatant) await combatant.adjustMomentum(r.momentumChange);
-    await this.save(r.state);
+    let next = FX.consume(r.state, usedFx);
+    if (!r.skipped) {
+      const outcome = hit === null ? null : hit ? "hit" : "miss";
+      next = await this.fire(next, [
+        FX.actionEvent(next, entry, { timing: "resolve", outcome }),
+        entry.decl.reaction ? { id: `${entryId}:reaction`, type: "reactionResolved", actorId: entry.pid, targetIds: FX.targetIdsOf(next, entry.decl) } : null
+      ]);
+    }
+    await this.save(next);
   }
 
   interrupt(entryId) {
     return this.run(async () => {
+      const entry = this.state.stack.find((e) => e.id === entryId);
       const r = E.cancelEntry(this.state, entryId);
-      await this.save(r.state);
+      await this.save(await this.fire(r.state, [entry ? { id: `${entryId}:interrupted`, type: "interrupted", actorId: entry.pid } : null]));
       return this._pump();
     });
   }
@@ -361,11 +425,14 @@ export class EncounterController {
     const c = this.combatant(combatantId);
     if (!c) return;
     await c.update({ defeated: out, [`flags.${SYSTEM_ID}.active`]: !out });
+    if (out) await this.emit([{ id: `${combatantId}:out:${this.state.round}`, type: "surrendered", actorId: combatantId }, { id: `${combatantId}:left:${this.state.round}`, type: "participantLeft", actorId: combatantId }]);
   }
 
   endRound() {
     return this.run(async () => {
-      const r = E.endRound(this.state);
+      let state = await this.fire(this.state, [{ id: `round-${this.state.round}-end`, type: "roundEnd" }]);
+      state = FX.expire(state, "roundEnd");
+      const r = E.endRound(state);
       await this.tickStatuses("roundEnd");
       this.asked.clear();
       await this.save(r.state);

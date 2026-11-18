@@ -12,6 +12,7 @@ import { dcForTier } from "../rules/tier.js";
 import { assemblySettings, dcTable, getSetting } from "../settings.js";
 import { ModulusRoll } from "../documents/roll.js";
 import { statLabel } from "./item-sheet.js";
+import { rollModifiers } from "../encounter/condfx-bridge.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -53,7 +54,7 @@ function statusesOf(actor) {
  * @param {{buff?: number, debuff?: number}} [d.extraDice]  e.g. aid / hinder from the stack
  * @param {number} [d.extraFlat]         e.g. Duelist bonus
  */
-export function buildDeclaration(actor, { action, words, target, targetMode, sceneTrack, momentum, extraDice = {}, extraFlat = 0 }) {
+export function buildDeclaration(actor, { action, words, target, targetMode, sceneTrack, momentum, extraDice = {}, extraFlat = 0, condFx = null }) {
   let targetCtx = null;
   if (targetMode === "self") targetCtx = { kind: "self" };
   else if (targetMode === "entry") targetCtx = { kind: "entry" };
@@ -78,9 +79,16 @@ export function buildDeclaration(actor, { action, words, target, targetMode, sce
     assembled.flatBonus += extraFlat;
   }
 
-  const plan = { assembled, target: targetCtx?.kind === "other" ? target : null, dc: null, dcSource: null, tier: null };
+  // Conditional effects (§8.1) active in this encounter: the roller's own, and the defender's for the DC.
+  const own = condFx?.attack?.(assembled.rollStat) ?? { shifts: [], buff: 0, debuff: 0, sources: [] };
+  if (own.buff || own.debuff) {
+    assembled.dice.lines.push({ label: "talents", buff: own.buff, debuff: own.debuff });
+    assembled.dice.buff += own.buff;
+    assembled.dice.debuff += own.debuff;
+  }
+  const plan = { assembled, target: targetCtx?.kind === "other" ? target : null, dc: null, dcSource: null, tier: null, condFxSources: [...own.sources] };
   if (assembled.rolls && assembled.rollStat) {
-    const eff = actor.getEffectiveTier(assembled.rollStat, { shifts: assembled.tierShifts.map((s) => s.delta) });
+    const eff = actor.getEffectiveTier(assembled.rollStat, { shifts: [...assembled.tierShifts.map((s) => s.delta), ...own.shifts] });
     Object.assign(plan, {
       tier: eff.tier,
       baseTier: eff.baseTier,
@@ -97,7 +105,10 @@ export function buildDeclaration(actor, { action, words, target, targetMode, sce
       plan.dcSource = { kind: "task" };
     } else if (plan.target && assembled.targetStat) {
       // §6.6 step 7: the DC is looked up at resolution; before that this is a preview.
-      const def = plan.target.getDefenseDC(assembled.targetStat);
+      const defense = condFx?.defense?.(assembled.targetStat) ?? { shifts: [], sources: [] };
+      plan.condFxSources.push(...defense.sources);
+      plan.condFxDefenseIds = defense.sources.map((i) => i.id);
+      const def = plan.target.getDefenseDC(assembled.targetStat, { shifts: defense.shifts });
       plan.dc = dcForTier(def.tier, dcTable());
       plan.dcSource = {
         kind: "target", targetName: plan.target.name, stat: assembled.targetStat,
@@ -132,6 +143,10 @@ export function toStackDeclaration(plan, { payload, target }) {
     recovery: has("recovery"),
     rolls: a.rolls,
     tags: formatTags(a.tags),
+    tagList: a.tags,
+    words: (a.label.split(" + ").slice(1)),
+    rollStat: a.rollStat,
+    targetStat: a.targetStat,
     target,
     payload
   };
@@ -158,6 +173,14 @@ export async function resolveDeclaration(actor, plan, { spend = true, encounter 
     encounter,
     targetUuid: plan.target?.uuid ?? null,
     outcomeEffects,
+    talentEffects: (plan.condFxSources ?? []).map((i) => ({
+      label: i.label || i.talentName,
+      talent: i.talentName,
+      event: game.i18n.localize(`MODULUS.Talent.Trigger.${i.eventType}`),
+      shifts: i.tierShifts.map((s) => `${s.delta * i.stacks > 0 ? "+" : ""}${s.delta * i.stacks} ${s.stat === "*" ? game.i18n.localize("MODULUS.Talent.AllStats") : s.stat.includes("*") ? s.stat : statLabel(s.stat)}`).join(", "),
+      dice: i.dice.map((d) => [d.buff ? `+${d.buff * i.stacks}▲` : "", d.debuff ? `+${d.debuff * i.stacks}▼` : ""].join(" ").trim()).filter(Boolean).join(", "),
+      defense: (plan.condFxDefenseIds ?? []).includes(i.id)
+    })),
     action: {
       tags: formatTags(a.tags),
       cost: a.cost.total,
@@ -313,9 +336,12 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
   _plan() {
     const { action, chosen, target } = this._current();
     if (!action) return null;
+    // In an encounter, preview the talent effects active right now (they are looked up again at resolution).
+    const targetPid = target.stack?.kind === "actor" ? target.stack.pid : null;
+    const condFx = this.inEncounter ? rollModifiers(this.combat.encounterState, this.combatant.id, targetPid) : null;
     return buildDeclaration(this.actor, {
       action, words: chosen, target: target.actor, targetMode: target.mode,
-      sceneTrack: this.choice.sceneTrack || undefined, momentum: this.momentum
+      sceneTrack: this.choice.sceneTrack || undefined, momentum: this.momentum, condFx
     });
   }
 
@@ -348,7 +374,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!action) return ctx;
     const plan = this._plan();
     const a = plan.assembled;
-    const LINES = ["extraWords", "focus", "sceneTrack", "exposed", "resistance", "aid", "hinder", "duelist"];
+    const LINES = ["extraWords", "focus", "sceneTrack", "exposed", "resistance", "aid", "hinder", "duelist", "talents"];
     const lineLabel = (l) => (LINES.includes(l.label) ? t(`MODULUS.Builder.Line.${l.label}`) : l.label);
     ctx.plan = {
       label: a.label,

@@ -27,14 +27,14 @@ export function targetFor(combat, target) {
 /**
  * @returns {Promise<{decl, plan, errors: string[]}>}
  */
-export async function declarationFromPayload(combat, combatant, payload, { momentum = combatant.momentum, extraDice, extraFlat } = {}) {
+export async function declarationFromPayload(combat, combatant, payload, { momentum = combatant.momentum, extraDice, extraFlat, condFx } = {}) {
   const { action, words } = await loadItems(payload);
   if (!action) return { decl: null, plan: null, errors: [game.i18n.localize("MODULUS.Encounter.Error.noAction")] };
   const target = targetFor(combat, payload.target);
   const plan = buildDeclaration(combatant.actor, {
     action, words, target: target.actor, targetMode: target.mode,
     sceneTrack: combatant.sceneTrack || payload.sceneTrack || undefined,
-    momentum, extraDice, extraFlat
+    momentum, extraDice, extraFlat, condFx
   });
   const errors = plan.assembled.errors.map((e) => game.i18n.format(`MODULUS.Builder.Error.${e.code}`, e));
   return { decl: toStackDeclaration(plan, { payload, target: payload.target ?? { kind: "none" } }), plan, errors };

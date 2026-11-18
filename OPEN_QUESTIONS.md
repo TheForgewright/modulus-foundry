@@ -73,6 +73,10 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 66 | On-hit effects with ops the engine cannot apply directly (dice, tier shifts imposed on a target) | Offered as GM notes until conditional effects (Phase 4) exist | `encounter/outcomes.js` |
 | 67 | When a compendium entry changes and a world copy of it was also edited in the world, which wins? | The world edit, until the GM chooses to replace it (Sync from compendiums) | `rules/compendium-sync.js` |
 | 68 | Which actions does a skill modify (listed actions, actions with a tag, actions using a stat?), and do two skills on one roll stack? **Deferred:** skills may be removed entirely; the designers are deciding whether to focus on talents instead. | Not built; no further skill work until decided | `data/item.js` SkillData |
+| 69 | Can players take a talent they cannot afford or that is locked? | No; a GM can grant one anyway (the XP is still spent) | `talents/talents.js` `takeTalent` |
+| 70 | Removing a talent: refund its XP? | The GM or player chooses when removing; refund is the default | `talents/talents.js` `removeTalent` |
+| 71 | "Until the start of the owner's next turn": the stack has no turns. | The start of the next round | `rules/condfx.js` `expireEffects` |
+| 72 | Do talent effects apply outside an encounter (the Act window)? | No: "nearby" is the encounter instance (§8.1.2), so effects exist only inside one | `encounter/condfx-bridge.js` |
 
 ## Resolved
 

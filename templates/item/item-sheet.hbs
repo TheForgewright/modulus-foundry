@@ -87,6 +87,88 @@
   </fieldset>
   {{/if}}
 
+
+  {{!-- Talent editor (§8, §8.1) --}}
+  {{#with talent}}
+  {{#*inline "mfield"}}
+  <label class="cfx-field">
+    <span>{{label}}</span>
+    {{#if isSelect}}<select name="{{name}}">{{selectOptions options selected=value}}</select>{{/if}}
+    {{#if isInt}}<input type="number" name="{{name}}" value="{{value}}" step="1">{{/if}}
+    {{#if isBool}}<input type="checkbox" name="{{name}}" {{checked value}}>{{/if}}
+    {{#if isText}}<input type="text" name="{{name}}" value="{{value}}">{{/if}}
+  </label>
+  {{/inline}}
+  <fieldset class="talent-prereqs">
+    <legend>{{localize "MODULUS.Talent.Prerequisites"}}</legend>
+    {{#if needsPrereq}}
+    <div class="form-group">
+      <label>{{localize (concat "MODULUS.Talent.PrereqFor." tier)}}</label>
+      <select name="system.prereqTalent">{{selectOptions prereqOptions selected=prereq}}</select>
+    </div>
+    {{#if isTier3}}
+    <div class="form-group">
+      <label>{{localize "MODULUS.Talent.CrossPrereq"}}</label>
+      <select name="system.crossPrereq">{{selectOptions crossOptions selected=cross}}</select>
+    </div>
+    {{/if}}
+    <p class="hint">{{localize (concat "MODULUS.Talent.RequiresTier." tier)}}</p>
+    {{else}}
+    <p class="hint">{{localize "MODULUS.Talent.Tier1Open"}}</p>
+    {{/if}}
+    {{#each issues}}<p class="effect-error"><i class="fa-solid fa-triangle-exclamation"></i> {{this}}</p>{{/each}}
+    <button type="button" class="secondary" data-action="openTalentGraph"><i class="fa-solid fa-diagram-project"></i> {{localize "MODULUS.Talent.Graph"}}</button>
+  </fieldset>
+
+  <details class="talent-principles">
+    <summary>{{localize "MODULUS.Talent.PrinciplesTitle"}}</summary>
+    <ul>
+      <li>{{localize "MODULUS.Talent.Principle.1"}}</li>
+      <li>{{localize "MODULUS.Talent.Principle.2"}}</li>
+      <li>{{localize "MODULUS.Talent.Principle.3"}}</li>
+      <li>{{localize "MODULUS.Talent.Principle.4"}}</li>
+      <li>{{localize "MODULUS.Talent.Principle.5"}}</li>
+      <li>{{localize "MODULUS.Talent.Principle.6"}}</li>
+    </ul>
+  </details>
+
+  <fieldset class="cfx-editor">
+    <legend>{{localize "MODULUS.Field.conditionalEffects"}}</legend>
+    {{#each cfx}}
+    <div class="cfx-row {{#if errors.length}}invalid{{/if}}" data-cfx="{{index}}">
+      <div class="cfx-head">
+        <input type="hidden" name="{{idName}}" value="{{id}}">
+        <input type="text" name="{{labelName}}" value="{{label}}" placeholder="{{localize 'MODULUS.Talent.Field.label'}}">
+        {{#if ../../editable}}<a data-action="removeCfx" data-tooltip="DOCUMENT.Delete"><i class="fa-solid fa-trash"></i></a>{{/if}}
+      </div>
+      <div class="cfx-section"><strong>{{localize "MODULUS.Talent.When"}}</strong><div class="cfx-fields">{{#each triggerFields}}{{> mfield}}{{/each}}</div></div>
+      <div class="cfx-section">
+        <strong>{{localize "MODULUS.Talent.If"}}</strong>
+        {{#each conditions}}
+        <div class="cfx-fields cfx-sub">{{#each fields}}{{> mfield}}{{/each}}<a data-action="removeCfxPart" data-part="condition" data-index="{{index}}"><i class="fa-solid fa-xmark"></i></a></div>
+        {{else}}<span class="hint">{{localize "MODULUS.Talent.NoConditions"}}</span>{{/each}}
+        <a class="cfx-add" data-action="addCfxPart" data-part="condition"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Talent.AddCondition"}}</a>
+      </div>
+      <div class="cfx-section">
+        <strong>{{localize "MODULUS.Talent.Gives"}}</strong>
+        {{#each shifts}}<div class="cfx-fields cfx-sub">{{#each fields}}{{> mfield}}{{/each}}<a data-action="removeCfxPart" data-part="shift" data-index="{{index}}"><i class="fa-solid fa-xmark"></i></a></div>{{/each}}
+        {{#each dice}}<div class="cfx-fields cfx-sub">{{#each fields}}{{> mfield}}{{/each}}<a data-action="removeCfxPart" data-part="dice" data-index="{{index}}"><i class="fa-solid fa-xmark"></i></a></div>{{/each}}
+        <a class="cfx-add" data-action="addCfxPart" data-part="shift"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Talent.AddShift"}}</a>
+        <a class="cfx-add" data-action="addCfxPart" data-part="dice"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Talent.AddDice"}}</a>
+        <div class="cfx-fields">{{#each grantFields}}{{> mfield}}{{/each}}</div>
+      </div>
+      <div class="cfx-section"><strong>{{localize "MODULUS.Talent.For"}}</strong><div class="cfx-fields">{{#each timeFields}}{{> mfield}}{{/each}}</div></div>
+      <p class="effect-preview">{{preview}}</p>
+      {{#each errors}}<p class="effect-error">{{this}}</p>{{/each}}
+      {{#each warnings}}<p class="hint"><i class="fa-solid fa-triangle-exclamation"></i> {{this}}</p>{{/each}}
+    </div>
+    {{else}}
+    <p class="hint">{{localize "MODULUS.Talent.NoCfx"}}</p>
+    {{/each}}
+    {{#if ../editable}}<button type="button" data-action="addCfx"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Talent.AddCfx"}}</button>{{/if}}
+  </fieldset>
+  {{/with}}
+
   {{#each lists}}
   <div class="form-group">
     <label>{{label}}</label>

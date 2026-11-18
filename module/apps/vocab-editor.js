@@ -34,7 +34,8 @@ export class VocabularyEditor extends HandlebarsApplicationMixin(ApplicationV2) 
       importJSON: VocabularyEditor.#onImport,
       addTag: VocabularyEditor.#onAddTag,
       deleteTag: VocabularyEditor.#onDeleteTag,
-      syncCompendiums: () => openSyncDialog()
+      syncCompendiums: () => openSyncDialog(),
+      talentGraph: () => game.modulus.openTalentGraph()
     }
   };
 

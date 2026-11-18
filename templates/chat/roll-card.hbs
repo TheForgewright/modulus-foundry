@@ -24,6 +24,11 @@
     {{#if m.flatBonus}}<span>+ {{m.flatBonus}} {{localize "MODULUS.Roll.Flat"}}</span>{{/if}}
     <span class="total">= {{m.total}}</span>
   </div>
+  {{#if ctx.talentEffects.length}}
+  <ul class="talent-sources">
+    {{#each ctx.talentEffects}}<li><strong>{{label}}</strong>{{#if defense}} ({{localize "MODULUS.Talent.OnDefense"}}){{/if}}: {{shifts}}{{#if dice}} {{dice}}{{/if}} <span class="note">· {{event}}</span></li>{{/each}}
+  </ul>
+  {{/if}}
   {{#if m.dc}}
   <div class="dc">
     DC {{m.dc}}

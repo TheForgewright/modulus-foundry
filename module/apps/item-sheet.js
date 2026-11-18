@@ -8,13 +8,18 @@ import { STAT_KEYS, isStatKey } from "../rules/constants.js";
 import { EFFECT_OPS, EFFECT_TRIGGERS, EFFECT_TARGETS, coerceEffect, validateEffect, describeEffect, newEffect, defaultArgs } from "../rules/effects.js";
 import { normalizeTag } from "../rules/tags.js";
 import { tagRegistry } from "../settings.js";
+import { editorRows, recordsFromForm, newRecord } from "../talents/condfx-editor.js";
+import { knownTalents, talentData, issueText } from "../talents/talents.js";
+import { validateTalentGraph } from "../rules/talents.js";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
 const fields = foundry.data.fields;
 
 const STRING_LISTS = ["grantsWords", "grantsActions", "affectsTags", "wordPool", "defendsAgainst"];
-const JSON_FIELDS = ["conditionalEffects"]; // typed editor arrives in Phase 4
+const JSON_FIELDS = [];
+/** Talent fields with their own editor block instead of the generic one. */
+const TALENT_CUSTOM = ["prereqTalent", "crossPrereq"];
 
 export function statLabel(key) {
   return key ? game.i18n.localize(`MODULUS.Stat.${key.replace(".", "_")}`) : "";
@@ -31,7 +36,12 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       removeTag: ModulusItemSheet.#onRemoveTag,
       addEffect: ModulusItemSheet.#onAddEffect,
       removeEffect: ModulusItemSheet.#onRemoveEffect,
-      moveEffect: ModulusItemSheet.#onMoveEffect
+      moveEffect: ModulusItemSheet.#onMoveEffect,
+      addCfx: ModulusItemSheet.#onAddCfx,
+      removeCfx: ModulusItemSheet.#onRemoveCfx,
+      addCfxPart: ModulusItemSheet.#onAddCfxPart,
+      removeCfxPart: ModulusItemSheet.#onRemoveCfxPart,
+      openTalentGraph: () => game.modulus.openTalentGraph()
     }
   };
 
@@ -45,8 +55,10 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const schema = item.system.schema;
     const t = (k) => game.i18n.localize(k);
     const scalar = [];
+    const isTalent = item.type === "talent";
     const walk = (field, value) => {
       if (field instanceof fields.HTMLField) return;
+      if (isTalent && TALENT_CUSTOM.includes(field.name)) return;
       if (field instanceof fields.SchemaField) {
         for (const [k, f] of Object.entries(field.fields)) walk(f, value?.[k]);
         return;
@@ -122,7 +134,32 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       isSkill: item.type === "skill",
       rootId: this.id
     });
+    if (isTalent) context.talent = await this._prepareTalent();
     return context;
+  }
+
+  /** Talent editor (§8, §15): prerequisite pickers, graph check, principles, conditional effects. */
+  async _prepareTalent() {
+    const item = this.document;
+    const s = item.system;
+    const known = await knownTalents();
+    const self = talentData(item);
+    const others = [...known.values()].filter((k) => k.talentId !== self.talentId);
+    const choose = (tier) => Object.fromEntries([["", "—"], ...others.filter((k) => k.tier === tier)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((k) => [k.talentId, `${k.name} (${game.i18n.localize(`MODULUS.Domain.${k.domain || "physical"}`)})`])]);
+    const graph = validateTalentGraph([...others, self]).filter((i) => i.talentId === self.talentId);
+    return {
+      tier: s.tier,
+      needsPrereq: s.tier >= 2,
+      isTier3: s.tier === 3,
+      prereqOptions: choose(s.tier - 1),
+      crossOptions: choose(1),
+      prereq: s.prereqTalent,
+      cross: s.crossPrereq,
+      issues: graph.map(issueText),
+      cfx: editorRows(item.system._source.conditionalEffects)
+    };
   }
 
   /** Rebuild structured fields from the flat form inputs before update. */
@@ -154,6 +191,9 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       });
     }
     delete data._fx;
+
+    if (data._cfx) sys.conditionalEffects = recordsFromForm(data._cfx, src.conditionalEffects ?? []);
+    delete data._cfx;
 
     for (const k of STRING_LISTS) {
       if (typeof sys[k] === "string") sys[k] = sys[k].split(",").map((s) => s.trim()).filter(Boolean);
@@ -206,6 +246,48 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const i = Number(target.closest("[data-index]").dataset.index);
     const effects = (this.document.system._source.effects ?? []).filter((_, n) => n !== i);
     await this.document.update({ "system.effects": effects });
+  }
+
+  /* ---------------- Conditional effects (§8.1) ---------------- */
+
+  #cfx() {
+    return foundry.utils.deepClone(this.document.system._source.conditionalEffects ?? []);
+  }
+
+  static async #onAddCfx() {
+    if (!this.isEditable) return;
+    await this.document.update({ "system.conditionalEffects": [...this.#cfx(), newRecord()] });
+  }
+
+  static async #onRemoveCfx(event, target) {
+    if (!this.isEditable) return;
+    const i = Number(target.closest("[data-cfx]").dataset.cfx);
+    await this.document.update({ "system.conditionalEffects": this.#cfx().filter((_, n) => n !== i) });
+  }
+
+  /** Add a condition, tier shift or dice row to one conditional effect. */
+  static async #onAddCfxPart(event, target) {
+    if (!this.isEditable) return;
+    const list = this.#cfx();
+    const rec = list[Number(target.closest("[data-cfx]").dataset.cfx)];
+    if (!rec) return;
+    const part = target.dataset.part;
+    if (part === "condition") (rec.conditions ??= []).push({ type: "momentum", who: "owner", op: "above", value: 0 });
+    if (part === "shift") ((rec.grant ??= {}).tierShifts ??= []).push({ stat: "rollStat", delta: 1 });
+    if (part === "dice") ((rec.grant ??= {}).dice ??= []).push({ stat: "any", buff: 1, debuff: 0 });
+    await this.document.update({ "system.conditionalEffects": list });
+  }
+
+  static async #onRemoveCfxPart(event, target) {
+    if (!this.isEditable) return;
+    const list = this.#cfx();
+    const rec = list[Number(target.closest("[data-cfx]").dataset.cfx)];
+    if (!rec) return;
+    const i = Number(target.dataset.index);
+    const key = { condition: "conditions", shift: "tierShifts", dice: "dice" }[target.dataset.part];
+    const arr = key === "conditions" ? rec.conditions : rec.grant?.[key];
+    if (Array.isArray(arr)) arr.splice(i, 1);
+    await this.document.update({ "system.conditionalEffects": list });
   }
 
   static async #onMoveEffect(event, target) {
