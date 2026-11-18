@@ -44,6 +44,7 @@ export const TRIGGERS = Object.freeze({
   participantJoined: { params: [] },
   participantLeft: { params: [] },
   surrendered: { params: [] },
+  teamChanged: { params: [{ key: "change", options: ["any", "joined", "left", "switched"] }, { key: "side", options: ["any", "nowAlly", "nowEnemy", "wasAlly", "wasEnemy"] }] },
   tierChanged: { params: [{ key: "stat", type: "stat" }] },
   extendedMomentum: { params: [{ key: "kind", options: ["any", "relationship", "investigation", "ordeal"] }, { key: "value", type: "int" }, { key: "direction", options: ["any", "up", "down"] }] },
   cardEvent: { params: [{ key: "kind", options: ["any", "cashed", "burned", "discarded"] }, { key: "minRank", type: "int" }] },
@@ -107,8 +108,10 @@ function actorInScope(scope, event, ownerId, ctx) {
     case "any": return true;
     case "targetsMe": return actor !== ownerId && (event.targetIds ?? []).includes(ownerId);
     case "targetedByMe": return actor !== ownerId && (ctx.targetsOf?.(ownerId) ?? []).includes(actor);
+    // Teams (§8.1.2): same label = ally; a different label = enemy. No label = free for all: no allies,
+    // no enemies, and nobody's enemy (a stealthed character's target is a victim, not an opponent).
     case "ally": return actor !== ownerId && team(actor) !== "" && team(actor) === team(ownerId);
-    case "enemy": return actor !== ownerId && !(team(actor) !== "" && team(actor) === team(ownerId));
+    case "enemy": return actor !== ownerId && team(actor) !== "" && team(ownerId) !== "" && team(actor) !== team(ownerId);
     default: return false;
   }
 }
@@ -176,6 +179,16 @@ function paramsMatch(event, trigger, ownerId) {
       return true;
     case "tierChanged":
       return !p.stat || p.stat === e.stat;
+    case "teamChanged": {
+      // e.from / e.to are the subject's old and new labels; e.ownerTeam is the owner's label.
+      const change = !e.from && e.to ? "joined" : e.from && !e.to ? "left" : e.from !== e.to ? "switched" : null;
+      if (!change) return false;
+      if (!any(p.change) && p.change !== change) return false;
+      if (any(p.side)) return true;
+      const own = e.ownerTeam ?? "";
+      const rel = (label) => (!own || !label ? null : label === own ? "ally" : "enemy");
+      return { nowAlly: rel(e.to) === "ally", nowEnemy: rel(e.to) === "enemy", wasAlly: rel(e.from) === "ally", wasEnemy: rel(e.from) === "enemy" }[p.side] ?? false;
+    }
     case "cardEvent":
       return (any(p.kind) || p.kind === e.kind) && (p.minRank == null || (e.rank ?? -1) >= p.minRank);
     case "restTaken":
@@ -208,6 +221,9 @@ export function matchTrigger(event, def, ownerId, ctx = {}) {
       if (trigger.timing && event.timing !== trigger.timing) return false;
       if (trigger.timing === "resolve" && !any(trigger.outcome) && event.outcome !== trigger.outcome) return false;
     }
+  }
+  if (trigger.event === "teamChanged") {
+    return paramsMatch({ ...event, params: { ...event.params, ownerTeam: ctx.teams?.[ownerId] ?? "" } }, trigger, ownerId);
   }
   return paramsMatch(event, trigger, ownerId);
 }
@@ -514,6 +530,12 @@ export function describeCondFx(raw, { stat = (k) => k } = {}) {
     case "momentumCrossed": when = `${who === "you" ? "your" : `${who}'s`} momentum ${p.direction === "down" ? "drops to" : p.direction === "up" ? "rises to" : "crosses"} ${p.value ?? 0}`; break;
     case "roundStart": when = `a round starts${p.round ? ` (round ${p.round})` : ""}${p.every ? ` (every ${p.every} rounds)` : ""}`; break;
     case "roundEnd": when = `a round ends`; break;
+    case "teamChanged": {
+      const rel = { nowAlly: " and becomes your ally", nowEnemy: " and becomes your enemy", wasAlly: " (they were your ally)", wasEnemy: " (they were your enemy)" }[p.side] ?? "";
+      const verb = { joined: "reveals a side", left: "drops into free for all", switched: "switches sides" }[p.change] ?? "changes team";
+      when = `${who} ${t.actor === "self" ? verb.replace("reveals", "reveal").replace("drops", "drop").replace("switches", "switch").replace("changes", "change") : verb}${rel}`;
+      break;
+    }
     case "manual": when = "you press the talent's button"; break;
     default: when = `${t.event || "(no trigger)"} happens`;
   }

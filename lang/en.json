@@ -805,8 +805,8 @@
         "roundEnd": "Round {round} ended."
       },
       "ContinueCharging": "You are charging {label} ({n} round(s) so far). Declare it again to keep charging; anything else resets the count.",
-      "Team": "team",
-      "TeamHint": "Optional team label. Talents that say \"an ally\" or \"an enemy\" use it: same label = ally."
+      "Team": "free for all",
+      "TeamHint": "Team label. The same label = allies; a different label = enemies. Blank = free for all: no allies or enemies (stealthed or undeclared). Changing it (a reveal, a betrayal) is a talent trigger."
     },
     "Sync": {
       "Title": "Sync from compendiums",
@@ -861,7 +861,8 @@
         "extendedMomentum": "Extended encounter momentum",
         "cardEvent": "Card event",
         "restTaken": "Rest taken",
-        "manual": "Manual button"
+        "manual": "Manual button",
+        "teamChanged": "Team changed (reveal, betrayal, stealth)"
       },
       "Actor": {
         "self": "This character",
@@ -869,8 +870,8 @@
         "any": "Anyone",
         "targetsMe": "Someone targeting this character",
         "targetedByMe": "Someone this character targets",
-        "ally": "An ally (team label)",
-        "enemy": "An enemy (team label)"
+        "ally": "An ally (same team)",
+        "enemy": "An enemy (opposing team)"
       },
       "ApplyTo": {
         "self": "This character",
@@ -995,7 +996,9 @@
         "atLeast": "At least",
         "which": "Which stat",
         "is": "Is",
-        "relation": "Subject sits"
+        "relation": "Subject sits",
+        "change": "Change",
+        "side": "Relative to this character"
       },
       "Option": {
         "any": "Any",
@@ -1045,7 +1048,14 @@
         "encounterEnd": "End of the encounter",
         "refresh": "Refresh the duration",
         "stack": "Stack",
-        "ignore": "Ignore"
+        "ignore": "Ignore",
+        "joined": "Reveals a side (from free for all)",
+        "left": "Drops into free for all",
+        "switched": "Switches sides",
+        "nowAlly": "Now an ally",
+        "nowEnemy": "Now an enemy",
+        "wasAlly": "Was an ally",
+        "wasEnemy": "Was an enemy"
       },
       "Check": {
         "noTrigger": "Pick an event.",

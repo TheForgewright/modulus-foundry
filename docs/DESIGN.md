@@ -706,7 +706,7 @@ Tag matching is a subset test on the action's **final assembled tag set** (§6.6
 | `any` | Anyone including self |
 | `targetsMe` | Another participant, and the action targets the owner |
 | `targetedByMe` | The subject of the event is a target of the owner's action |
-| `ally` / `enemy` | **[OPEN]** requires a teams concept the rules do not have yet. Add the field to the schema, allow a manual per-combatant `team` label, default every participant to `other` |
+| `ally` / `enemy` | **[RULE, 2026-11-18]** Participants carry an optional team label. **Ally:** same team. **Enemy:** only someone on an opposing team (both have a label, and they differ). **No label = free for all:** no allies, no enemies, and nobody's enemy. A stealthed or undeclared character sits in free for all; their target is a victim, not an opponent. Double-crosses and reveals are mechanics: changing a team label is the `teamChanged` trigger (joined a side, dropped into free for all, switched sides; now / formerly an ally or enemy of the talent's owner). |
 
 "Nearby" in the design sense means **in the same encounter instance** (§7.1), not spatial distance. Events in a different instance (a nested brawl inside a trial) do not trigger effects in the parent unless the effect sets `params.instance: any`. **[OPEN]** whether spatial range ever matters; no distance is modeled.
 
@@ -1169,7 +1169,7 @@ Carried from the original doc for a later "ability builder". It predates the act
 | 32 | Conditional effects: do shifts above primary give a buff die or clamp | Clamp |
 | 33 | Conditional effects: do tier shifts change the owner's defense DC | Yes (`appliesToRolls: all`) |
 | 34 | Conditional effects: is "nearby" encounter-scoped only, or does distance or range ever matter | Encounter-scoped |
-| 35 | Teams: is there an ally/enemy distinction for triggers | Not modeled; manual `team` label optional |
+| 35 | ~~Teams: is there an ally/enemy distinction for triggers~~ **Decided 2026-11-18:** team labels; same = ally, opposing = enemy; no label = free for all with no allies or enemies; team changes are a trigger (§8.1.2) | |
 | 36 | Conditional effects: when a duration-1 effect is gained mid-round, does it apply to remaining resolutions this round or start next round | Applies to the rest of this round |
 | 37 | Conditional effects: should effects be allowed to grant dice and not only tier shifts at launch | Schema allows it; editor can hide it |
 | 39 | Extended encounters: what momentum means for investigations and ordeals, and what ends them | Not defined; GM closes manually |

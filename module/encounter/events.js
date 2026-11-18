@@ -54,7 +54,7 @@ export function registerEncounterEvents() {
 
   // Scene track and momentum, on the combatant.
   Hooks.on("preUpdateCombatant", (c, changes, options) => {
-    options.modulusBefore = { sceneTrack: c.sceneTrack, momentum: c.momentum };
+    options.modulusBefore = { sceneTrack: c.sceneTrack, momentum: c.momentum, team: c.team };
   });
   Hooks.on("updateCombatant", (c, changes, options) => {
     if (!isActiveGM() || !options.modulusBefore) return;
@@ -65,6 +65,11 @@ export function registerEncounterEvents() {
     const events = [];
     const track = foundry.utils.getProperty(changes, `flags.${SYSTEM_ID}.sceneTrack`);
     if (track !== undefined) events.push(sceneTrackEvent({ from: before.sceneTrack, to: track, actorId: c.id, round, instanceId: combat.id }));
+    // Teams (reveals, betrayals, slipping into stealth): from / to labels; "" is free for all.
+    const team = foundry.utils.getProperty(changes, `flags.${SYSTEM_ID}.team`);
+    if (team !== undefined && (team ?? "") !== (before.team ?? "")) {
+      events.push({ id: rid(), type: "teamChanged", actorId: c.id, params: { from: before.team ?? "", to: team ?? "" } });
+    }
     const m = foundry.utils.getProperty(changes, `flags.${SYSTEM_ID}.momentum`);
     if (m !== undefined && m !== before.momentum) {
       events.push({ id: rid(), type: "momentumCrossed", actorId: c.id, params: { from: before.momentum, to: m } });

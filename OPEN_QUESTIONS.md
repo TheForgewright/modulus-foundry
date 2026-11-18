@@ -38,7 +38,6 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 32 | Conditional effects: do shifts above primary give a buff die or clamp | Clamp | setting `condFx.aboveRank`; `rules/tier.js` |
 | 33 | Conditional effects: do tier shifts change the owner's defense DC | Yes (`appliesToRolls: all`) |  |
 | 34 | Conditional effects: is "nearby" encounter-scoped only, or does distance or range ever matter | Encounter-scoped |  |
-| 35 | Teams: is there an ally/enemy distinction for triggers | Not modeled; manual `team` label optional |  |
 | 36 | Conditional effects: when a duration-1 effect is gained mid-round, does it apply to remaining resolutions this round or start next round | Applies to the rest of this round |  |
 | 37 | Conditional effects: should effects be allowed to grant dice and not only tier shifts at launch | Schema allows it; editor can hide it |  |
 | 39 | Extended encounters: what momentum means for investigations and ordeals, and what ends them | Not defined; GM closes manually |  |
@@ -88,3 +87,4 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 54 | Which copy of a mark type is used, and whose value applies? | The copy on the card the player picked first, regardless of permanence. Its value applies; it is exhausted only if consumable. |
 | 3a | How are talents acquired? | For now, each talent has its own XP cost, set on the talent (`xpCost`). Phase 4 spends it from the character's XP when a talent is taken. |
 | 3b | How do skills affect actions? | A skill adds its rank as a flat bonus to rolls of the actions it modifies; one of the few flat bonus sources. Which actions: #68. |
+| 35 | Teams: is there an ally/enemy distinction? | Team labels per participant. Ally = same team; enemy = only someone on an opposing team. No label = free for all: no allies, no enemies, nobody's enemy (a stealthed character's target is a victim, not an opponent). Changing a label (reveal, betrayal, slipping into stealth) is the `teamChanged` trigger. |

@@ -187,3 +187,35 @@ test("plain-language preview and gating check", () => {
   assert.equal(normalizeCondFx({}).limitPerRound, 1);
   assert.equal(matchTrigger(action({}), normalizeCondFx({ trigger: { event: "nope" } }), "me"), false);
 });
+
+test("teams: same label = ally; different labels = enemy; free for all (no label) has no allies or enemies and is nobody's enemy", () => {
+  const scoped = (actor) => ({ id: actor, trigger: { event: "actionUsed", actor, timing: "declare" }, grant: { tierShifts: [{ stat: "*", delta: 1 }] } });
+  const fires = (actor, teams, subject) =>
+    processEvent(newCondFxState(), action({ actorId: subject, timing: "declare", outcome: null }), [talent([scoped(actor)])], { ...ctx, teams }).applied.length;
+  const teams = { me: "red", pal: "red", foe: "blue", ghost: "" };
+  assert.equal(fires("ally", teams, "pal"), 1);
+  assert.equal(fires("ally", teams, "foe"), 0);
+  assert.equal(fires("enemy", teams, "foe"), 1);
+  assert.equal(fires("enemy", teams, "pal"), 0);
+  assert.equal(fires("enemy", teams, "ghost"), 0); // a free-for-all character is nobody's enemy
+  assert.equal(fires("ally", teams, "ghost"), 0);
+  const asGhost = { ...teams, me: "" };          // the owner is in free for all (stealthed)
+  assert.equal(fires("enemy", asGhost, "foe"), 0); // can't consider anyone an enemy
+  assert.equal(fires("ally", asGhost, "pal"), 0);
+  assert.equal(fires("other", asGhost, "foe"), 1); // "another participant" still works
+});
+
+test("teamChanged: reveals, betrayals and dropping out, relative to the owner's team", () => {
+  const def = (params) => ({ id: "t", trigger: { event: "teamChanged", actor: "other", params }, grant: { tierShifts: [{ stat: "*", delta: 1 }] }, limitPerRound: 0 });
+  const ev = (from, to) => ({ id: `tc${from}${to}`, type: "teamChanged", round: 2, instanceId: "C1", actorId: "foe", targetIds: [], params: { from, to } });
+  const teams = { me: "red", foe: "red" };
+  const fires = (params, from, to, t = teams) => processEvent(newCondFxState(), ev(from, to), [talent([def(params)])], { ...ctx, teams: t }).applied.length;
+  assert.equal(fires({ change: "switched", side: "wasAlly" }, "red", "blue"), 1);  // betrayal
+  assert.equal(fires({ change: "switched", side: "nowEnemy" }, "red", "blue"), 1);
+  assert.equal(fires({ change: "joined", side: "nowEnemy" }, "", "blue"), 1);      // a hidden enemy reveals
+  assert.equal(fires({ change: "joined", side: "nowAlly" }, "", "blue"), 0);
+  assert.equal(fires({ change: "left" }, "red", ""), 1);                                // drops into stealth
+  assert.equal(fires({ change: "any" }, "red", "red"), 0);                              // no change, no event
+  assert.equal(fires({ side: "nowEnemy" }, "", "blue", { me: "", foe: "blue" }), 0); // free-for-all owners have no enemies
+  assert.match(describeCondFx(def({ change: "switched", side: "wasAlly" })), /switches sides \(they were your ally\)/);
+});
