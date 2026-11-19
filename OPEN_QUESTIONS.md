@@ -74,6 +74,7 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 71 | "Until the start of the owner's next turn": the stack has no turns. | The start of the next round | `rules/condfx.js` `expireEffects` |
 | 72 | Do talent effects apply outside an encounter (the Act window)? | No: "nearby" is the encounter instance (§8.1.2), so effects exist only inside one | `encounter/condfx-bridge.js` |
 | 73 | Delayed effects: do they fire at the start or the end of the due round, and outside an encounter? | Start of the due round (delay 1 = start of next round); outside an encounter they apply immediately; pending ones end with their encounter | `rules/delayed.js`, `encounter/outcomes.js` |
+| 76 | Unknown words: does the word still do everything else (tags, cost, effects), and does it use a word slot (and the extra-word penalty past two)? | Yes to both: it works fully, and it counts as a word | `rules/assembly.js` |
 
 ## Resolved
 
@@ -92,3 +93,4 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 75 | Talents with several levels | Separate talents chained by prerequisites ("Also requires"): level 2 requires level 1. Each level has its own XP cost. |
 | 74 | What replaces level (pips and break points, momentum ceiling, word slots)? | XP thresholds: 10 configurable thresholds of earned XP (spent or banked); the number reached stands in for level. May be removed later. |
 | 4 | How do characters acquire words? | From talents (*Grants words*), plus base words everyone knows. Trained actions likewise come from talents (*Grants actions*). |
+| 77 | How do characters use words they don't have? | Anyone may use any word; not knowing it costs its penalty on the roll. Known = base word, on the sheet, or granted by a talent. |
