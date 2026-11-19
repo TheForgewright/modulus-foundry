@@ -62,8 +62,8 @@ test("dynamic catalog keys exist", () => {
     ...ACTOR_SCOPES.map((k) => `MODULUS.Talent.Actor.${k}`),
     ...APPLY_TO.map((k) => `MODULUS.Talent.ApplyTo.${k}`),
     ...CONDITION_TYPES.map((k) => `MODULUS.Talent.Condition.${k}`),
-    ...["needSameDomain", "noPrereqSet", "needPrereq", "needCross", "needXP"].map((k) => `MODULUS.Talent.Reason.${k}`),
-    ...["noId", "duplicateId", "badTier", "noDomain", "tier1HasPrereq", "crossOnlyTier3", "noPrereqSet", "prereqNotFound", "prereqWrongTier", "crossNotFound", "crossWrongTier", "crossIsParentsOwn"].map((k) => `MODULUS.Talent.Issue.${k}`),
+    ...["needSameDomain", "noPrereqSet", "needPrereq", "needCross", "needXP", "needRequired"].map((k) => `MODULUS.Talent.Reason.${k}`),
+    ...["noId", "duplicateId", "badTier", "noDomain", "tier1HasPrereq", "crossOnlyTier3", "noPrereqSet", "prereqNotFound", "prereqWrongTier", "crossNotFound", "crossWrongTier", "crossIsParentsOwn", "requiresSelf", "requiredNotFound", "cycle"].map((k) => `MODULUS.Talent.Issue.${k}`),
     ...["noTrigger", "unknownTrigger", "emptyGrant", "outcomeNeedsResolve", "badStat", "zeroDelta", "passiveBonus"].map((k) => `MODULUS.Talent.Check.${k}`)
   ];
   assert.deepEqual(keys.filter((k) => typeof get(k) !== "string"), []);

@@ -1,10 +1,10 @@
 # Vocabulary authoring guide
 
-How designers author actions, words, statuses, talents, skills and tags (§6 of `DESIGN.md`).
+How designers author actions, words, statuses, talents and tags (§6 of `DESIGN.md`).
 
 ## Where
 
-- **Vocabulary Editor**: the *Vocabulary Editor* button at the top of the Items sidebar (GM), or *Game Settings → Configure Settings → Modulus → Vocabulary Editor*. It lists world Items of the vocabulary types with search, type and group filters, create / duplicate / delete, a **Tags** tab, and JSON import / export.
+- **Vocabulary Editor**: the *Vocabulary Editor* button at the top of the Items sidebar (GM), or *Game Settings → Configure Settings → Modulus → Vocabulary Editor*. It lists world actions, words, statuses and talents with search, type and group filters, create / duplicate / delete, a **Tags** tab, and JSON import / export.
 - Clicking a name opens the item sheet, which has the tag chips and the typed **Effects** editor.
 
 ## Effects

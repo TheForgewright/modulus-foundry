@@ -201,25 +201,19 @@ Provide one function, `effectiveTier(actor, statKey) → { tier, extraDebuffDice
 
 Stats rarely change. The designers describe "one-roll changes" to primary/secondary/tertiary and "occasional respec points, but you don't get more of them." Implement a `respecPoints` counter on the sheet (GM-adjustable, default 0) and a manual way to re-run the dot allocator. Define no automatic level-up retraining; the original "move up to 2 points per level" belonged to the superseded point-buy.
 
-### 3.5 Levels and XP [carried from the original doc]
+### 3.5 XP and progression [RULE, 2026-11-19]
 
-Cumulative XP needed to reach each level (the cost from the previous level is 100 × the new level):
+**There are no levels and no skills.** The whole system is built from talents (§8).
 
-| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| XP | 100 | 300 | 600 | 1000 | 1500 | 2100 | 2800 | 3600 | 4500 | 5500 | 6600 | 7800 | 9100 | 10500 | 12000 |
+- **XP is an expendable resource.** A character has XP to spend; taking a talent spends its XP cost.
+- **Everything is buildable:** a character is their dot allocation plus the talents they have bought.
+- **Talents with several levels** are separate talents chained by prerequisites: level 2 is its own talent that requires level 1, level 3 requires level 2, and so on. Each level has its own XP cost (the same or more than the previous level).
+- **Superseded:** the original level table (100 × level XP), level-0 characters, and the "XP counts what was spent on skills and features" model.
+- **[OPEN #74]** what replaces level where the rules used it: track pips and break points (§4.2, §4.3), the momentum ceiling (§5.1) and word slots (§6.7). Until decided the sheet keeps a GM-set `level` number feeding those formulas.
 
-- Level 1 characters have 100 XP, all spent during creation. Level 0 characters are background characters or templates, with up to 90 XP and no features.
-- XP counts what a character has **spent** on skills and features.
+### 3.6 Skills [REMOVED, 2026-11-19]
 
-### 3.6 Skills [carried, partially superseded]
-
-- Buying skill rank *r* costs `10 × r` XP (so rank 2 costs 30 total).
-- **Skills modify actions [RULE, 2026-11-18]:** a skill gives its rank as a flat bonus to rolls of the actions it applies to (kept die + rank ≥ DC). **[OPEN #68]** which actions a skill applies to, and whether two skills applying to one roll stack. **Deferred:** skills may be removed entirely in favour of talents; no further skill work until the designers decide.
-- **Superseded:** the original "choose a specialization at rank 6 and 11" branching. Progression structure is now the talent tier system (§8).
-- **Kept:** skills as the XP sink and as the source of vocabulary. A skill carries a pool of words (the designers suggest around 30 per skill set, with heavy overlap between skills, so the whole game has on the order of 100–150 unique words). Picking up a skill rank grants 1–2 words from its pool; some purchases grant specific words or none.
-- The original skill taxonomy (Brawn, Ranged, Endurance, Athletics, Subtlety, Persuasion and so on, listed under each stat) is **content**. Designers will re-author it in the vocabulary editor; do not hard-code it.
-- **[OPEN]** how skills, talents and word packs relate (Appendix D #3, #4).
+Skills are removed. Talents are the only progression. The skill item type is gone; actions and words come from the vocabulary and from talents (`grantsWords`, `grantsActions`). **[OPEN #4]** how characters acquire words now.
 
 ### 3.7 Creation aspects [carried]
 
@@ -619,7 +613,7 @@ Talents replace branching skill trees. A **talent** has a **domain** (physical, 
 - Talents that push a secondary up a tier situationally are a legitimate build axis (via the `tierShift` effect).
 - Counter-relationships between talent groups suggest synergies: the group that thrives under conditions another group creates (for example one that burns word slots, and one that needs few words) is a natural cross-prerequisite.
 
-Talent fields: `domain`, `tier`, `prereqTalent`, `crossPrereq` (optional, tier 3), `xpCost` (**[RULE, 2026-11-18]** talents are bought with XP; each talent has its own XP cost, set by the designer on the talent), `effects`, `grantsWords`, `grantsActions`, `affectsTags` (informational), `description`.
+Talent fields: `domain`, `tier`, `prereqTalent`, `crossPrereq` (optional, tier 3), `requires` (**[RULE, 2026-11-19]** further talents of any tier; this is how a talent's levels chain: level 2 requires level 1), `xpCost` (**[RULE, 2026-11-18]** talents are bought with XP; each talent has its own XP cost, set by the designer on the talent), `effects`, `grantsWords`, `grantsActions`, `affectsTags` (informational), `description`.
 
 Tree names, roster and example trees discussed in design sessions are **brainstorm, not canon**. Do not ship them.
 
@@ -1137,8 +1131,8 @@ Carried from the original doc for a later "ability builder". It predates the act
 |---|---|---|
 | 1 | DC preset: 14/11/8 or 13/11/9 | 14/11/8 |
 | 2 | DC for unopposed tasks | GM-entered; suggest 11 |
-| 3 | ~~How are talents acquired?~~ **Decided 2026-11-18:** each talent has its own XP cost. Still open: how do skills, talents and word packs relate? | Eligibility counts talents owned regardless of source |
-| 4 | Word packs vs skill word lists vs talents granting words | All three can grant words; no automatic pack selection |
+| 3 | ~~How are talents acquired? How do skills, talents and word packs relate?~~ **Decided:** each talent has its own XP cost (2026-11-18); skills and levels are removed, XP is spent only on talents (2026-11-19) | |
+| 4 | How do characters acquire words, now that skills are gone (word packs, talents granting words)? | Base words for everyone; talents can grant words; no automatic pack selection |
 | 5 | `maxWords` formula and the extra-word penalty | `2 + floor(level/4)`; one debuff die per extra word |
 | 6 | Focus bonus magnitude | Off |
 | 7 | Buff/debuff stacking and caps | Additive, no cap |

@@ -72,6 +72,29 @@ test("graph validation", () => {
   assert.deepEqual(validateTalentGraph([T("a", "physical", 1), T("b", "physical", 2, { prereqTalent: "a" })]), []);
 });
 
+test("talent levels are a chain: each level requires the previous one (any tier, any number)", () => {
+  const l1 = T("grip-1", "physical", 1, { xpCost: 10 });
+  const l2 = T("grip-2", "physical", 1, { xpCost: 20, requires: ["grip-1"] });
+  const l3 = T("grip-3", "physical", 1, { xpCost: 30, requires: ["grip-2"] });
+  const byId = new Map([l1, l2, l3].map((t) => [t.talentId, t]));
+  assert.deepEqual(talentEligibility(l2, [], byId).reasons, [{ code: "needRequired", id: "grip-1", name: "GRIP-1" }]);
+  assert.equal(talentEligibility(l2, [l1], byId).eligible, true);
+  assert.equal(talentEligibility(l3, [l1], byId).eligible, false);
+  assert.equal(talentEligibility(l3, [l1, l2], byId).eligible, true);
+  // a tier-2 talent with tier rules and an extra requirement needs both
+  const t2 = T("t2", "physical", 2, { prereqTalent: "grip-1", requires: ["grip-3"] });
+  const five = [l1, ...["a", "b", "c", "d"].map((x) => T(x, "physical", 1))];
+  assert.deepEqual(talentEligibility(t2, five, byId).reasons.map((r) => r.code), ["needRequired"]);
+  assert.deepEqual(validateTalentGraph([l1, l2, l3]), []);
+});
+
+test("graph check: missing requirements, self-requirement and loops", () => {
+  const codes = (list) => validateTalentGraph(list).map((i) => `${i.talentId}:${i.code}`).sort();
+  assert.deepEqual(codes([T("a", "physical", 1, { requires: ["zz"] })]), ["a:requiredNotFound"]);
+  assert.deepEqual(codes([T("a", "physical", 1, { requires: ["a"] })]), ["a:cycle", "a:requiresSelf"]);
+  assert.deepEqual(codes([T("a", "physical", 1, { requires: ["b"] }), T("b", "physical", 1, { requires: ["a"] })]), ["a:cycle", "b:cycle"]);
+});
+
 test("tree view and slugs", () => {
   const tree = talentTree([T("a", "physical", 1), T("c", "physical", 2, { prereqTalent: "a" }), T("d", "physical", 3, { prereqTalent: "c" }), T("z", "mental", 2, { prereqTalent: "gone" })]);
   assert.equal(tree.domains.physical[0].children[0].children[0].talentId, "d");

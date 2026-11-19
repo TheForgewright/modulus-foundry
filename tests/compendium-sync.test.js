@@ -49,7 +49,6 @@ test("a copy's own fields are kept and not compared", () => {
   assert.equal(sys.duration.rounds, 1);
   assert.equal(sys.duration.type, "rounds");
   assert.deepEqual(sys.effects, [{ op: "note" }]);
-  assert.equal(mergedSystem("skill", { rank: 0, wordPool: ["a"] }, { rank: 4 }).rank, 4);
   assert.deepEqual(syncContent("armor", { name: "Mail", system: { equipped: true, penalty: "x" } }).system, { penalty: "x" });
 });
 

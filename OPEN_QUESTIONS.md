@@ -6,8 +6,7 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 |---|---|---|---|
 | 1 | DC preset: 14/11/8 or 13/11/9 | 14/11/8 | settings `dc.*` |
 | 2 | DC for unopposed tasks | GM-entered; suggest 11 | setting `defaultTaskDC`, roll dialog |
-| 3 | How do skills, talents and word packs relate? (Acquisition is decided: see Resolved.) | Eligibility counts talents owned regardless of source |  |
-| 4 | Word packs vs skill word lists vs talents granting words | All three can grant words; no automatic pack selection |  |
+| 4 | How do characters acquire words, now that skills are gone (word packs, talents granting words)? | Base words for everyone; talents can grant words (`grantsWords`); no automatic pack selection |  |
 | 5 | `maxWords` formula and the extra-word penalty | `2 + floor(level/4)`; one debuff die per extra word | setting `maxWordsFormula`, `extraWordPenalty` |
 | 6 | Focus bonus magnitude | Off |  |
 | 7 | Buff/debuff stacking and caps | Additive, no cap |  |
@@ -71,12 +70,12 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 65 | Can momentum be edited mid-round? It is read at the start of declaration for ordering. | Yes; edits after declaration starts affect costs and later rounds, not this round's order | `rules/encounter.js` `beginDeclaration` |
 | 66 | On-hit effects with ops the engine cannot apply directly (dice, tier shifts imposed on a target) | Offered as GM notes until conditional effects (Phase 4) exist | `encounter/outcomes.js` |
 | 67 | When a compendium entry changes and a world copy of it was also edited in the world, which wins? | The world edit, until the GM chooses to replace it (Sync from compendiums) | `rules/compendium-sync.js` |
-| 68 | Which actions does a skill modify (listed actions, actions with a tag, actions using a stat?), and do two skills on one roll stack? **Deferred:** skills may be removed entirely; the designers are deciding whether to focus on talents instead. | Not built; no further skill work until decided | `data/item.js` SkillData |
 | 69 | Can players take a talent they cannot afford or that is locked? | No; a GM can grant one anyway (the XP is still spent) | `talents/talents.js` `takeTalent` |
 | 70 | Removing a talent: refund its XP? | The GM or player chooses when removing; refund is the default | `talents/talents.js` `removeTalent` |
 | 71 | "Until the start of the owner's next turn": the stack has no turns. | The start of the next round | `rules/condfx.js` `expireEffects` |
 | 72 | Do talent effects apply outside an encounter (the Act window)? | No: "nearby" is the encounter instance (§8.1.2), so effects exist only inside one | `encounter/condfx-bridge.js` |
 | 73 | Delayed effects: do they fire at the start or the end of the due round, and outside an encounter? | Start of the due round (delay 1 = start of next round); outside an encounter they apply immediately; pending ones end with their encounter | `rules/delayed.js`, `encounter/outcomes.js` |
+| 74 | Levels are gone. What replaces level in track pips and break points (pips per level × level; one segment per level), the momentum ceiling (5 + level) and word slots (2 + level/4)? | A GM-set `level` number stays on the sheet and feeds those formulas until decided | `rules/tracks.js`, settings `momentum.ceiling`, `maxWordsFormula` |
 
 ## Resolved
 
@@ -90,3 +89,6 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 3b | How do skills affect actions? | A skill adds its rank as a flat bonus to rolls of the actions it modifies; one of the few flat bonus sources. Which actions: #68. |
 | 35 | Teams: is there an ally/enemy distinction? | Team labels per participant. Ally = same team; enemy = only someone on an opposing team. No label = free for all: no allies, no enemies, nobody's enemy (a stealthed character's target is a victim, not an opponent). Changing a label (reveal, betrayal, slipping into stealth) is the `teamChanged` trigger. |
 | 35a | Can a participant have a hidden team only the GM sees? | No. Labels are the apparent team, visible to all; mechanics (reveals, betrayals) change the apparent team. |
+| 3c | Skills, levels and progression | Skills and levels are removed. XP is an expendable resource spent on talents; the whole system is talents. |
+| 68 | Which actions does a skill modify? | Moot: skills are removed. |
+| 75 | Talents with several levels | Separate talents chained by prerequisites ("Also requires"): level 2 requires level 1. Each level has its own XP cost. |

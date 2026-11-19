@@ -61,6 +61,8 @@ export class TalentData extends ModulusItemData {
       tier: intField(1, { min: 1, max: 3, label: L("talentTier") }),
       prereqTalent: str("prereqTalent"),
       crossPrereq: str("crossPrereq"),
+      // Further talents this one needs, any tier: how a talent's levels chain (level 2 requires level 1).
+      requires: new fields.ArrayField(new fields.StringField(), { label: L("requires") }),
       xpCost: intField(0, { min: 0, label: L("xpCost") }),
       effects: effectsField(),
       conditionalEffects: effectsField("conditionalEffects"), // §8.1
@@ -69,22 +71,6 @@ export class TalentData extends ModulusItemData {
       affectsTags: new fields.ArrayField(new fields.StringField(), { label: L("affectsTags") }),
       groups: groupsField()
     };
-  }
-}
-
-/** §3.6 Skill. Rank r costs 10 x r XP; total for rank r is 10 x r(r+1)/2. */
-export class SkillData extends ModulusItemData {
-  static defineSchema() {
-    return {
-      ...super.defineSchema(),
-      rank: intField(0, { min: 0, label: L("rank") }),
-      wordPool: new fields.ArrayField(new fields.StringField(), { label: L("wordPool") }),
-      groups: groupsField()
-    };
-  }
-
-  prepareDerivedData() {
-    this.xpSpent = (10 * this.rank * (this.rank + 1)) / 2;
   }
 }
 
@@ -166,7 +152,6 @@ export const ITEM_MODELS = {
   action: ActionData,
   word: WordData,
   talent: TalentData,
-  skill: SkillData,
   status: StatusData,
   ancestry: AncestryData,
   society: SocietyData,

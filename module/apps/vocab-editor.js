@@ -1,6 +1,5 @@
 /**
- * Vocabulary Editor (§15): list, filter and edit actions, words, statuses, talents and
- * skills; manage the tag registry; import and export JSON for everything or a selection.
+ * Vocabulary Editor (§15): list, filter and edit actions, words, statuses and talents; manage the tag registry; import and export JSON for everything or a selection.
  * Works on world Items. Designers spend most of their time here.
  */
 import { SYSTEM_ID } from "../config.js";
@@ -86,8 +85,6 @@ export class VocabularyEditor extends HandlebarsApplicationMixin(ApplicationV2) 
       parts.push(`${game.i18n.localize(`MODULUS.Domain.${s.domain || "physical"}`)} ${s.tier}`);
     } else if (item.type === "status") {
       parts.push(game.i18n.localize(`MODULUS.Status.Duration.${s.duration.type}`));
-    } else if (item.type === "skill") {
-      parts.push(`${game.i18n.localize("MODULUS.Field.rank")} ${s.rank}`);
     }
     return parts.join(" · ");
   }

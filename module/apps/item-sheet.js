@@ -16,7 +16,7 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
 const fields = foundry.data.fields;
 
-const STRING_LISTS = ["grantsWords", "grantsActions", "affectsTags", "wordPool", "defendsAgainst"];
+const STRING_LISTS = ["grantsWords", "grantsActions", "affectsTags", "defendsAgainst"];
 const JSON_FIELDS = [];
 /** Talent fields with their own editor block instead of the generic one. */
 const TALENT_CUSTOM = ["prereqTalent", "crossPrereq"];
@@ -41,7 +41,9 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       removeCfx: ModulusItemSheet.#onRemoveCfx,
       addCfxPart: ModulusItemSheet.#onAddCfxPart,
       removeCfxPart: ModulusItemSheet.#onRemoveCfxPart,
-      openTalentGraph: () => game.modulus.openTalentGraph()
+      openTalentGraph: () => game.modulus.openTalentGraph(),
+      addRequired: ModulusItemSheet.#onAddRequired,
+      removeRequired: ModulusItemSheet.#onRemoveRequired
     }
   };
 
@@ -133,7 +135,6 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       })),
       descriptionHTML: await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.system.description, { relativeTo: item }),
       descriptionField: schema.fields.description,
-      isSkill: item.type === "skill",
       rootId: this.id
     });
     if (isTalent) context.talent = await this._prepareTalent();
@@ -151,6 +152,10 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((k) => [k.talentId, `${k.name} (${game.i18n.localize(`MODULUS.Domain.${k.domain || "physical"}`)})`])]);
     const graph = validateTalentGraph([...others, self]).filter((i) => i.talentId === self.talentId);
+    const required = (s.requires ?? []).map((id) => ({ id, name: known.get(id)?.name ?? id, missing: !known.has(id) }));
+    const requireOptions = Object.fromEntries([["", "—"], ...others.filter((k) => !(s.requires ?? []).includes(k.talentId))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((k) => [k.talentId, `${k.name} (${game.i18n.format("MODULUS.Talent.TierN", { n: k.tier })})`])]);
     return {
       tier: s.tier,
       needsPrereq: s.tier >= 2,
@@ -159,6 +164,8 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       crossOptions: choose(1),
       prereq: s.prereqTalent,
       cross: s.crossPrereq,
+      required,
+      requireOptions,
       issues: graph.map(issueText),
       cfx: editorRows(item.system._source.conditionalEffects)
     };
@@ -248,6 +255,20 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const i = Number(target.closest("[data-index]").dataset.index);
     const effects = (this.document.system._source.effects ?? []).filter((_, n) => n !== i);
     await this.document.update({ "system.effects": effects });
+  }
+
+  static async #onAddRequired() {
+    if (!this.isEditable) return;
+    const id = this.element.querySelector("select.new-required")?.value;
+    const current = this.document.system._source.requires ?? [];
+    if (!id || current.includes(id)) return;
+    await this.document.update({ "system.requires": [...current, id] });
+  }
+
+  static async #onRemoveRequired(event, target) {
+    if (!this.isEditable) return;
+    const id = target.closest("[data-required]").dataset.required;
+    await this.document.update({ "system.requires": (this.document.system._source.requires ?? []).filter((x) => x !== id) });
   }
 
   /* ---------------- Conditional effects (§8.1) ---------------- */

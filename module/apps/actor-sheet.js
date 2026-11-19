@@ -20,7 +20,7 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 const T = (p) => `systems/${SYSTEM_ID}/templates/actor/${p}.hbs`;
 
-const ITEM_SECTIONS = ["status", "action", "word", "talent", "skill", "ancestry", "society", "background", "armor"];
+const ITEM_SECTIONS = ["status", "action", "word", "talent", "ancestry", "society", "background", "armor"];
 
 export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   static DEFAULT_OPTIONS = {

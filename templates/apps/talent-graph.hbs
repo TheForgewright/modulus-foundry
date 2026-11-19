@@ -2,7 +2,7 @@
   {{#*inline "tnode"}}
   <li class="tnode {{#if problem}}problem{{/if}}" data-uuid="{{uuid}}">
     <a data-action="openTalent"><span class="tier-badge">{{tier}}</span> {{name}}</a>
-    <span class="hint">{{xpCost}} XP{{#if cross}} · + {{cross.name}}{{#if cross.missing}} (?){{/if}}{{/if}}</span>
+    <span class="hint">{{xpCost}} XP{{#if cross}} · + {{cross.name}}{{#if cross.missing}} (?){{/if}}{{/if}}{{#each required}} · {{localize "MODULUS.Talent.Needs"}} {{name}}{{#if missing}} (?){{/if}}{{/each}}</span>
     {{#if children.length}}<ul>{{#each children}}{{> tnode}}{{/each}}</ul>{{/if}}
   </li>
   {{/inline}}

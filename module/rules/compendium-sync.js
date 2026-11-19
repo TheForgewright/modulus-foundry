@@ -10,12 +10,11 @@
  *   orphan   its compendium entry no longer exists
  * "Since it was created or last synced" is a fingerprint (syncHash) stored on the copy.
  *
- * Fields that belong to the copy, not to the entry (a skill's rank, a status's remaining rounds,
+ * Fields that belong to the copy, not to the entry (a status's remaining rounds,
  * whether armor is worn) are never compared or overwritten.
  */
 
 export const KEEP_FIELDS = Object.freeze({
-  skill: ["rank"],
   status: ["value", "duration.rounds"],
   armor: ["equipped"]
 });

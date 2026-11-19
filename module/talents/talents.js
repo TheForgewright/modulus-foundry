@@ -16,6 +16,7 @@ export function talentData(item) {
     tier: s.tier,
     prereqTalent: s.prereqTalent,
     crossPrereq: s.crossPrereq,
+    requires: [...(s.requires ?? [])],
     xpCost: s.xpCost ?? 0,
     uuid: item.uuid,
     img: item.img

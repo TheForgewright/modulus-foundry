@@ -2,8 +2,10 @@
  * Talents (§8): eligibility, why a talent is locked, the prerequisite graph and XP. Pure JS.
  *
  * A talent here is plain data:
- *   { talentId, name, domain, tier, prereqTalent, crossPrereq, xpCost }
+ *   { talentId, name, domain, tier, prereqTalent, crossPrereq, requires, xpCost }
  * Prerequisites point at another talent's `talentId` (a stable key that survives copies and renames).
+ * `requires` lists further talents of any tier. A talent with several levels is a chain of separate
+ * talents, each requiring the previous level.
  */
 
 export const SAME_DOMAIN_REQUIRED = 5;
@@ -43,6 +45,9 @@ export function talentEligibility(talent, owned, byId = new Map(), { xpAvailable
       reasons.push({ code: "needCross", id: talent.crossPrereq, name: name(talent.crossPrereq) });
     }
   }
+  for (const id of talent.requires ?? []) {
+    if (id && !has(owned, id)) reasons.push({ code: "needRequired", id, name: name(id) });
+  }
   const affordable = cost <= xpAvailable;
   if (!isOwned && !affordable) reasons.push({ code: "needXP", cost, have: xpAvailable });
   return { eligible: !isOwned && reasons.length === 0, owned: isOwned, affordable, cost, reasons };
@@ -64,6 +69,10 @@ export function validateTalentGraph(talents) {
     const issue = (code, data = {}) => issues.push({ talentId: t.talentId, name: t.name, code, ...data });
     if (![1, 2, 3].includes(t.tier)) issue("badTier");
     if (!["physical", "mental", "social"].includes(t.domain)) issue("noDomain");
+    for (const id of t.requires ?? []) {
+      if (id === t.talentId) issue("requiresSelf");
+      else if (!byId.has(id)) issue("requiredNotFound", { id });
+    }
     if (t.tier === 1) {
       if (t.prereqTalent) issue("tier1HasPrereq");
       if (t.crossPrereq) issue("crossOnlyTier3");
@@ -81,7 +90,34 @@ export function validateTalentGraph(talents) {
       else if (parent && cross.talentId === parent.prereqTalent) issue("crossIsParentsOwn", { id: t.crossPrereq });
     }
   }
+  // Loops through any prerequisite (a talent that ends up needing itself) can never be taken.
+  for (const id of findCycles(talents)) {
+    const t = byId.get(id);
+    issues.push({ talentId: id, name: t?.name, code: "cycle" });
+  }
   return issues;
+}
+
+/** Talent ids that sit on a prerequisite loop. */
+export function findCycles(talents) {
+  const edges = new Map(talents.map((t) => [t.talentId, [t.prereqTalent, t.crossPrereq, ...(t.requires ?? [])].filter(Boolean)]));
+  const state = new Map(); // 1 = visiting, 2 = done
+  const onCycle = new Set();
+  const stack = [];
+  const visit = (id) => {
+    if (state.get(id) === 2 || !edges.has(id)) return;
+    if (state.get(id) === 1) {
+      for (const x of stack.slice(stack.indexOf(id))) onCycle.add(x);
+      return;
+    }
+    state.set(id, 1);
+    stack.push(id);
+    for (const next of edges.get(id)) visit(next);
+    stack.pop();
+    state.set(id, 2);
+  };
+  for (const id of edges.keys()) visit(id);
+  return [...onCycle];
 }
 
 /**
@@ -96,6 +132,7 @@ export function talentTree(talents) {
   const node = (t) => ({
     ...t,
     cross: t.crossPrereq ? byId.get(t.crossPrereq) ?? { talentId: t.crossPrereq, name: t.crossPrereq, missing: true } : null,
+    required: (t.requires ?? []).map((id) => byId.get(id) ?? { talentId: id, name: id, missing: true }),
     children: t.tier < 3 ? childrenOf(t.talentId, t.tier + 1).map(node) : []
   });
   for (const t of talents.filter((x) => x.tier === 1)) (domains[t.domain] ?? []).push(node(t));

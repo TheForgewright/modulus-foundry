@@ -8,9 +8,6 @@
   {{formGroup field value=value localize=true}}
   {{/each}}
 
-  {{#if isSkill}}
-  <div class="form-group"><label>{{localize "MODULUS.Field.xpSpent"}}</label><input type="number" value="{{system.xpSpent}}" disabled></div>
-  {{/if}}
 
   {{!-- Tags (§6.4) --}}
   {{#if hasTags}}
@@ -117,6 +114,19 @@
     {{else}}
     <p class="hint">{{localize "MODULUS.Talent.Tier1Open"}}</p>
     {{/if}}
+    <div class="form-group stacked">
+      <label>{{localize "MODULUS.Talent.AlsoRequires"}}</label>
+      <div class="tag-chips">
+        {{#each required}}<span class="tag-chip {{#if missing}}engine{{/if}}" data-required="{{id}}">{{name}}{{#if ../../editable}} <a class="remove" data-action="removeRequired"><i class="fa-solid fa-xmark"></i></a>{{/if}}</span>{{else}}<span class="hint">—</span>{{/each}}
+      </div>
+      {{#if ../editable}}
+      <div class="tag-add">
+        <select class="new-required">{{selectOptions requireOptions}}</select>
+        <button type="button" data-action="addRequired"><i class="fa-solid fa-plus"></i> {{localize "MODULUS.Item.AddTag"}}</button>
+      </div>
+      {{/if}}
+      <p class="hint">{{localize "MODULUS.Talent.AlsoRequiresHint"}}</p>
+    </div>
     {{#each issues}}<p class="effect-error"><i class="fa-solid fa-triangle-exclamation"></i> {{this}}</p>{{/each}}
     <button type="button" class="secondary" data-action="openTalentGraph"><i class="fa-solid fa-diagram-project"></i> {{localize "MODULUS.Talent.Graph"}}</button>
   </fieldset>

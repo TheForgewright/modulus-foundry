@@ -16,7 +16,7 @@
 
 export const VOCAB_FORMAT = "modulus-vocabulary";
 export const VOCAB_VERSION = 1;
-export const VOCAB_TYPES = Object.freeze(["action", "word", "status", "talent", "skill"]);
+export const VOCAB_TYPES = Object.freeze(["action", "word", "status", "talent"]);
 
 function sortKeys(value) {
   if (Array.isArray(value)) return value.map(sortKeys);

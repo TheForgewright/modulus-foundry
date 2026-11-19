@@ -8,7 +8,6 @@
       "action": "Action",
       "word": "Word",
       "talent": "Talent",
-      "skill": "Skill",
       "status": "Status",
       "ancestry": "Ancestry",
       "society": "Society",
@@ -190,12 +189,9 @@
       "prereqTalent": "Prerequisite talent",
       "crossPrereq": "Cross prerequisite (tier 3)",
       "xpCost": "XP cost",
-      "xpSpent": "XP spent (cumulative)",
       "grantsWords": "Grants words",
       "grantsActions": "Grants actions",
       "affectsTags": "Affects tags",
-      "rank": "Rank",
-      "wordPool": "Word pool",
       "duration": {
         "type": "Duration",
         "rounds": "Rounds"
@@ -213,7 +209,8 @@
       "equipped": "Equipped",
       "defendsAgainst": "Defends against",
       "penalty": "Penalty",
-      "talentId": "Talent id (prerequisites point at this)"
+      "talentId": "Talent id (prerequisites point at this)",
+      "requires": "Also requires"
     },
     "Settings": {
       "dc": {
@@ -401,7 +398,7 @@
       },
       "enableDeck": {
         "Name": "Enable personal card deck",
-        "Hint": "Optional personal 52-card deck (§10). Characters with card abilities get a deck when an encounter starts."
+        "Hint": "Optional personal 52-card deck (\u00a710). Characters with card abilities get a deck when an encounter starts."
       },
       "roomEntryMomentum": {
         "Name": "Room entry momentum",
@@ -821,7 +818,7 @@
       "Run": "Update",
       "ReportTitle": "Compendium updates for Modulus {version}",
       "Updated": "Updated {n} item(s) to match the compendium:",
-      "EditedWaiting": "{n} item(s) were edited in this world, so they were left as they are. Review them in Vocabulary Editor → Sync from compendiums:",
+      "EditedWaiting": "{n} item(s) were edited in this world, so they were left as they are. Review them in Vocabulary Editor \u2192 Sync from compendiums:",
       "Orphans": "{n} item(s) came from compendium entries that no longer exist; they were left as they are.",
       "AllCurrent": "All {n} compendium copies are current.",
       "Done": "Updated {n} item(s) from the compendiums.",
@@ -904,7 +901,8 @@
         "noPrereqSet": "No tier-{tier} prerequisite is set on this talent yet.",
         "needPrereq": "Needs {name}.",
         "needCross": "Needs {name} as well.",
-        "needXP": "Costs {cost} XP; {have} available."
+        "needXP": "Costs {cost} XP; {have} available.",
+        "needRequired": "Needs {name}."
       },
       "Issue": {
         "noId": "{name} has no talent id.",
@@ -918,7 +916,10 @@
         "prereqWrongTier": "{name}: its prerequisite is tier {tier}; it must be tier {need}.",
         "crossNotFound": "{name}: its cross prerequisite {id} does not exist.",
         "crossWrongTier": "{name}: its cross prerequisite must be tier 1 (it is tier {tier}).",
-        "crossIsParentsOwn": "{name}: the cross prerequisite must be a different tier-1 talent from its parent's own."
+        "crossIsParentsOwn": "{name}: the cross prerequisite must be a different tier-1 talent from its parent's own.",
+        "requiresSelf": "{name} cannot require itself.",
+        "requiredNotFound": "{name}: a required talent ({id}) does not exist.",
+        "cycle": "{name} is part of a prerequisite loop, so it can never be taken."
       },
       "XPAvailable": "XP available",
       "TierN": "Tier {n}",
@@ -946,7 +947,7 @@
       "PrinciplesTitle": "Authoring principles",
       "Principle": {
         "1": "Bonuses live at tier 1, if anywhere. A tier-1 effect reads \"gain X when you do Y\" and is gated.",
-        "2": "Higher tiers widen the circumstances, not the size. Tier 2: \"when Y or Z\". Tier 3: \"…even when [unusual condition]\". The bonus never grows.",
+        "2": "Higher tiers widen the circumstances, not the size. Tier 2: \"when Y or Z\". Tier 3: \"\u2026even when [unusual condition]\". The bonus never grows.",
         "3": "Tier 3 is more focused, not more powerful. A tier-3 effect that works in every circumstance is a design failure; it needs a ceiling that creates real blind spots.",
         "4": "A tier-1 circumstance sets the identity of everything above it.",
         "5": "Talents that push a secondary up a tier situationally are a legitimate build axis.",
@@ -971,7 +972,7 @@
         "outcome": "Outcome",
         "condition": "Condition",
         "stat": "Stat",
-        "delta": "Tiers (+/−)",
+        "delta": "Tiers (+/\u2212)",
         "applyTo": "Lands on",
         "appliesToRolls": "Applies to",
         "rounds": "Rounds (0 = next roll)",
@@ -1071,7 +1072,7 @@
         "outcomeNeedsResolve": "A hit or miss outcome needs timing \"When resolved\".",
         "badStat": "Pick a stat for each tier shift.",
         "zeroDelta": "A tier shift of 0 does nothing.",
-        "passiveBonus": "This fires every round with no conditions: it is a passive bonus, which the bonus rules forbid (§2.5)."
+        "passiveBonus": "This fires every round with no conditions: it is a passive bonus, which the bonus rules forbid (\u00a72.5)."
       },
       "PrereqFor": {
         "2": "Tier-1 prerequisite (any domain)",
@@ -1080,7 +1081,10 @@
       "RequiresTier": {
         "2": "Also needs 5 tier-1 talents in this talent's domain.",
         "3": "Also needs 5 tier-2 talents in this talent's domain."
-      }
+      },
+      "AlsoRequires": "Also requires",
+      "AlsoRequiresHint": "Further talents this one needs, of any tier. A talent with several levels is a chain: level 2 requires level 1, level 3 requires level 2.",
+      "Needs": "needs"
     },
     "Delayed": {
       "Title": "Delayed effects",
