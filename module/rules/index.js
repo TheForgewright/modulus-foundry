@@ -16,3 +16,4 @@ export * from "./compendium-sync.js";
 export * from "./talents.js";
 export * from "./condfx.js";
 export * from "./delayed.js";
+export * from "./thresholds.js";

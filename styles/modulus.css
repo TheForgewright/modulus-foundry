@@ -343,3 +343,4 @@
 .modulus .em-delayed ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
 .modulus .em-delayed a { cursor: pointer; margin-left: 4px; }
 .modulus-outcomes li.scheduled span:first-child { font-style: italic; }
+.modulus .header-row .threshold { display: flex; flex-direction: column; font-size: 11px; } .modulus .header-row .threshold strong { font-size: 16px; }

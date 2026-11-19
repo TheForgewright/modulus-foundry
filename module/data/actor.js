@@ -6,7 +6,8 @@ import { DOMAINS, EXPRESSIONS, STAT_KEYS, TIERS, statKey } from "../rules/consta
 import { computeDots, validateAllocation, shapeSummary } from "../rules/allocation.js";
 import { tierFromDots } from "../rules/constants.js";
 import { describeTrack } from "../rules/tracks.js";
-import { getFormula, getSetting, pipsTable } from "../settings.js";
+import { getFormula, getSetting, pipsTable, xpThresholds } from "../settings.js";
+import { thresholdFor } from "../rules/thresholds.js";
 import { intField, tierField, L } from "./fields.js";
 
 const fields = foundry.data.fields;
@@ -32,8 +33,8 @@ function tracksSchema(npc = false) {
 export class ModulusActorData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
-      level: intField(1, { min: 0, label: L("level") }),
       xp: new fields.SchemaField({
+        // XP earned. Spent or banked, it all counts toward thresholds (§3.5).
         total: intField(100, { min: 0, label: L("xp.total") }),
         spent: intField(0, { min: 0, label: L("xp.spent") })
       }),
@@ -64,6 +65,13 @@ export class ModulusActorData extends foundry.abstract.TypeDataModel {
   }
 
   prepareDerivedData() {
+    // No levels: the threshold reached by earned XP stands in wherever the rules used the level.
+    const t = thresholdFor(this.xp.total, xpThresholds());
+    this.threshold = t.threshold;
+    this.nextThreshold = t.next;
+    this.toNextThreshold = t.toNext;
+    this.xp.available = this.xp.total - this.xp.spent;
+    this.level = t.threshold;
     const { dots, tiers } = this._baseTiers();
     this.allocationStatus = validateAllocation(this.allocation);
     this.shape = Object.fromEntries(TIERS.map((t) => [t, 0]));

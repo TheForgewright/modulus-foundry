@@ -7,11 +7,14 @@
 import { SYSTEM_ID } from "./config.js";
 import { evaluateFormula } from "./rules/formula.js";
 import { buildRegistry } from "./rules/tags.js";
+import { DEFAULT_THRESHOLDS, THRESHOLD_COUNT } from "./rules/thresholds.js";
 
 const S = (key) => `MODULUS.Settings.${key}`;
 
 /** key, type, default, extra options */
 const DEFINITIONS = [
+  // XP thresholds (§3.5): earned XP reaching each one counts as one step in place of levels.
+  ...Array.from({ length: THRESHOLD_COUNT }, (_, i) => [`xpThreshold.${i + 1}`, Number, DEFAULT_THRESHOLDS[i], { threshold: i + 1 }]),
   ["dc.primary", Number, 14],
   ["dc.secondary", Number, 11],
   ["dc.tertiary", Number, 8],
@@ -57,7 +60,7 @@ export function registerSettings() {
   for (const [key, type, def, opts = {}] of DEFINITIONS) {
     const setting = {
       name: S(`${key}.Name`),
-      hint: S(`${key}.Hint`),
+      hint: opts.threshold ? S("xpThreshold.Hint") : S(`${key}.Hint`),
       scope: "world",
       config: true,
       type,
@@ -138,6 +141,11 @@ export function getFormula(key, vars) {
     const def = DEFINITIONS.find((d) => d[0] === key)[2];
     return evaluateFormula(def, vars);
   }
+}
+
+/** The ten XP thresholds as configured (§3.5). */
+export function xpThresholds() {
+  return Array.from({ length: THRESHOLD_COUNT }, (_, i) => getSetting(`xpThreshold.${i + 1}`));
 }
 
 export function dcTable() {

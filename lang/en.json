@@ -152,10 +152,10 @@
       "TagValue": "Value (0 = no intensity)"
     },
     "Field": {
-      "level": "Level",
       "xp": {
-        "total": "XP total",
-        "spent": "XP spent"
+        "total": "XP earned",
+        "spent": "XP spent",
+        "available": "XP to spend"
       },
       "respecPoints": "Respec points",
       "bonus": "Bonus",
@@ -234,7 +234,7 @@
       "momentum": {
         "ceiling": {
           "Name": "Momentum ceiling formula",
-          "Hint": "Variables: level. Functions: floor, ceil, round, min, max."
+          "Hint": "Variables: level (the XP threshold reached). Functions: floor, ceil, round, min, max."
         },
         "startingDefault": {
           "Name": "Default starting momentum",
@@ -271,7 +271,7 @@
       },
       "maxWordsFormula": {
         "Name": "Max words per action formula",
-        "Hint": "[OPEN] Variables: level. Alternative: 2 + floor(level / 2)."
+        "Hint": "[OPEN] Variables: level (the XP threshold reached). Alternative: 2 + floor(level / 2)."
       },
       "extraWordPenalty": {
         "Name": "Debuff dice per extra word",
@@ -362,8 +362,8 @@
           "Hint": "[DRAFT]"
         },
         "minLevel": {
-          "Name": "Minimum level for pips",
-          "Hint": "[OPEN] Level used for pips is max(level, this). 1 keeps level 0 characters from having no pips."
+          "Name": "Minimum threshold for pips",
+          "Hint": "[OPEN] Pips use max(threshold, this). 1 keeps characters below the first threshold from having no pips."
         }
       },
       "condFx": {
@@ -398,7 +398,7 @@
       },
       "enableDeck": {
         "Name": "Enable personal card deck",
-        "Hint": "Optional personal 52-card deck (\u00a710). Characters with card abilities get a deck when an encounter starts."
+        "Hint": "Optional personal 52-card deck (§10). Characters with card abilities get a deck when an encounter starts."
       },
       "roomEntryMomentum": {
         "Name": "Room entry momentum",
@@ -415,6 +415,40 @@
       "autoSyncCompendiums": {
         "Name": "Update compendium copies on system updates",
         "Hint": "When a new system version is installed, items in this world that came from the system compendiums (in the Items sidebar and on actors) are updated to match, unless they were edited here. Edited ones are listed for the GM to review."
+      },
+      "xpThreshold": {
+        "1": {
+          "Name": "XP threshold 1"
+        },
+        "2": {
+          "Name": "XP threshold 2"
+        },
+        "3": {
+          "Name": "XP threshold 3"
+        },
+        "4": {
+          "Name": "XP threshold 4"
+        },
+        "5": {
+          "Name": "XP threshold 5"
+        },
+        "6": {
+          "Name": "XP threshold 6"
+        },
+        "7": {
+          "Name": "XP threshold 7"
+        },
+        "8": {
+          "Name": "XP threshold 8"
+        },
+        "9": {
+          "Name": "XP threshold 9"
+        },
+        "10": {
+          "Name": "XP threshold 10"
+        },
+        "Name": "XP threshold",
+        "Hint": "Earned XP at which a character reaches this threshold (in order, 1 to 10; 0 = unused). Thresholds stand in for levels in track pips, the momentum ceiling and word slots."
       }
     },
     "Hand": {
@@ -818,7 +852,7 @@
       "Run": "Update",
       "ReportTitle": "Compendium updates for Modulus {version}",
       "Updated": "Updated {n} item(s) to match the compendium:",
-      "EditedWaiting": "{n} item(s) were edited in this world, so they were left as they are. Review them in Vocabulary Editor \u2192 Sync from compendiums:",
+      "EditedWaiting": "{n} item(s) were edited in this world, so they were left as they are. Review them in Vocabulary Editor → Sync from compendiums:",
       "Orphans": "{n} item(s) came from compendium entries that no longer exist; they were left as they are.",
       "AllCurrent": "All {n} compendium copies are current.",
       "Done": "Updated {n} item(s) from the compendiums.",
@@ -947,7 +981,7 @@
       "PrinciplesTitle": "Authoring principles",
       "Principle": {
         "1": "Bonuses live at tier 1, if anywhere. A tier-1 effect reads \"gain X when you do Y\" and is gated.",
-        "2": "Higher tiers widen the circumstances, not the size. Tier 2: \"when Y or Z\". Tier 3: \"\u2026even when [unusual condition]\". The bonus never grows.",
+        "2": "Higher tiers widen the circumstances, not the size. Tier 2: \"when Y or Z\". Tier 3: \"…even when [unusual condition]\". The bonus never grows.",
         "3": "Tier 3 is more focused, not more powerful. A tier-3 effect that works in every circumstance is a design failure; it needs a ceiling that creates real blind spots.",
         "4": "A tier-1 circumstance sets the identity of everything above it.",
         "5": "Talents that push a secondary up a tier situationally are a legitimate build axis.",
@@ -972,7 +1006,7 @@
         "outcome": "Outcome",
         "condition": "Condition",
         "stat": "Stat",
-        "delta": "Tiers (+/\u2212)",
+        "delta": "Tiers (+/−)",
         "applyTo": "Lands on",
         "appliesToRolls": "Applies to",
         "rounds": "Rounds (0 = next roll)",
@@ -1072,7 +1106,7 @@
         "outcomeNeedsResolve": "A hit or miss outcome needs timing \"When resolved\".",
         "badStat": "Pick a stat for each tier shift.",
         "zeroDelta": "A tier shift of 0 does nothing.",
-        "passiveBonus": "This fires every round with no conditions: it is a passive bonus, which the bonus rules forbid (\u00a72.5)."
+        "passiveBonus": "This fires every round with no conditions: it is a passive bonus, which the bonus rules forbid (§2.5)."
       },
       "PrereqFor": {
         "2": "Tier-1 prerequisite (any domain)",
@@ -1095,6 +1129,12 @@
       "Scheduled": "Delayed effect scheduled in round {round}.",
       "ScheduledNote": "{source}: a delayed effect will take effect at the start of round {round}.",
       "FieldHint": "Delay in rounds: 0 = now; 1 = at the start of next round. Only applies inside an encounter."
+    },
+    "Threshold": {
+      "Label": "Threshold",
+      "Next": "next at {xp} XP ({n} to go)",
+      "Top": "all reached",
+      "Tooltip": "How many XP thresholds this character's earned XP has reached (spent or banked). It stands in for level: track pips and break points, the momentum ceiling and word slots use it. The thresholds are world settings."
     }
   }
 }

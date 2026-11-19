@@ -75,7 +75,6 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 71 | "Until the start of the owner's next turn": the stack has no turns. | The start of the next round | `rules/condfx.js` `expireEffects` |
 | 72 | Do talent effects apply outside an encounter (the Act window)? | No: "nearby" is the encounter instance (§8.1.2), so effects exist only inside one | `encounter/condfx-bridge.js` |
 | 73 | Delayed effects: do they fire at the start or the end of the due round, and outside an encounter? | Start of the due round (delay 1 = start of next round); outside an encounter they apply immediately; pending ones end with their encounter | `rules/delayed.js`, `encounter/outcomes.js` |
-| 74 | Levels are gone. What replaces level in track pips and break points (pips per level × level; one segment per level), the momentum ceiling (5 + level) and word slots (2 + level/4)? | A GM-set `level` number stays on the sheet and feeds those formulas until decided | `rules/tracks.js`, settings `momentum.ceiling`, `maxWordsFormula` |
 
 ## Resolved
 
@@ -92,3 +91,4 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 3c | Skills, levels and progression | Skills and levels are removed. XP is an expendable resource spent on talents; the whole system is talents. |
 | 68 | Which actions does a skill modify? | Moot: skills are removed. |
 | 75 | Talents with several levels | Separate talents chained by prerequisites ("Also requires"): level 2 requires level 1. Each level has its own XP cost. |
+| 74 | What replaces level (pips and break points, momentum ceiling, word slots)? | XP thresholds: 10 configurable thresholds of earned XP (spent or banked); the number reached stands in for level. May be removed later. |

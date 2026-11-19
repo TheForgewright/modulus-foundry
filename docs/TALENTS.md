@@ -1,6 +1,6 @@
 # Talents: authoring and play
 
-Talents (§8 of `DESIGN.md`) are the whole progression system: there are no levels or skills. XP is spent on talents, and talents unlock in tiers. Their conditional effects (§8.1) give tier shifts for a few rounds when something happens in an encounter.
+Talents (§8 of `DESIGN.md`) are the whole progression system: there are no levels or skills. XP is spent on talents, and talents unlock in tiers. Earned XP (spent or banked) also counts toward ten XP thresholds, which stand in for levels in track pips, the momentum ceiling and word slots. Their conditional effects (§8.1) give tier shifts for a few rounds when something happens in an encounter.
 
 ## Authoring a talent
 

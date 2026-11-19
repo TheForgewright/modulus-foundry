@@ -209,7 +209,7 @@ Stats rarely change. The designers describe "one-roll changes" to primary/second
 - **Everything is buildable:** a character is their dot allocation plus the talents they have bought.
 - **Talents with several levels** are separate talents chained by prerequisites: level 2 is its own talent that requires level 1, level 3 requires level 2, and so on. Each level has its own XP cost (the same or more than the previous level).
 - **Superseded:** the original level table (100 × level XP), level-0 characters, and the "XP counts what was spent on skills and features" model.
-- **[OPEN #74]** what replaces level where the rules used it: track pips and break points (§4.2, §4.3), the momentum ceiling (§5.1) and word slots (§6.7). Until decided the sheet keeps a GM-set `level` number feeding those formulas.
+- **XP thresholds replace levels [RULE, 2026-11-19, may be removed later].** There are 10 thresholds of **earned** XP (spent or banked, it all counts), configurable as world settings (defaults 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 5500). A character's *threshold* is how many they have reached. Wherever the rules used the level, they use the threshold: track pips and break points (§4.2, §4.3: pips per threshold × threshold, one segment per threshold), the momentum ceiling (§5.1: 5 + threshold) and word slots (§6.7: 2 + threshold ÷ 4).
 
 ### 3.6 Skills [REMOVED, 2026-11-19]
 

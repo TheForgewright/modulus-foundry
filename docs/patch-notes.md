@@ -4,6 +4,7 @@ Newest first. Every build adds a section for its version (`build.sh` checks for 
 
 ## 0.1.1
 - **No skills or levels.** Talents are the only progression; XP is spent on talents. The Skill item type is removed.
+- **XP thresholds instead of levels.** The sheet shows XP earned, spent and left, and the XP threshold reached with the XP needed for the next. Earned XP counts whether spent or banked. The ten thresholds are game settings (default 100 to 5500). Track pips and break points, the momentum ceiling and word slots grow with the threshold the way they grew with level.
 - **Talent levels.** A talent can require any number of other talents (*Also requires* on the talent sheet), of any tier. A talent with several levels is a chain: level 2 requires level 1. The talent graph shows these and flags loops.
 - **Talents.** A Talents tab on the character sheet shows the talents a character has and every talent they could take, with its XP cost. Locked talents say exactly what they still need. Taking a talent spends its XP; removing one can refund it. The GM can grant a locked talent.
 - **Talent editor.** Talent sheets pick their prerequisites from lists of the right tier, flag problems in the prerequisite graph, and show the authoring principles. A Talent graph window (talent sheet or Vocabulary Editor) shows every talent as trees by domain.
