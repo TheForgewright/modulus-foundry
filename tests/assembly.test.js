@@ -163,3 +163,25 @@ test("knowing a word: on the sheet, granted by a talent, or a base word", async 
   assert.ok(knowsWord({ name: "Strike", baseWord: true }, ctx));
   assert.ok(!knowsWord({ name: "Brutal" }, ctx));
 });
+
+test("§6.2: an unknown word can carry a flat penalty, a tier downgrade, or both", async () => {
+  const { effectiveTier } = await import("../module/rules/tier.js");
+  const w = (o) => ({ name: "Acrobatic", momentumModifier: 0, tags: [], effects: [], known: false, ...o });
+  const pen = assembleAction({ action: STRIKE, words: [w({ penalty: -2 })], actor }); // entered as -2
+  assert.equal(pen.flatBonus, -2);
+  assert.deepEqual(pen.tierShifts, []);
+  const down = assembleAction({ action: STRIKE, words: [w({ tierDowngrade: 1 })], actor });
+  assert.equal(down.flatBonus, 0);
+  assert.deepEqual(down.tierShifts, [{ label: "Acrobatic", delta: -1, kind: "unknownWord" }]);
+  assert.equal(effectiveTier({ baseTier: "secondary", shifts: down.tierShifts.map((s) => s.delta) }).tier, "tertiary");
+  const both = assembleAction({ action: STRIKE, words: [w({ penalty: 1, tierDowngrade: 2 })], actor });
+  assert.equal(both.flatBonus, -1);
+  const r = effectiveTier({ baseTier: "secondary", shifts: both.tierShifts.map((s) => s.delta) });
+  assert.equal(r.tier, "tertiary");
+  assert.equal(r.extraDebuffDice, 1); // the step below tertiary becomes a debuff die
+  assert.deepEqual(both.unknownWords, [{ name: "Acrobatic", penalty: 1, tierDowngrade: 2 }]);
+  // known: neither applies
+  const known = assembleAction({ action: STRIKE, words: [w({ penalty: 1, tierDowngrade: 2, known: true })], actor });
+  assert.equal(known.flatBonus, 0);
+  assert.deepEqual(known.tierShifts, []);
+});

@@ -41,8 +41,10 @@ export class WordData extends ModulusItemData {
     return {
       ...super.defineSchema(),
       momentumModifier: intField(0, { label: L("momentumModifier") }),
-      // Anyone may use any word; a character who doesn't know it takes this off the roll (§6.2).
-      penalty: intField(0, { min: 0, label: L("wordPenalty") }),
+      // Anyone may use any word; a character who doesn't know it takes these on the roll (§6.2):
+      // a flat penalty (entered as 2 or -2), a tier downgrade of the rolling stat, or both.
+      penalty: intField(0, { label: L("wordPenalty") }),
+      tierDowngrade: intField(0, { min: 0, max: 3, label: L("wordTierDowngrade") }),
       baseWord: bool(false, "baseWord"),
       tags: tagsField(),
       effects: effectsField(),

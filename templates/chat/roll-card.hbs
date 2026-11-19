@@ -24,6 +24,7 @@
     {{#each ctx.action.flatLines}}<span class="{{#if penalty}}debuff{{else}}buff{{/if}}" data-tooltip="{{label}}">{{value}}</span>{{else}}{{#if m.flatBonus}}<span>{{m.flatBonus}} {{localize "MODULUS.Roll.Flat"}}</span>{{/if}}{{/each}}
     <span class="total">= {{m.total}}</span>
   </div>
+  {{#if ctx.action.unknownWords.length}}<div class="roll-meta debuff">{{#each ctx.action.unknownWords}}<span>{{this}}</span>{{/each}}</div>{{/if}}
   {{#if ctx.action.flatLines.length}}<div class="roll-meta note">{{#each ctx.action.flatLines}}<span>{{label}} {{value}}</span>{{/each}}</div>{{/if}}
   {{#if ctx.talentEffects.length}}
   <ul class="talent-sources">

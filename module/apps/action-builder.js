@@ -34,7 +34,7 @@ export function actionData(item) {
 
 export function wordData(item, known = true) {
   const s = item.system;
-  return { name: item.name, momentumModifier: s.momentumModifier, tags: s.tags, effects: s.effects, penalty: s.penalty ?? 0, known };
+  return { name: item.name, momentumModifier: s.momentumModifier, tags: s.tags, effects: s.effects, penalty: s.penalty ?? 0, tierDowngrade: s.tierDowngrade ?? 0, known };
 }
 
 /** Which words this actor knows (§6.2): on the sheet, granted by a talent, or a base word. */
@@ -224,6 +224,7 @@ export async function resolveDeclaration(actor, plan, { spend = true, encounter 
       onMiss: describe(a.outcomes.onMiss),
       onResolve: describe(a.outcomes.onResolve),
       flatLines: a.flatLines.map(flatLineText),
+      unknownWords: a.unknownWords.filter((w) => w.tierDowngrade).map((w) => game.i18n.format("MODULUS.Builder.UnknownWordTier", { name: w.name, n: w.tierDowngrade })),
       tierShifts: a.tierShifts
     }
   };
@@ -397,7 +398,11 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       actionOptions: Object.fromEntries(actions.map((i) => [i.uuid, i.name])),
       wordOptions: Object.fromEntries(words.map((i) => {
         const cost = `${i.system.momentumModifier >= 0 ? "+" : ""}${i.system.momentumModifier}`;
-        const unknown = !knows(i) && i.system.penalty ? ` · ${game.i18n.format("MODULUS.Builder.UnknownPenalty", { n: i.system.penalty })}` : "";
+        const costs = [
+          i.system.penalty ? game.i18n.format("MODULUS.Builder.UnknownPenalty", { n: Math.abs(i.system.penalty) }) : null,
+          i.system.tierDowngrade ? game.i18n.format("MODULUS.Builder.UnknownTier", { n: i.system.tierDowngrade }) : null
+        ].filter(Boolean);
+        const unknown = !knows(i) && costs.length ? ` · ${game.i18n.localize("MODULUS.Builder.NotKnown")} ${costs.join(", ")}` : "";
         return [i.uuid, `${i.name} (${cost})${unknown}`];
       })),
       slots,
@@ -434,6 +439,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       extraDebuff: plan.extraDebuff,
       flatBonus: a.flatBonus,
       flatLines: a.flatLines.map(flatLineText),
+      unknownWords: a.unknownWords.filter((w) => w.tierDowngrade).map((w) => game.i18n.format("MODULUS.Builder.UnknownWordTier", { name: w.name, n: w.tierDowngrade })),
       tierShifts: a.tierShifts,
       dc: plan.dc,
       dcSource: plan.dcSource,

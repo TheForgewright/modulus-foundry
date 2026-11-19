@@ -344,7 +344,7 @@ Modifiers declared with an action. A word is a **delta object**: it describes ch
 | `momentumModifier` | signed int | Added to cost. Always applies, regardless of target. |
 | `tags` | `{name, value}[]` | Added to the action. |
 | `effects` | Effect[] | §6.3 |
-| `penalty` | int ≥ 0 | **[RULE, 2026-11-19]** Anyone may attach any word to an action; the word declares what they are trying to do. A character who does not **know** the word takes its penalty off the roll as a flat penalty; knowing it negates the penalty. |
+| `penalty`, `tierDowngrade` | int | **[RULE, 2026-11-19]** Anyone may attach any word to an action; the word declares what they are trying to do. A character who does not **know** the word takes its costs on the roll: `penalty` as a flat penalty (−1, −2…), `tierDowngrade` as tiers off the rolling stat (below tertiary, each step is a debuff die, §3.3). A word may carry either or both; **[DRAFT]** which to keep is decided by playtesting. Knowing the word negates both. |
 | `baseWord` | bool | `baseWord` = every character knows it. A character also knows the words on their sheet and the words their talents grant. (`trained` is removed: knowing replaces it.) |
 | `groups` | as for actions | |
 

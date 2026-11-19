@@ -211,7 +211,8 @@
       "penalty": "Penalty",
       "talentId": "Talent id (prerequisites point at this)",
       "requires": "Also requires",
-      "wordPenalty": "Penalty when not known"
+      "wordPenalty": "Roll penalty when not known",
+      "wordTierDowngrade": "Tier downgrade when not known"
     },
     "Settings": {
       "dc": {
@@ -711,7 +712,10 @@
       "Keep": "Keep my action",
       "Change": "Change to this",
       "UnknownWord": "{name} (not known)",
-      "UnknownPenalty": "not known, \u2212{n}"
+      "UnknownPenalty": "\u2212{n}",
+      "NotKnown": "not known:",
+      "UnknownTier": "\u2212{n} tier",
+      "UnknownWordTier": "{name} (not known): \u2212{n} tier"
     },
     "Outcome": {
       "Apply": "Apply",

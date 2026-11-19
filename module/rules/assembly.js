@@ -4,8 +4,9 @@
  *   assembleAction({ action, words, actor, target, statuses, settings })
  *
  * action   { name, rollStat, targetStat, momentumCost, tags, effects, rolls }
- * words    [{ name, momentumModifier, tags, effects, penalty, known }]   in declared order;
- *          a word the actor doesn't know (known === false) takes its penalty off the roll (§6.2)
+ * words    [{ name, momentumModifier, tags, effects, penalty, tierDowngrade, known }]   in declared order;
+ *          a word the actor doesn't know (known === false) takes its penalty off the roll and/or
+ *          drops the rolling stat by its tier downgrade (§6.2)
  * actor    { momentum, maxWords, sceneTrack? }            sceneTrack: "physical" | "mental" | "social"
  * target   null | { kind: "self" | "other" | "entry", resistance?: {physical, mental, social}, exposed?: number }
  * statuses [{ name, effects }]                            the actor's active statuses ("while" effects apply)
@@ -109,7 +110,7 @@ export function assembleAction({ action, words = [], actor = {}, target = null, 
   const flatLines = pre.filter((x) => x.op === "flat").map((e) => ({ label: e.source, value: Math.trunc(e.args?.value ?? 0) }));
   // Unknown words (§6.2): anyone may use any word; not knowing it costs its penalty on the roll.
   for (const w of words) {
-    const p = Math.max(0, Math.trunc(w.penalty ?? 0));
+    const p = Math.abs(Math.trunc(w.penalty ?? 0)); // entered as 2 or -2
     if (w.known === false && p) flatLines.push({ label: w.name, value: -p, kind: "unknownWord" });
   }
   if (target?.exposed) {
@@ -128,6 +129,10 @@ export function assembleAction({ action, words = [], actor = {}, target = null, 
     .filter((e) => e.op === "tierShift" && e.to !== "target" && (e.args?.appliesTo ?? "roll") === "roll")
     .filter((e) => !e.args?.stat || e.args.stat === rollStat)
     .map((e) => ({ label: e.source, delta: Math.trunc(e.args?.delta ?? 0) }));
+  for (const w of words) {
+    const t = Math.max(0, Math.trunc(w.tierDowngrade ?? 0));
+    if (w.known === false && t) tierShifts.push({ label: w.name, delta: -t, kind: "unknownWord" });
+  }
 
   // Fixed DC.
   const dcEffects = pre.filter((x) => x.op === "dc");
@@ -167,7 +172,9 @@ export function assembleAction({ action, words = [], actor = {}, target = null, 
     effectiveMomentum,
     dice: { buff, debuff, lines: diceLines },
     flatBonus: flatLines.reduce((s, l) => s + l.value, 0),
-    unknownWords: words.filter((w) => w.known === false).map((w) => ({ name: w.name, penalty: Math.max(0, Math.trunc(w.penalty ?? 0)) })),
+    unknownWords: words.filter((w) => w.known === false).map((w) => ({
+      name: w.name, penalty: Math.abs(Math.trunc(w.penalty ?? 0)), tierDowngrade: Math.max(0, Math.trunc(w.tierDowngrade ?? 0))
+    })),
     flatLines,
     tierShifts,
     fixedDC,

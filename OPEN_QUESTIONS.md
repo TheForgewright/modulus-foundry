@@ -75,6 +75,7 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 72 | Do talent effects apply outside an encounter (the Act window)? | No: "nearby" is the encounter instance (§8.1.2), so effects exist only inside one | `encounter/condfx-bridge.js` |
 | 73 | Delayed effects: do they fire at the start or the end of the due round, and outside an encounter? | Start of the due round (delay 1 = start of next round); outside an encounter they apply immediately; pending ones end with their encounter | `rules/delayed.js`, `encounter/outcomes.js` |
 | 76 | Unknown words: does the word still do everything else (tags, cost, effects), and does it use a word slot (and the extra-word penalty past two)? | Yes to both: it works fully, and it counts as a word | `rules/assembly.js` |
+| 78 | Unknown words: flat penalty, tier downgrade, or both? | Both fields exist; a word may use either or both while the designers playtest | `data/item.js` WordData, `rules/assembly.js` |
 
 ## Resolved
 
