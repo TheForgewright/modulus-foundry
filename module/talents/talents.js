@@ -5,6 +5,7 @@
 import { SYSTEM_ID } from "../config.js";
 import { talentEligibility, talentSlug, validateTalentGraph } from "../rules/talents.js";
 import { sourceOf } from "../compendium/sync.js";
+import { catalogItems, catalogReady } from "../vocab/catalog.js";
 
 /** Plain data the rules need from a talent Item. */
 export function talentData(item) {
@@ -25,17 +26,12 @@ export function talentData(item) {
 
 /** Every talent a character could take: world Items, then the system's compendiums. World copies win. */
 export async function knownTalents() {
+  await catalogReady();
   const byId = new Map();
-  for (const item of game.items.filter((i) => i.type === "talent")) {
+  for (const item of catalogItems("talent")) {
     const t = talentData(item);
-    if (!byId.has(t.talentId)) byId.set(t.talentId, t);
-  }
-  for (const pack of game.packs) {
-    if (pack.metadata.packageType !== "system" || pack.metadata.packageName !== SYSTEM_ID || pack.documentName !== "Item") continue;
-    for (const item of await pack.getDocuments({ type: "talent" })) {
-      const t = talentData(item);
-      if (!byId.has(t.talentId)) byId.set(t.talentId, { ...t, fromPack: pack.title });
-    }
+    if (byId.has(t.talentId)) continue;
+    byId.set(t.talentId, item.pack ? { ...t, fromPack: game.packs.get(item.pack)?.title } : t);
   }
   return byId;
 }

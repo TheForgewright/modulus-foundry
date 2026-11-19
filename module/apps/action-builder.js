@@ -14,6 +14,7 @@ import { ModulusRoll } from "../documents/roll.js";
 import { statLabel } from "./item-sheet.js";
 import { rollModifiers } from "../encounter/condfx-bridge.js";
 import { talentGrants, isGranted } from "../rules/talents.js";
+import { catalogItems } from "../vocab/catalog.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -29,8 +30,9 @@ export function wordData(item) {
 }
 
 /**
- * Actions and words this actor can use (§6.1, §6.2, §3.6): owned ones; world untrained actions and
- * base words, which everyone has; and world actions and words granted by the actor's talents.
+ * Actions and words this actor can use (§6.1, §6.2, §3.6): owned ones; untrained actions and base
+ * words, which everyone has; and actions and words granted by the actor's talents. "World" here is
+ * the world's Items plus the system's compendium entries (vocab/catalog.js).
  */
 export function availableVocabulary(actor) {
   const owned = actor.items;
@@ -38,9 +40,9 @@ export function availableVocabulary(actor) {
   const grants = talentGrants(owned.filter((i) => i.type === "talent").map((i) => i.system));
   const entry = (i) => ({ name: i.name, vocabId: i.getFlag?.("modulus", "vocabId") });
   const actions = [...owned.filter((i) => i.type === "action"),
-    ...game.items.filter((i) => i.type === "action" && (!i.system.trained || isGranted(entry(i), grants.actions)))];
+    ...catalogItems("action").filter((i) => !i.system.trained || isGranted(entry(i), grants.actions))];
   const words = [...owned.filter((i) => i.type === "word"),
-    ...game.items.filter((i) => i.type === "word" && (i.system.baseWord || isGranted(entry(i), grants.words)))];
+    ...catalogItems("word").filter((i) => i.system.baseWord || isGranted(entry(i), grants.words))];
   const dedupe = (list) => [...new Map(list.map((i) => [i.uuid, i])).values()].sort(byName);
   return { actions: dedupe(actions), words: dedupe(words) };
 }
@@ -445,7 +447,8 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       ["updateCombatant", Hooks.on("updateCombatant", (doc) => doc === this.combatant && rerender())],
       ["updateItem", Hooks.on("updateItem", rerender)],
       ["createItem", Hooks.on("createItem", rerender)],
-      ["deleteItem", Hooks.on("deleteItem", rerender)]
+      ["deleteItem", Hooks.on("deleteItem", rerender)],
+      ["modulus.catalogReady", Hooks.on("modulus.catalogReady", rerender)]
     ];
   }
 

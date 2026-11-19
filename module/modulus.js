@@ -24,6 +24,7 @@ import { registerSyncHooks, openSyncDialog, syncCompendiumCopies, syncPlan } fro
 import { registerEncounterEvents, requestEmit } from "./encounter/events.js";
 import { registerTalentHooks } from "./talents/talents.js";
 import { TalentGraph } from "./apps/talent-graph.js";
+import { registerCatalog, loadCatalog, catalogItems } from "./vocab/catalog.js";
 
 Hooks.once("init", () => {
   console.log("Modulus | Initializing");
@@ -74,6 +75,7 @@ Hooks.once("init", () => {
   registerSyncHooks();
   registerEncounterEvents();
   registerTalentHooks();
+  registerCatalog();
 
   game.settings.registerMenu(SYSTEM_ID, "vocabularyEditor", {
     name: "MODULUS.Vocab.Title",
@@ -92,7 +94,8 @@ Hooks.once("init", () => {
     EncounterManager, openEncounterManager: (combatId) => EncounterManager.open(combatId), encounterController,
     syncCompendiums: openSyncDialog, syncCompendiumCopies, syncPlan,
     emitEvent: requestEmit,
-    openTalentGraph: () => TalentGraph.open()
+    openTalentGraph: () => TalentGraph.open(),
+    catalogItems, reloadCatalog: loadCatalog
   };
 });
 

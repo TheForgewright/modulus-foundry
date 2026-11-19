@@ -51,7 +51,7 @@ Type a tag in the box under the chips and press **Add**; `slow 2` adds `slow` wi
 - An **action** with *Trained* off is available to every character once it exists in the world. Trained actions must be on the character.
 - A **word** with *Base word* on is known by everyone. Other words come from **talents**: a talent's *Grants words* list (names or vocabulary ids, comma-separated) makes those world words available to its owner. A word placed directly on the character also works.
 - A **trained action** comes from a talent's *Grants actions* list the same way, or from being on the character.
-- Granted words and actions must exist as world Items (import them from a compendium) to appear in the Act and Declare windows.
+- **Compendium content is used directly.** The system's compendium actions, words, statuses and talents are available in every world without importing them: the Act and Declare windows, the Talents tab and status effects read them straight from the compendiums, and a new version's changes apply as soon as it is deployed. World Items work alongside them; a world copy of a compendium entry (imported or dragged in) overrides that entry in that world.
 
 ## Trying it: the Act window
 

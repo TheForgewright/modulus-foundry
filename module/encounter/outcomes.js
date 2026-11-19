@@ -5,6 +5,7 @@
 import { SYSTEM_ID } from "../config.js";
 import { describeEffect } from "../rules/effects.js";
 import { statLabel } from "../apps/item-sheet.js";
+import { catalogItems } from "../vocab/catalog.js";
 
 /** The Modulus context stored on a chat message (roll or non-roll card). */
 export function messageContext(message) {
@@ -62,8 +63,8 @@ async function applyStatus(actor, { mode, name, value }, round) {
     if (ids.length) await actor.deleteEmbeddedDocuments("Item", ids);
     return;
   }
-  // Prefer the authored status from the world, so its effects and duration come along.
-  const source = game.items.find((i) => i.type === "status" && i.name.toLowerCase() === name.toLowerCase());
+  // Prefer the authored status (world, then the system compendiums), so its effects and duration come along.
+  const source = catalogItems("status").find((i) => i.name.toLowerCase() === name.toLowerCase());
   const data = source ? source.toObject() : { name, type: "status", system: {} };
   delete data._id;
   if (value) foundry.utils.setProperty(data, "system.value", value);

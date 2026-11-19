@@ -17,3 +17,4 @@ export * from "./talents.js";
 export * from "./condfx.js";
 export * from "./delayed.js";
 export * from "./thresholds.js";
+export * from "./catalog.js";
