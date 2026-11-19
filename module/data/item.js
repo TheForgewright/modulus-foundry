@@ -41,7 +41,8 @@ export class WordData extends ModulusItemData {
     return {
       ...super.defineSchema(),
       momentumModifier: intField(0, { label: L("momentumModifier") }),
-      trained: bool(false, "trained"),
+      // Anyone may use any word; a character who doesn't know it takes this off the roll (§6.2).
+      penalty: intField(0, { min: 0, label: L("wordPenalty") }),
       baseWord: bool(false, "baseWord"),
       tags: tagsField(),
       effects: effectsField(),

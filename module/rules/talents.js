@@ -69,6 +69,18 @@ export function talentGrants(talents) {
   return { words, actions };
 }
 
+/**
+ * Does a character know this word (§6.2)? Base words are known by everyone; otherwise it is on the
+ * character (by name or vocabulary id) or granted by one of their talents.
+ * @param {{name, vocabId?, baseWord?}} word
+ * @param {{owned: Set<string>, granted: Set<string>}} known  lower-cased names / vocabulary ids
+ */
+export function knowsWord(word, { owned, granted }) {
+  if (word.baseWord) return true;
+  const keys = [word.name, word.vocabId].filter((k) => k != null).map((k) => String(k).toLowerCase());
+  return keys.some((k) => owned.has(k) || granted.has(k));
+}
+
 /** Is a word or action ({name, vocabId}) in a grant set? */
 export function isGranted(entry, grants) {
   return grants.has(String(entry.name ?? "").toLowerCase()) || (entry.vocabId != null && grants.has(String(entry.vocabId).toLowerCase()));

@@ -210,7 +210,8 @@
       "defendsAgainst": "Defends against",
       "penalty": "Penalty",
       "talentId": "Talent id (prerequisites point at this)",
-      "requires": "Also requires"
+      "requires": "Also requires",
+      "wordPenalty": "Penalty when not known"
     },
     "Settings": {
       "dc": {
@@ -708,7 +709,9 @@
       "Pass": "Pass",
       "Declare": "Declare",
       "Keep": "Keep my action",
-      "Change": "Change to this"
+      "Change": "Change to this",
+      "UnknownWord": "{name} (not known)",
+      "UnknownPenalty": "not known, \u2212{n}"
     },
     "Outcome": {
       "Apply": "Apply",

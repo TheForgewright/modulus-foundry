@@ -50,7 +50,8 @@
       {{#each tierShifts}}<tr><td>{{label}}</td><td>{{delta}} {{localize "MODULUS.Builder.Tier"}}</td></tr>{{/each}}
       {{#each diceLines}}<tr><td>{{label}}</td><td>{{#if buff}}<span class="buff">+{{buff}}▲</span> {{/if}}{{#if debuff}}<span class="debuff">+{{debuff}}▼</span>{{/if}}</td></tr>{{/each}}
       {{#if extraDebuff}}<tr><td>{{localize "MODULUS.Roll.FromDegrade"}}</td><td><span class="debuff">+{{extraDebuff}}▼</span></td></tr>{{/if}}
-      <tr class="total"><td>{{localize "MODULUS.Builder.Dice"}}</td><td>{{buff}}▲ {{debuff}}▼{{#if flatBonus}} · +{{flatBonus}} {{localize "MODULUS.Roll.Flat"}}{{/if}}</td></tr>
+      {{#each flatLines}}<tr><td>{{label}}</td><td class="{{#if penalty}}debuff{{else}}buff{{/if}}">{{value}}</td></tr>{{/each}}
+      <tr class="total"><td>{{localize "MODULUS.Builder.Dice"}}</td><td>{{buff}}▲ {{debuff}}▼</td></tr>
       <tr><td>DC</td><td>{{#if dc}}{{dc}}{{#if dcSource.targetName}} ({{dcSource.targetName}} · {{dcSource.statLabel}}){{/if}}{{else}}—{{/if}}</td></tr>
       {{#if chance}}<tr class="total"><td>{{localize "MODULUS.Builder.Chance"}}</td><td>{{chance}}</td></tr>{{/if}}
     </table>

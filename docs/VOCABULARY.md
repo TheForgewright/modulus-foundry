@@ -49,7 +49,7 @@ Type a tag in the box under the chips and press **Add**; `slow 2` adds `slow` wi
 ## Who can use what
 
 - An **action** with *Trained* off is available to every character once it exists in the world. Trained actions must be on the character.
-- A **word** with *Base word* on is known by everyone. Other words come from **talents**: a talent's *Grants words* list (names or vocabulary ids, comma-separated) makes those world words available to its owner. A word placed directly on the character also works.
+- **Any word can be used by anyone.** The word declares what the character is trying to do. A character who doesn't **know** the word takes its *Penalty when not known* off the roll; knowing it negates the penalty. A character knows a word if it is a *Base word* (everyone), if it is on their sheet, or if one of their talents grants it (*Grants words*: names or vocabulary ids, comma-separated). The Act and Declare windows list every word and mark unknown ones with their penalty ("Acrobatic (+1) · not known, −2"); the roll shows it as its own line.
 - A **trained action** comes from a talent's *Grants actions* list the same way, or from being on the character.
 - **Compendium content is used directly.** The system's compendium actions, words, statuses and talents are available in every world without importing them: the Act and Declare windows, the Talents tab and status effects read them straight from the compendiums, and a new version's changes apply as soon as it is deployed. World Items work alongside them; a world copy of a compendium entry (imported or dragged in) overrides that entry in that world.
 

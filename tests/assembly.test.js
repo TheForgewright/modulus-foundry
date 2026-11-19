@@ -136,3 +136,30 @@ test("tag helpers", () => {
   assert.ok(reg.find((t) => t.name === "ki"));
   assert.ok(hasTag([{ name: "Offensive" }], "offensive"));
 });
+
+test("§6.2: any word can be used; an unknown word takes its penalty off the roll, knowing it negates it", () => {
+  const acrobatic = { name: "Acrobatic", momentumModifier: 1, penalty: 2, tags: [{ name: "movement", value: 0 }], effects: [] };
+  const known = assembleAction({ action: STRIKE, words: [{ ...acrobatic, known: true }], actor });
+  assert.equal(known.flatBonus, 0);
+  assert.deepEqual(known.unknownWords, []);
+  const unknown = assembleAction({ action: STRIKE, words: [{ ...acrobatic, known: false }], actor });
+  assert.equal(unknown.flatBonus, -2);
+  assert.deepEqual(unknown.flatLines.at(-1), { label: "Acrobatic", value: -2, kind: "unknownWord" });
+  assert.deepEqual(unknown.unknownWords, [{ name: "Acrobatic", penalty: 2 }]);
+  // the word still does everything else: tags and cost
+  assert.ok(unknown.tags.some((t) => t.name === "movement"));
+  assert.equal(unknown.cost.total, 2);
+  // two unknown words add up; a penalty-0 word costs nothing to not know
+  const two = assembleAction({ action: STRIKE, words: [{ ...acrobatic, known: false }, { name: "Quiet", penalty: 0, known: false }], actor });
+  assert.equal(two.flatBonus, -2);
+});
+
+test("knowing a word: on the sheet, granted by a talent, or a base word", async () => {
+  const { knowsWord } = await import("../module/rules/talents.js");
+  const ctx = { owned: new Set(["acrobatic"]), granted: new Set(["feint", "w-quiet"]) };
+  assert.ok(knowsWord({ name: "Acrobatic" }, ctx));
+  assert.ok(knowsWord({ name: "Feint" }, ctx));
+  assert.ok(knowsWord({ name: "Hush", vocabId: "w-quiet" }, ctx));
+  assert.ok(knowsWord({ name: "Strike", baseWord: true }, ctx));
+  assert.ok(!knowsWord({ name: "Brutal" }, ctx));
+});

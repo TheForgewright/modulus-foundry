@@ -4,7 +4,8 @@
  *   assembleAction({ action, words, actor, target, statuses, settings })
  *
  * action   { name, rollStat, targetStat, momentumCost, tags, effects, rolls }
- * words    [{ name, momentumModifier, tags, effects }]   in declared order
+ * words    [{ name, momentumModifier, tags, effects, penalty, known }]   in declared order;
+ *          a word the actor doesn't know (known === false) takes its penalty off the roll (§6.2)
  * actor    { momentum, maxWords, sceneTrack? }            sceneTrack: "physical" | "mental" | "social"
  * target   null | { kind: "self" | "other" | "entry", resistance?: {physical, mental, social}, exposed?: number }
  * statuses [{ name, effects }]                            the actor's active statuses ("while" effects apply)
@@ -106,6 +107,11 @@ export function assembleAction({ action, words = [], actor = {}, target = null, 
     diceLines.push({ label: "sceneTrack", buff: S.sceneTrackBonusDice, debuff: 0 });
   }
   const flatLines = pre.filter((x) => x.op === "flat").map((e) => ({ label: e.source, value: Math.trunc(e.args?.value ?? 0) }));
+  // Unknown words (§6.2): anyone may use any word; not knowing it costs its penalty on the roll.
+  for (const w of words) {
+    const p = Math.max(0, Math.trunc(w.penalty ?? 0));
+    if (w.known === false && p) flatLines.push({ label: w.name, value: -p, kind: "unknownWord" });
+  }
   if (target?.exposed) {
     if (S.exposedMode === "dice") diceLines.push({ label: "exposed", buff: target.exposed, debuff: 0 });
     else flatLines.push({ label: "exposed", value: target.exposed });
@@ -161,6 +167,7 @@ export function assembleAction({ action, words = [], actor = {}, target = null, 
     effectiveMomentum,
     dice: { buff, debuff, lines: diceLines },
     flatBonus: flatLines.reduce((s, l) => s + l.value, 0),
+    unknownWords: words.filter((w) => w.known === false).map((w) => ({ name: w.name, penalty: Math.max(0, Math.trunc(w.penalty ?? 0)) })),
     flatLines,
     tierShifts,
     fixedDC,

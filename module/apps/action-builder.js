@@ -13,10 +13,18 @@ import { assemblySettings, dcTable, getSetting } from "../settings.js";
 import { ModulusRoll } from "../documents/roll.js";
 import { statLabel } from "./item-sheet.js";
 import { rollModifiers } from "../encounter/condfx-bridge.js";
-import { talentGrants, isGranted } from "../rules/talents.js";
+import { talentGrants, isGranted, knowsWord } from "../rules/talents.js";
 import { catalogItems } from "../vocab/catalog.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+/** Display text for a flat roll line (unknown words, Duelist, Exposed, gated bonuses). */
+export function flatLineText(l) {
+  const signed = `${l.value >= 0 ? "+" : "−"}${Math.abs(l.value)}`;
+  const label = l.kind === "unknownWord" ? game.i18n.format("MODULUS.Builder.UnknownWord", { name: l.label })
+    : ["duelist", "exposed"].includes(l.label) ? game.i18n.localize(`MODULUS.Builder.Line.${l.label}`) : l.label;
+  return { label, value: signed, penalty: l.value < 0 };
+}
 
 /** Plain data the rules engine needs from an action Item. */
 export function actionData(item) {
@@ -24,15 +32,28 @@ export function actionData(item) {
   return { name: item.name, rollStat: s.rollStat, targetStat: s.targetStat, momentumCost: s.momentumCost, tags: s.tags, effects: s.effects, rolls: s.rolls };
 }
 
-export function wordData(item) {
+export function wordData(item, known = true) {
   const s = item.system;
-  return { name: item.name, momentumModifier: s.momentumModifier, tags: s.tags, effects: s.effects };
+  return { name: item.name, momentumModifier: s.momentumModifier, tags: s.tags, effects: s.effects, penalty: s.penalty ?? 0, known };
+}
+
+/** Which words this actor knows (§6.2): on the sheet, granted by a talent, or a base word. */
+export function wordKnowledge(actor) {
+  const owned = new Set();
+  for (const i of actor.items.filter((x) => x.type === "word")) {
+    owned.add(i.name.toLowerCase());
+    const v = i.getFlag?.("modulus", "vocabId");
+    if (v) owned.add(String(v).toLowerCase());
+  }
+  const granted = talentGrants(actor.items.filter((i) => i.type === "talent").map((i) => i.system)).words;
+  return (item) => knowsWord({ name: item.name, vocabId: item.getFlag?.("modulus", "vocabId"), baseWord: item.system.baseWord }, { owned, granted });
 }
 
 /**
- * Actions and words this actor can use (§6.1, §6.2, §3.6): owned ones; untrained actions and base
- * words, which everyone has; and actions and words granted by the actor's talents. "World" here is
- * the world's Items plus the system's compendium entries (vocab/catalog.js).
+ * Actions and words this actor can use (§6.1, §6.2, §3.6). Actions: owned ones, untrained ones, and
+ * those granted by the actor's talents. Words: every word (anyone may use any word); the ones the
+ * actor doesn't know carry their penalty (see wordKnowledge). The world's Items plus the system's
+ * compendium entries (vocab/catalog.js).
  */
 export function availableVocabulary(actor) {
   const owned = actor.items;
@@ -41,10 +62,12 @@ export function availableVocabulary(actor) {
   const entry = (i) => ({ name: i.name, vocabId: i.getFlag?.("modulus", "vocabId") });
   const actions = [...owned.filter((i) => i.type === "action"),
     ...catalogItems("action").filter((i) => !i.system.trained || isGranted(entry(i), grants.actions))];
-  const words = [...owned.filter((i) => i.type === "word"),
-    ...catalogItems("word").filter((i) => i.system.baseWord || isGranted(entry(i), grants.words))];
+  const words = [...owned.filter((i) => i.type === "word"), ...catalogItems("word")];
   const dedupe = (list) => [...new Map(list.map((i) => [i.uuid, i])).values()].sort(byName);
-  return { actions: dedupe(actions), words: dedupe(words) };
+  // One entry per word name: the character's own copy wins over the catalog's.
+  const byWordName = new Map();
+  for (const w of words) if (!byWordName.has(w.name.toLowerCase()) || w.parent === actor) byWordName.set(w.name.toLowerCase(), w);
+  return { actions: dedupe(actions), words: [...byWordName.values()].sort(byName) };
 }
 
 function statusesOf(actor) {
@@ -72,9 +95,10 @@ export function buildDeclaration(actor, { action, words, target, targetMode, sce
     const exposed = statusesOf(target).filter((s) => s.name.toLowerCase() === "exposed").reduce((n, s) => n + (s.value || 0), 0);
     targetCtx = target === actor ? { kind: "self" } : { kind: "other", resistance: target.system.momentum.resistance, exposed };
   }
+  const knows = wordKnowledge(actor);
   const assembled = assembleAction({
     action: actionData(action),
-    words: words.map(wordData),
+    words: words.map((w) => wordData(w, knows(w))),
     actor: { momentum: momentum ?? actor.system.momentum.current, maxWords: actor.system.maxWords, sceneTrack },
     target: targetCtx,
     statuses: statusesOf(actor),
@@ -199,7 +223,7 @@ export async function resolveDeclaration(actor, plan, { spend = true, encounter 
       onHit: describe(a.outcomes.onHit),
       onMiss: describe(a.outcomes.onMiss),
       onResolve: describe(a.outcomes.onResolve),
-      flatLines: a.flatLines,
+      flatLines: a.flatLines.map(flatLineText),
       tierShifts: a.tierShifts
     }
   };
@@ -359,6 +383,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     const t = (k) => game.i18n.localize(k);
     const { actions, words, action, chosen, target } = this._current();
     const maxWords = this.actor.system.maxWords;
+    const knows = wordKnowledge(this.actor);
     const slots = Array.from({ length: Math.max(maxWords, chosen.length) + 1 }, (_, i) => ({
       index: i, value: this.choice.words[i] ?? "", over: i >= maxWords
     }));
@@ -370,7 +395,11 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       isReconfirm: this.mode === "reconfirm",
       note: this.note,
       actionOptions: Object.fromEntries(actions.map((i) => [i.uuid, i.name])),
-      wordOptions: Object.fromEntries(words.map((i) => [i.uuid, `${i.name} (${i.system.momentumModifier >= 0 ? "+" : ""}${i.system.momentumModifier})`])),
+      wordOptions: Object.fromEntries(words.map((i) => {
+        const cost = `${i.system.momentumModifier >= 0 ? "+" : ""}${i.system.momentumModifier}`;
+        const unknown = !knows(i) && i.system.penalty ? ` · ${game.i18n.format("MODULUS.Builder.UnknownPenalty", { n: i.system.penalty })}` : "";
+        return [i.uuid, `${i.name} (${cost})${unknown}`];
+      })),
       slots,
       state: this.choice,
       targetOptions: this._targetOptions(),
@@ -404,6 +433,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       debuff: plan.debuff,
       extraDebuff: plan.extraDebuff,
       flatBonus: a.flatBonus,
+      flatLines: a.flatLines.map(flatLineText),
       tierShifts: a.tierShifts,
       dc: plan.dc,
       dcSource: plan.dcSource,

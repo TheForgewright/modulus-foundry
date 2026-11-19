@@ -133,7 +133,7 @@ They need not be in the same domain. Words can override either. This produces th
 
 - **No passive bonuses.** A bonus may exist only if gated by (a) a successful prior action against an uncertain situation, or (b) a momentum expenditure.
 - **Prefer dice to flat numbers.** The preferred bonus language is buff dice, debuff dice, tier shifts and rerolls.
-- **Flat bonuses that do exist** (for example Duelist, §7.5) are gated and small.
+- **Flat bonuses that do exist** (for example Duelist, §7.5) are gated and small. The unknown-word penalty (§6.2) is a flat penalty.
 - **Skills are an exception [RULE, 2026-11-18]:** a skill adds its rank as a flat bonus to rolls of the actions it modifies (§3.6). It is one of the few flat bonus sources, and is not gated.
 - A sheet-level integer `bonus` per stat exists as a v0.1 placeholder the designers said "will change later". Implement it, default 0, hidden behind an "advanced" toggle, and do not build features on it.
 - Round down by default wherever a calculation produces a fraction.
@@ -344,8 +344,11 @@ Modifiers declared with an action. A word is a **delta object**: it describes ch
 | `momentumModifier` | signed int | Added to cost. Always applies, regardless of target. |
 | `tags` | `{name, value}[]` | Added to the action. |
 | `effects` | Effect[] | §6.3 |
-| `trained`, `baseWord` | bool | `baseWord` = every character knows it. |
+| `penalty` | int ≥ 0 | **[RULE, 2026-11-19]** Anyone may attach any word to an action; the word declares what they are trying to do. A character who does not **know** the word takes its penalty off the roll as a flat penalty; knowing it negates the penalty. |
+| `baseWord` | bool | `baseWord` = every character knows it. A character also knows the words on their sheet and the words their talents grant. (`trained` is removed: knowing replaces it.) |
 | `groups` | as for actions | |
+
+**Unknown words [RULE, 2026-11-19]:** for example an *Acrobatic* strike (vaulting an obstacle, leaping through the air) is open to everyone, but a character without *Acrobatic* in their vocabulary takes its penalty on the roll. This is one of the few flat modifiers, alongside Duelist (§2.5).
 
 Words describe *how* an action is done ("Planted", "Charging"). **Test for a good word:** can you put it before a core action and have it make physical sense? Words are not spells; a "spell" is a mental skill's words combined with a core action.
 
