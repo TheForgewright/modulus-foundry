@@ -145,7 +145,7 @@ test("§6.2: any word can be used; an unknown word takes its penalty off the rol
   const unknown = assembleAction({ action: STRIKE, words: [{ ...acrobatic, known: false }], actor });
   assert.equal(unknown.flatBonus, -2);
   assert.deepEqual(unknown.flatLines.at(-1), { label: "Acrobatic", value: -2, kind: "unknownWord" });
-  assert.deepEqual(unknown.unknownWords, [{ name: "Acrobatic", penalty: 2 }]);
+  assert.deepEqual(unknown.unknownWords, [{ name: "Acrobatic", penalty: 2, tierDowngrade: 0 }]);
   // the word still does everything else: tags and cost
   assert.ok(unknown.tags.some((t) => t.name === "movement"));
   assert.equal(unknown.cost.total, 2);

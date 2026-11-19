@@ -440,7 +440,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       flatBonus: a.flatBonus,
       flatLines: a.flatLines.map(flatLineText),
       unknownWords: a.unknownWords.filter((w) => w.tierDowngrade).map((w) => game.i18n.format("MODULUS.Builder.UnknownWordTier", { name: w.name, n: w.tierDowngrade })),
-      tierShifts: a.tierShifts,
+      tierShifts: a.tierShifts.map((t) => ({ ...t, label: t.kind === "unknownWord" ? game.i18n.format("MODULUS.Builder.UnknownWord", { name: t.label }) : t.label })),
       dc: plan.dc,
       dcSource: plan.dcSource,
       chance: plan.chance == null ? null : `${(plan.chance * 100).toFixed(1)}%`,
