@@ -364,7 +364,9 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     const { actions, words } = availableVocabulary(this.actor);
     const action = actions.find((i) => i.uuid === this.choice.action) ?? actions[0] ?? null;
     if (action) this.choice.action = action.uuid;
-    const chosen = this.choice.words.map((u) => words.find((w) => w.uuid === u)).filter(Boolean);
+    // A chosen word may name a copy the list replaced with the actor's own (same name): match by name then.
+    const byUuid = (u) => words.find((w) => w.uuid === u) ?? words.find((w) => w.name === fromUuidSync(u)?.name);
+    const chosen = this.choice.words.map(byUuid).filter(Boolean);
     return { actions, words, action, chosen, target: this._target() };
   }
 

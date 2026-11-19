@@ -8,11 +8,13 @@
     "build:packs": "node scripts/build-packs.mjs",
     "load": "node harness/load-check.mjs",
     "actions": "node harness/actions-check.mjs",
-    "check": "node harness/load-check.mjs && node harness/actions-check.mjs && node --test \"tests/**/*.test.js\"",
-    "compendium": "node harness/compendium-check.mjs"
+    "check": "node harness/load-check.mjs && node harness/actions-check.mjs && node harness/render-check.mjs && node --test \"tests/**/*.test.js\"",
+    "compendium": "node harness/compendium-check.mjs",
+    "render": "node harness/render-check.mjs"
   },
   "devDependencies": {
     "@foundryvtt/foundryvtt-cli": "3.0.5",
+    "handlebars": "^4.7.8",
     "yauzl": "^3.4.0",
     "yazl": "^3.3.1"
   },

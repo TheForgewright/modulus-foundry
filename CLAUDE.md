@@ -24,6 +24,7 @@ A Foundry VTT **v14** game system (`modulus`). The rules and the implementation 
 - `npm test`: unit tests for everything under `module/rules/` (pure JS, no Foundry imports; `tests/purity.test.js` enforces it), plus the language-key test and the end-to-end encounter round against mocked documents.
 - `harness/load-check.mjs`: imports every module with stand-in Foundry globals, runs the init hook, and checks every template, manifest path and document type it registers exists.
 - `harness/compendium-check.mjs [zip]`: every pack in `system.json` matches its sources, in `packs/` and, given a zip, in the zip.
+- `harness/render-check.mjs`: runs the real data models and every window's real context code against stand-in documents (`harness/render-sim.mjs`), renders every sheet tab, item type, Act / Declare / Re-confirm window, Encounter Manager phase, Vocabulary Editor view, the talent graph and the chat cards with real Handlebars and Foundry's helpers, and fails on template errors or `undefined`, `[object Object]`, `NaN` or untranslated keys in the output. Add a scenario when you add a window, a tab or a state.
 - `harness/actions-check.mjs`: every `data-action` in a template is registered on the window that renders it; no class assigns ApplicationV2's own `state`, `rendered`, `element`, `form` or `window`.
 
 ## Layout

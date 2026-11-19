@@ -48,6 +48,9 @@ node harness/load-check.mjs
 step "Actions check"
 node harness/actions-check.mjs
 
+step "Render check"
+node harness/render-check.mjs
+
 step "Unit tests"
 node --test "tests/**/*.test.js"
 
