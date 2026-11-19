@@ -102,3 +102,13 @@ test("tree view and slugs", () => {
   assert.equal(talentSlug("Reads the Opening!"), "reads-the-opening");
   assert.equal(talentSlug("Élan"), "elan");
 });
+
+test("talents grant words and actions by name or vocabulary id, ignoring case", async () => {
+  const { talentGrants, isGranted } = await import("../module/rules/talents.js");
+  const g = talentGrants([{ grantsWords: ["Steady", " darting "], grantsActions: ["fixture-grapple"] }, { grantsWords: [""] }]);
+  assert.ok(isGranted({ name: "steady" }, g.words));
+  assert.ok(isGranted({ name: "Darting" }, g.words));
+  assert.ok(!isGranted({ name: "Charging" }, g.words));
+  assert.ok(isGranted({ name: "Grapple", vocabId: "fixture-grapple" }, g.actions));
+  assert.equal(g.words.size, 2);
+});

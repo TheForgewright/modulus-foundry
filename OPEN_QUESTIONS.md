@@ -6,7 +6,6 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 |---|---|---|---|
 | 1 | DC preset: 14/11/8 or 13/11/9 | 14/11/8 | settings `dc.*` |
 | 2 | DC for unopposed tasks | GM-entered; suggest 11 | setting `defaultTaskDC`, roll dialog |
-| 4 | How do characters acquire words, now that skills are gone (word packs, talents granting words)? | Base words for everyone; talents can grant words (`grantsWords`); no automatic pack selection |  |
 | 5 | `maxWords` formula and the extra-word penalty | `2 + floor(level/4)`; one debuff die per extra word | setting `maxWordsFormula`, `extraWordPenalty` |
 | 6 | Focus bonus magnitude | Off |  |
 | 7 | Buff/debuff stacking and caps | Additive, no cap |  |
@@ -92,3 +91,4 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 68 | Which actions does a skill modify? | Moot: skills are removed. |
 | 75 | Talents with several levels | Separate talents chained by prerequisites ("Also requires"): level 2 requires level 1. Each level has its own XP cost. |
 | 74 | What replaces level (pips and break points, momentum ceiling, word slots)? | XP thresholds: 10 configurable thresholds of earned XP (spent or banked); the number reached stands in for level. May be removed later. |
+| 4 | How do characters acquire words? | From talents (*Grants words*), plus base words everyone knows. Trained actions likewise come from talents (*Grants actions*). |

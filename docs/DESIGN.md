@@ -213,7 +213,7 @@ Stats rarely change. The designers describe "one-roll changes" to primary/second
 
 ### 3.6 Skills [REMOVED, 2026-11-19]
 
-Skills are removed. Talents are the only progression. The skill item type is gone; actions and words come from the vocabulary and from talents (`grantsWords`, `grantsActions`). **[OPEN #4]** how characters acquire words now.
+Skills are removed. Talents are the only progression. The skill item type is gone. **Words come from talents [RULE, 2026-11-19]:** a character knows the base words (everyone has them) and the words their talents grant (`grantsWords`); trained actions likewise come from talents (`grantsActions`).
 
 ### 3.7 Creation aspects [carried]
 
@@ -1132,7 +1132,7 @@ Carried from the original doc for a later "ability builder". It predates the act
 | 1 | DC preset: 14/11/8 or 13/11/9 | 14/11/8 |
 | 2 | DC for unopposed tasks | GM-entered; suggest 11 |
 | 3 | ~~How are talents acquired? How do skills, talents and word packs relate?~~ **Decided:** each talent has its own XP cost (2026-11-18); skills and levels are removed, XP is spent only on talents (2026-11-19) | |
-| 4 | How do characters acquire words, now that skills are gone (word packs, talents granting words)? | Base words for everyone; talents can grant words; no automatic pack selection |
+| 4 | ~~How do characters acquire words?~~ **Decided 2026-11-19:** from talents (`grantsWords`), plus base words everyone knows | |
 | 5 | `maxWords` formula and the extra-word penalty | `2 + floor(level/4)`; one debuff die per extra word |
 | 6 | Focus bonus magnitude | Off |
 | 7 | Buff/debuff stacking and caps | Additive, no cap |

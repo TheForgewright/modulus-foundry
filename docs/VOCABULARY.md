@@ -49,7 +49,9 @@ Type a tag in the box under the chips and press **Add**; `slow 2` adds `slow` wi
 ## Who can use what
 
 - An **action** with *Trained* off is available to every character once it exists in the world. Trained actions must be on the character.
-- A **word** with *Base word* on is known by everyone. Other words must be on the character.
+- A **word** with *Base word* on is known by everyone. Other words come from **talents**: a talent's *Grants words* list (names or vocabulary ids, comma-separated) makes those world words available to its owner. A word placed directly on the character also works.
+- A **trained action** comes from a talent's *Grants actions* list the same way, or from being on the character.
+- Granted words and actions must exist as world Items (import them from a compendium) to appear in the Act and Declare windows.
 
 ## Trying it: the Act window
 

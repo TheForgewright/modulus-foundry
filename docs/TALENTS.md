@@ -10,6 +10,7 @@ Create talents in the Vocabulary Editor (type *Talent*) or in a compendium. On t
 - **Talent id.** Filled in from the name when the talent is created; other talents point at it as their prerequisite, so it survives renames and copies. Change it only before anything depends on it.
 - **Prerequisites.** Tier 2 picks one tier-1 talent (any domain). Tier 3 picks its tier-2 parent and, optionally, a second tier-1 talent from another tree (not the parent's own tier-1). The lists only offer talents of the right tier. Problems with this talent's place in the graph show in red under the pickers.
 - **Also requires.** Any number of further talents, of any tier. A talent with several levels is a chain of separate talents: *Iron Grip II* requires *Iron Grip I*, *Iron Grip III* requires *Iron Grip II*, each with its own XP cost. Loops are flagged.
+- **Grants words / Grants actions.** With skills gone, talents are where characters get their words and trained actions: list them by name (or vocabulary id), comma-separated. Owners see them in the Act and Declare windows. Base words are known by everyone.
 - **Talent graph** (button on the sheet, or in the Vocabulary Editor) shows every talent by domain as trees, with every graph problem listed.
 - **Authoring principles** are under the sheet's *Authoring principles* heading.
 

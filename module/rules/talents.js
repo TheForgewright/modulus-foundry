@@ -54,6 +54,27 @@ export function talentEligibility(talent, owned, byId = new Map(), { xpAvailable
 }
 
 /**
+ * What a character's talents grant (§3.6: with skills gone, words come from talents).
+ * Talents list granted words and actions by name or vocabulary id; matching ignores case.
+ * @param {Array<{grantsWords?: string[], grantsActions?: string[]}>} talents
+ * @returns {{words: Set<string>, actions: Set<string>}} lower-cased keys
+ */
+export function talentGrants(talents) {
+  const words = new Set();
+  const actions = new Set();
+  for (const t of talents) {
+    for (const w of t.grantsWords ?? []) if (String(w).trim()) words.add(String(w).trim().toLowerCase());
+    for (const a of t.grantsActions ?? []) if (String(a).trim()) actions.add(String(a).trim().toLowerCase());
+  }
+  return { words, actions };
+}
+
+/** Is a word or action ({name, vocabId}) in a grant set? */
+export function isGranted(entry, grants) {
+  return grants.has(String(entry.name ?? "").toLowerCase()) || (entry.vocabId != null && grants.has(String(entry.vocabId).toLowerCase()));
+}
+
+/**
  * Check the authored graph (§8, §15 talent editor).
  * @returns {Array<{talentId, code, ...}>} problems; empty when valid
  */

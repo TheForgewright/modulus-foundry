@@ -13,6 +13,7 @@ import { assemblySettings, dcTable, getSetting } from "../settings.js";
 import { ModulusRoll } from "../documents/roll.js";
 import { statLabel } from "./item-sheet.js";
 import { rollModifiers } from "../encounter/condfx-bridge.js";
+import { talentGrants, isGranted } from "../rules/talents.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -27,12 +28,19 @@ export function wordData(item) {
   return { name: item.name, momentumModifier: s.momentumModifier, tags: s.tags, effects: s.effects };
 }
 
-/** Actions and words this actor can use: owned ones plus world untrained actions and base words (§6.1, §6.2). */
+/**
+ * Actions and words this actor can use (§6.1, §6.2, §3.6): owned ones; world untrained actions and
+ * base words, which everyone has; and world actions and words granted by the actor's talents.
+ */
 export function availableVocabulary(actor) {
   const owned = actor.items;
   const byName = (a, b) => a.name.localeCompare(b.name);
-  const actions = [...owned.filter((i) => i.type === "action"), ...game.items.filter((i) => i.type === "action" && !i.system.trained)];
-  const words = [...owned.filter((i) => i.type === "word"), ...game.items.filter((i) => i.type === "word" && i.system.baseWord)];
+  const grants = talentGrants(owned.filter((i) => i.type === "talent").map((i) => i.system));
+  const entry = (i) => ({ name: i.name, vocabId: i.getFlag?.("modulus", "vocabId") });
+  const actions = [...owned.filter((i) => i.type === "action"),
+    ...game.items.filter((i) => i.type === "action" && (!i.system.trained || isGranted(entry(i), grants.actions)))];
+  const words = [...owned.filter((i) => i.type === "word"),
+    ...game.items.filter((i) => i.type === "word" && (i.system.baseWord || isGranted(entry(i), grants.words)))];
   const dedupe = (list) => [...new Map(list.map((i) => [i.uuid, i])).values()].sort(byName);
   return { actions: dedupe(actions), words: dedupe(words) };
 }
