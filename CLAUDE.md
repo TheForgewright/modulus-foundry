@@ -40,7 +40,7 @@ module/deck/         card-deck effects and lifecycle
 module/talents/      talents on characters, the conditional-effects editor model
 packs/_source/       compendium sources as JSON (npm run build:packs)
 harness/  tests/     checks, not shipped
-docs/                DESIGN.md, VOCABULARY.md, ENCOUNTERS.md, TALENTS.md, CARD_DECK.md, patch-notes.md
+docs/                DESIGN.md, VOCABULARY.md, ENCOUNTERS.md, TALENTS.md, CARD_DECK.md, patch-notes.md, HANDOFF.md
 ```
 
 ## Architecture
