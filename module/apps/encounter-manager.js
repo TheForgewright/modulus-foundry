@@ -142,7 +142,9 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
         label: e.decl.label,
         tags: e.decl.tags,
         state: e.state,
-        stateLabel: t(`MODULUS.Encounter.State.${e.state}`),
+        stateLabel: e.cancelled ? t("MODULUS.Encounter.Interrupted")
+          : e.resolved ? t("MODULUS.Encounter.Outcome.resolved")
+          : t(`MODULUS.Encounter.State.${e.state}`),
         momentum: e.momentum,
         slow: e.slow,
         fast: e.fast,

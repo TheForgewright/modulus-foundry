@@ -240,6 +240,18 @@ for (const [phase, combat] of Object.entries(combats)) {
   em.selectedId = combat.id;
   await renderApp(`Encounter Manager / ${phase}`, em);
 }
+// Resolved stack entries are badged Resolved, not by their declaration state; titles stay one flex item.
+await attempt("Encounter Manager / surrender (stack badges)", async () => {
+  const em = new EncounterManager();
+  em.selectedId = combats.surrender.id;
+  const html = renderFile(EncounterManager.PARTS.body.template, await em._prepareContext({}));
+  if (!/class="em-entry[^"]*resolved/.test(html)) throw new Error("the surrender scenario has no resolved entries");
+  const badges = [...html.matchAll(/class="em-badge">([^<]*)</g)].map((m) => m[1].trim());
+  if (!badges.includes("Resolved")) throw new Error(`no Resolved badge in the stack: ${badges.join(", ")}`);
+  if (!/class="em-entry-title"><strong>/.test(html)) throw new Error("stack entry title is not wrapped in em-entry-title");
+  return html;
+});
+
 game.user.isGM = false;
 const playerView = new EncounterManager();
 playerView.selectedId = combats.executing.id;

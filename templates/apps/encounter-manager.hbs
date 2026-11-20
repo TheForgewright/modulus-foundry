@@ -121,14 +121,13 @@
           <span class="em-effective" data-tooltip="{{momentum}}{{#if slow}} − slow {{slow}}{{/if}}{{#if fast}} + fast {{fast}}{{/if}}{{#if duelist}} − duelist {{duelist}}{{/if}}">{{effective}}</span>
           <span class="em-badge">{{stateLabel}}{{#if charge}} {{charge}}{{/if}}</span>
           <span class="em-entry-main">
-            <strong>{{name}}</strong>: {{label}}
+            <span class="em-entry-title"><strong>{{name}}</strong>: {{label}}</span>
             {{#if target}}<span class="hint"> → {{target}}</span>{{/if}}
             <span class="em-tags">{{tags}}{{#if delayed}} · delayed{{/if}}</span>
           </span>
           <span class="em-cost" data-tooltip="MODULUS.Builder.Cost">{{cost}} <i class="fa-solid fa-bolt"></i></span>
           {{#if mods}}<span class="em-mods">{{mods}}</span>{{/if}}
           {{#if outcome}}<span class="em-outcome">{{outcome}}</span>{{/if}}
-          {{#if cancelled}}<span class="em-outcome">{{localize "MODULUS.Encounter.Interrupted"}}</span>{{/if}}
           {{#if ../../isGM}}{{#unless resolved}}{{#unless cancelled}}
           <a class="em-interrupt" data-action="interrupt" data-tooltip="MODULUS.Encounter.InterruptHint"><i class="fa-solid fa-hand"></i></a>
           {{/unless}}{{/unless}}{{/if}}

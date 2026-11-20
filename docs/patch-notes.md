@@ -2,6 +2,10 @@
 
 Newest first. Every build adds a section for its version (`build.sh` checks for it).
 
+## 0.1.2
+- **Encounter Manager stack:** entries that have resolved now say *Resolved* instead of *Submitted*, and interrupted entries say *Interrupted* in the same badge.
+- **Fix:** a stack entry's title ("Name: Action") stays on one line instead of breaking before the colon.
+
 ## 0.1.1
 - **No skills or levels.** Talents are the only progression; XP is spent on talents. The Skill item type is removed.
 - **XP thresholds instead of levels.** The sheet shows XP earned, spent and left, and the XP threshold reached with the XP needed for the next. Earned XP counts whether spent or banked. The ten thresholds are game settings (default 100 to 5500). Track pips and break points, the momentum ceiling and word slots grow with the threshold the way they grew with level.
