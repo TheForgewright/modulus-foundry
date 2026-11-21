@@ -66,6 +66,8 @@ export class TalentData extends ModulusItemData {
       crossPrereq: str("crossPrereq"),
       // Further talents this one needs, any tier: how a talent's levels chain (level 2 requires level 1).
       requires: new fields.ArrayField(new fields.StringField(), { label: L("requires") }),
+      // Advanced ancestry features (§3.7): the ancestryId a character must have to take this talent.
+      requiresAncestry: str("requiresAncestry"),
       xpCost: intField(0, { min: 0, label: L("xpCost") }),
       effects: effectsField(),
       conditionalEffects: effectsField("conditionalEffects"), // §8.1
@@ -110,14 +112,17 @@ class AspectData extends ModulusItemData {
   }
 }
 
-export class AncestryData extends AspectData {
+/** Ancestries cost no XP; advanced ancestry features are talents that require the ancestry (§3.7). */
+export class AncestryData extends ModulusItemData {
   static defineSchema() {
     return {
       ...super.defineSchema(),
-      advanced: bool(false, "advanced"),
+      // Stable key talents point at (requiresAncestry); survives copies and renames.
+      ancestryId: str("ancestryId"),
       minorBoon: str("minorBoon"),
       majorBoon: str("majorBoon"),
-      minorBane: str("minorBane")
+      minorBane: str("minorBane"),
+      effects: effectsField()
     };
   }
 }

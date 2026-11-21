@@ -2,7 +2,7 @@
  * Talents (§8): eligibility, why a talent is locked, the prerequisite graph and XP. Pure JS.
  *
  * A talent here is plain data:
- *   { talentId, name, domain, tier, prereqTalent, crossPrereq, requires, xpCost }
+ *   { talentId, name, domain, tier, prereqTalent, crossPrereq, requires, requiresAncestry, xpCost }
  * Prerequisites point at another talent's `talentId` (a stable key that survives copies and renames).
  * `requires` lists further talents of any tier. A talent with several levels is a chain of separate
  * talents, each requiring the previous level.
@@ -24,11 +24,12 @@ const has = (owned, id) => Boolean(id) && owned.some((t) => t.talentId === id);
  * @param {object} talent
  * @param {object[]} owned          the character's talents
  * @param {Map<string, object>} byId  every known talent, for prerequisite names
- * @param {{xpAvailable?: number}} [opts]
+ * @param {{xpAvailable?: number, ancestries?: Iterable<string>, ancestryNames?: Map<string, string>}} [opts]
+ *   ancestries: the character's ancestry ids; ancestryNames: id -> name, for reasons
  * @returns {{eligible: boolean, owned: boolean, affordable: boolean, cost: number, reasons: object[]}}
  *   reasons are codes with data, e.g. { code: "needSameDomain", tier: 1, domain, have: 4, need: 5 }
  */
-export function talentEligibility(talent, owned, byId = new Map(), { xpAvailable = Infinity } = {}) {
+export function talentEligibility(talent, owned, byId = new Map(), { xpAvailable = Infinity, ancestries = [], ancestryNames = new Map() } = {}) {
   const reasons = [];
   const cost = Math.max(0, Math.trunc(talent.xpCost ?? 0));
   const isOwned = has(owned, talent.talentId);
@@ -47,6 +48,10 @@ export function talentEligibility(talent, owned, byId = new Map(), { xpAvailable
   }
   for (const id of talent.requires ?? []) {
     if (id && !has(owned, id)) reasons.push({ code: "needRequired", id, name: name(id) });
+  }
+  // Advanced ancestry features (§3.7): only characters of that ancestry can take them.
+  if (talent.requiresAncestry && ![...ancestries].includes(talent.requiresAncestry)) {
+    reasons.push({ code: "needAncestry", id: talent.requiresAncestry, name: ancestryNames.get(talent.requiresAncestry) ?? talent.requiresAncestry });
   }
   const affordable = cost <= xpAvailable;
   if (!isOwned && !affordable) reasons.push({ code: "needXP", cost, have: xpAvailable });
@@ -90,7 +95,7 @@ export function isGranted(entry, grants) {
  * Check the authored graph (§8, §15 talent editor).
  * @returns {Array<{talentId, code, ...}>} problems; empty when valid
  */
-export function validateTalentGraph(talents) {
+export function validateTalentGraph(talents, { ancestryIds = null } = {}) {
   const issues = [];
   const byId = new Map();
   for (const t of talents) {
@@ -102,6 +107,7 @@ export function validateTalentGraph(talents) {
     const issue = (code, data = {}) => issues.push({ talentId: t.talentId, name: t.name, code, ...data });
     if (![1, 2, 3].includes(t.tier)) issue("badTier");
     if (!["physical", "mental", "social"].includes(t.domain)) issue("noDomain");
+    if (t.requiresAncestry && ancestryIds && !ancestryIds.includes(t.requiresAncestry)) issue("ancestryNotFound", { id: t.requiresAncestry });
     for (const id of t.requires ?? []) {
       if (id === t.talentId) issue("requiresSelf");
       else if (!byId.has(id)) issue("requiredNotFound", { id });

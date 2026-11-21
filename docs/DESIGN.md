@@ -199,7 +199,7 @@ Provide one function, `effectiveTier(actor, statKey) → { tier, extraDebuffDice
 
 ### 3.4 Changing stats [OPEN]
 
-Stats rarely change. The designers describe "one-roll changes" to primary/secondary/tertiary and "occasional respec points, but you don't get more of them." Implement a `respecPoints` counter on the sheet (GM-adjustable, default 0) and a manual way to re-run the dot allocator. Define no automatic level-up retraining; the original "move up to 2 points per level" belonged to the superseded point-buy.
+Stats rarely change. The designers describe "one-roll changes" to primary/secondary/tertiary and "occasional respec points, but you don't get more of them." Implement a `respecPoints` counter on the sheet (GM-adjustable, default 0) and a manual way to re-run the dot allocator. Define no automatic level-up retraining; the original "move up to 2 points per level" belonged to the superseded point-buy. Default in use: a respec clears the allocation to choose again; it is free until character creation is finished, then costs `respec.cost` respec points (setting, default 1), which a GM may waive.
 
 ### 3.5 XP and progression [RULE, 2026-11-19]
 
@@ -219,12 +219,14 @@ Skills are removed. Talents are the only progression. The skill item type is gon
 
 Content-authored item types with XP cost fields and effect lists:
 
-- **Ancestry**: one minor boon, one major boon, one minor bane. Simple ancestries cost no XP. Advanced ancestries cost 100–500 XP per level.
+- **Ancestry**: one minor boon, one major boon, one minor bane. Ancestries cost no XP. **[RULE, 2026-11-21]** Advanced ancestry features are talents with the character's ancestry as a prerequisite; they are bought with XP like any talent. This supersedes "advanced ancestries cost 100–500 XP per level".
 - **Society**: where you hail from; anything from a kingdom to a group of friends who made a pact. A character can belong to several, each with its own benefits.
 - **Background**: required one Childhood, one Job, one Leisure background; extras cost XP.
 - **Remaining XP**: spent freely.
 
-Starting word packs **[DRAFT]**: starting characters choose 2 packs of words for their primary skill, 1 pack for each secondary skill, and 1 additional pack applied across the tertiary skills. Packs are style-neutral (a pack is not "a fighting style"); styles emerge from combining packs.
+**Creation flow [built 0.1.3]:** a Character creation window (character sheet) steps through stats (dot allocation), ancestry, societies, backgrounds, starting words (only when `creation.startingWords` > 0) and a review with the XP cost. Finishing sets the allocation, copies the picks onto the character and spends their XP. A GM can re-run it; the earlier picks are replaced and refunded. New characters start with `creation.startingXP` (default 100, [OPEN #81]).
+
+Starting words **[RULE, 2026-11-21]**: the number of words a character picks at creation is a world setting (`creation.startingWords`, default 0), so the designers can test starting words against words linked only to talents. Base words are known by everyone and don't count. This supersedes the starting word packs (2 packs for the primary skill, 1 per secondary, 1 across the tertiaries), which were written for skills.
 
 ---
 
@@ -616,7 +618,7 @@ Talents replace branching skill trees. A **talent** has a **domain** (physical, 
 - Talents that push a secondary up a tier situationally are a legitimate build axis (via the `tierShift` effect).
 - Counter-relationships between talent groups suggest synergies: the group that thrives under conditions another group creates (for example one that burns word slots, and one that needs few words) is a natural cross-prerequisite.
 
-Talent fields: `domain`, `tier`, `prereqTalent`, `crossPrereq` (optional, tier 3), `requires` (**[RULE, 2026-11-19]** further talents of any tier; this is how a talent's levels chain: level 2 requires level 1), `xpCost` (**[RULE, 2026-11-18]** talents are bought with XP; each talent has its own XP cost, set by the designer on the talent), `effects`, `grantsWords`, `grantsActions`, `affectsTags` (informational), `description`.
+Talent fields: `domain`, `tier`, `prereqTalent`, `crossPrereq` (optional, tier 3), `requires` (**[RULE, 2026-11-19]** further talents of any tier; this is how a talent's levels chain: level 2 requires level 1), `xpCost` (**[RULE, 2026-11-18]** talents are bought with XP; each talent has its own XP cost, set by the designer on the talent), `effects`, `grantsWords`, `grantsActions`, `affectsTags` (informational), `description`. **[RULE, 2026-11-21]** A talent may also require an ancestry (`requiresAncestry`); only characters of that ancestry can take it. This is how advanced ancestry features work (§3.7).
 
 Tree names, roster and example trees discussed in design sessions are **brainstorm, not canon**. Do not ship them.
 

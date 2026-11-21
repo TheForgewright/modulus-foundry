@@ -11,6 +11,9 @@
     </div>
     {{/if}}
 
+    {{#if creation.canOpen}}{{#unless creation.created}}
+    <p class="creation-prompt"><button type="button" class="roll-button" data-action="openCreation"><i class="fa-solid fa-user-plus"></i> {{localize "MODULUS.Creation.Open"}}</button> <span class="hint">{{localize "MODULUS.Creation.Prompt"}}</span></p>
+    {{/unless}}{{/if}}
     {{#if allocating}}
     <p class="hint">{{localize "MODULUS.Allocation.Instructions"}}</p>
     {{/if}}
@@ -70,7 +73,7 @@
       {{#if allocErrors.length}}
       <ul class="alloc-errors">{{#each allocErrors}}<li>{{this}}</li>{{/each}}</ul>
       {{else}}
-      <button type="button" data-action="resetAllocation"><i class="fa-solid fa-rotate-left"></i> {{localize "MODULUS.Allocation.Reset"}}</button>
+      <button type="button" data-action="resetAllocation"><i class="fa-solid fa-rotate-left"></i> {{#if creation}}{{creation.respecLabel}}{{else}}{{localize "MODULUS.Allocation.Reset"}}{{/if}}</button>
       {{/if}}
     </div>
     {{/unless}}

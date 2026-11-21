@@ -25,6 +25,8 @@ import { registerEncounterEvents, requestEmit } from "./encounter/events.js";
 import { registerTalentHooks } from "./talents/talents.js";
 import { TalentGraph } from "./apps/talent-graph.js";
 import { registerCatalog, loadCatalog, catalogItems } from "./vocab/catalog.js";
+import { CharacterCreation } from "./apps/character-creation.js";
+import { registerCreationHooks, respec } from "./creation/creation.js";
 
 Hooks.once("init", () => {
   console.log("Modulus | Initializing");
@@ -60,6 +62,7 @@ Hooks.once("init", () => {
     `systems/${SYSTEM_ID}/templates/actor/cards.hbs`,
     `systems/${SYSTEM_ID}/templates/actor/talents.hbs`,
     `systems/${SYSTEM_ID}/templates/apps/talent-graph.hbs`,
+    `systems/${SYSTEM_ID}/templates/apps/character-creation.hbs`,
     `systems/${SYSTEM_ID}/templates/chat/hand-card.hbs`,
     `systems/${SYSTEM_ID}/templates/chat/action-card.hbs`,
     `systems/${SYSTEM_ID}/templates/apps/vocab-editor.hbs`,
@@ -76,6 +79,7 @@ Hooks.once("init", () => {
   registerEncounterEvents();
   registerTalentHooks();
   registerCatalog();
+  registerCreationHooks();
 
   game.settings.registerMenu(SYSTEM_ID, "vocabularyEditor", {
     name: "MODULUS.Vocab.Title",
@@ -95,7 +99,8 @@ Hooks.once("init", () => {
     syncCompendiums: openSyncDialog, syncCompendiumCopies, syncPlan,
     emitEvent: requestEmit,
     openTalentGraph: () => TalentGraph.open(),
-    catalogItems, reloadCatalog: loadCatalog
+    catalogItems, reloadCatalog: loadCatalog,
+    CharacterCreation, openCharacterCreation: (actor) => CharacterCreation.open(actor), respec
   };
 });
 

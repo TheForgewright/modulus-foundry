@@ -127,6 +127,11 @@
       {{/if}}
       <p class="hint">{{localize "MODULUS.Talent.AlsoRequiresHint"}}</p>
     </div>
+    <div class="form-group">
+      <label>{{localize "MODULUS.Field.requiresAncestry"}}</label>
+      <select name="system.requiresAncestry">{{selectOptions ancestryOptions selected=requiresAncestry}}</select>
+    </div>
+    <p class="hint">{{localize "MODULUS.Talent.RequiresAncestryHint"}}</p>
     {{#each issues}}<p class="effect-error"><i class="fa-solid fa-triangle-exclamation"></i> {{this}}</p>{{/each}}
     <button type="button" class="secondary" data-action="openTalentGraph"><i class="fa-solid fa-diagram-project"></i> {{localize "MODULUS.Talent.Graph"}}</button>
   </fieldset>

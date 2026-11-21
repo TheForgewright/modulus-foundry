@@ -15,6 +15,8 @@ import { knownTalents, ownedTalents, eligibilityFor, reasonText, takeTalent, rem
 import { requestEmit } from "../encounter/events.js";
 import { describeInstance } from "../encounter/condfx-bridge.js";
 import { normalizeCondFx } from "../rules/condfx.js";
+import { CharacterCreation } from "./character-creation.js";
+import { isCreated, respec } from "../creation/creation.js";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -55,7 +57,8 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       grantTalent: ModulusActorSheet.#onGrantTalent,
       removeTalent: ModulusActorSheet.#onRemoveTalent,
       manualTrigger: ModulusActorSheet.#onManualTrigger,
-      openTalent: ModulusActorSheet.#onOpenTalent
+      openTalent: ModulusActorSheet.#onOpenTalent,
+      openCreation: ModulusActorSheet.#onOpenCreation
     }
   };
 
@@ -162,6 +165,7 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       domains: DOMAINS.map((d) => ({ domain: d, label: t(`MODULUS.Domain.${d}`), resistance: system.momentum.resistance[d] })),
       items,
       showBonus: getSetting("showAdvancedBonus"),
+      creation: this._prepareCreation(),
       tab: this.tabGroups.primary,
       tabs: this._tabIds().map((id) => ({ id, label: t(`MODULUS.Sheet.Tab.${id}`), active: this.tabGroups.primary === id })),
       tierChoices: { primary: t("MODULUS.Tier.primary"), secondary: t("MODULUS.Tier.secondary"), tertiary: t("MODULUS.Tier.tertiary") },
@@ -525,14 +529,50 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
     await this.document.update({ "system.allocation.freeDot": alloc.freeDot === key ? "" : key });
   }
 
-  /** §3.4: a manual way to re-run the allocator. Respec rules are [OPEN #23]. */
+  /** Character creation (§3.7): players run it once; afterwards only a GM can re-run it. */
+  _prepareCreation() {
+    const actor = this.document;
+    if (this.isNPC) return null;
+    const created = isCreated(actor);
+    const cost = getSetting("respec.cost");
+    return {
+      created,
+      canOpen: actor.isOwner && (!created || game.user.isGM),
+      respecCost: cost,
+      respecLabel: created
+        ? game.i18n.format("MODULUS.Respec.Button", { cost, have: actor.system.respecPoints })
+        : game.i18n.localize("MODULUS.Allocation.Reset")
+    };
+  }
+
+  static #onOpenCreation() {
+    if (!this._prepareCreation()?.canOpen) return;
+    CharacterCreation.open(this.document);
+  }
+
+  /**
+   * §3.4: re-run the dot allocator. Free until creation is finished (and for NPCs); afterwards it
+   * spends respec points (setting respec.cost), which a GM may waive. Respec rules are [OPEN #23].
+   */
   static async #onResetAllocation() {
     if (!this.isEditable) return;
-    const ok = await foundry.applications.api.DialogV2.confirm({
-      window: { title: "MODULUS.Allocation.Reset" },
-      content: `<p>${game.i18n.localize("MODULUS.Allocation.ResetConfirm")}</p>`
-    });
-    if (ok) await this.document.update({ "system.allocation": { domain: "", expression: "", freeDot: "" } });
+    const actor = this.document;
+    if (this.isNPC || !isCreated(actor)) {
+      const ok = await foundry.applications.api.DialogV2.confirm({
+        window: { title: "MODULUS.Allocation.Reset" },
+        content: `<p>${game.i18n.localize("MODULUS.Allocation.ResetConfirm")}</p>`
+      });
+      if (ok) await actor.update({ "system.allocation": { domain: "", expression: "", freeDot: "" } });
+      return;
+    }
+    const cost = getSetting("respec.cost");
+    const content = `<p>${game.i18n.format("MODULUS.Respec.Confirm", { cost, have: actor.system.respecPoints })}</p>`;
+    const buttons = [{ action: "spend", label: "MODULUS.Respec.Spend", default: true, callback: () => "spend" }];
+    if (game.user.isGM) buttons.push({ action: "waive", label: "MODULUS.Respec.Waive", callback: () => "waive" });
+    buttons.push({ action: "cancel", label: "Cancel", callback: () => null });
+    const choice = await foundry.applications.api.DialogV2.wait({ window: { title: "MODULUS.Respec.Title" }, content, buttons, rejectClose: false });
+    if (!choice) return;
+    await respec(actor, { waive: choice === "waive" });
   }
 
   /* ---------------- Rolls ---------------- */

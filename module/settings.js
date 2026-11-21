@@ -15,6 +15,10 @@ const S = (key) => `MODULUS.Settings.${key}`;
 const DEFINITIONS = [
   // XP thresholds (§3.5): earned XP reaching each one counts as one step in place of levels.
   ...Array.from({ length: THRESHOLD_COUNT }, (_, i) => [`xpThreshold.${i + 1}`, Number, DEFAULT_THRESHOLDS[i], { threshold: i + 1 }]),
+  // Character creation (§3.7) and respec (§3.4).
+  ["creation.startingXP", Number, 100],
+  ["creation.startingWords", Number, 0],
+  ["respec.cost", Number, 1],
   ["dc.primary", Number, 14],
   ["dc.secondary", Number, 11],
   ["dc.tertiary", Number, 8],

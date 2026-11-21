@@ -201,7 +201,6 @@
       "tierDegrade": "Degrades tiers",
       "recovery": "Recovery",
       "context": "Context",
-      "advanced": "Advanced ancestry",
       "minorBoon": "Minor boon",
       "majorBoon": "Major boon",
       "minorBane": "Minor bane",
@@ -212,7 +211,9 @@
       "talentId": "Talent id (prerequisites point at this)",
       "requires": "Also requires",
       "wordPenalty": "Roll penalty when not known",
-      "wordTierDowngrade": "Tier downgrade when not known"
+      "wordTierDowngrade": "Tier downgrade when not known",
+      "requiresAncestry": "Requires ancestry",
+      "ancestryId": "Ancestry id"
     },
     "Settings": {
       "dc": {
@@ -400,7 +401,7 @@
       },
       "enableDeck": {
         "Name": "Enable personal card deck",
-        "Hint": "Optional personal 52-card deck (\u00a710). Characters with card abilities get a deck when an encounter starts."
+        "Hint": "Optional personal 52-card deck (§10). Characters with card abilities get a deck when an encounter starts."
       },
       "roomEntryMomentum": {
         "Name": "Room entry momentum",
@@ -451,6 +452,22 @@
         },
         "Name": "XP threshold",
         "Hint": "Earned XP at which a character reaches this threshold (in order, 1 to 10; 0 = unused). Thresholds stand in for levels in track pips, the momentum ceiling and word slots."
+      },
+      "creation": {
+        "startingXP": {
+          "Name": "Starting XP",
+          "Hint": "XP a new character starts with."
+        },
+        "startingWords": {
+          "Name": "Starting words",
+          "Hint": "How many words a character picks at character creation (base words don't count). 0 = words come only from talents."
+        }
+      },
+      "respec": {
+        "cost": {
+          "Name": "Respec cost",
+          "Hint": "Respec points spent to re-run a created character's dot allocation. [OPEN] A GM may waive it."
+        }
       }
     },
     "Hand": {
@@ -712,10 +729,10 @@
       "Keep": "Keep my action",
       "Change": "Change to this",
       "UnknownWord": "{name} (not known)",
-      "UnknownPenalty": "\u2212{n}",
+      "UnknownPenalty": "−{n}",
       "NotKnown": "not known:",
-      "UnknownTier": "\u2212{n} tier",
-      "UnknownWordTier": "{name} (not known): \u2212{n} tier"
+      "UnknownTier": "−{n} tier",
+      "UnknownWordTier": "{name} (not known): −{n} tier"
     },
     "Outcome": {
       "Apply": "Apply",
@@ -859,7 +876,7 @@
       "Run": "Update",
       "ReportTitle": "Compendium updates for Modulus {version}",
       "Updated": "Updated {n} item(s) to match the compendium:",
-      "EditedWaiting": "{n} item(s) were edited in this world, so they were left as they are. Review them in Vocabulary Editor \u2192 Sync from compendiums:",
+      "EditedWaiting": "{n} item(s) were edited in this world, so they were left as they are. Review them in Vocabulary Editor → Sync from compendiums:",
       "Orphans": "{n} item(s) came from compendium entries that no longer exist; they were left as they are.",
       "AllCurrent": "All {n} compendium copies are current.",
       "Done": "Updated {n} item(s) from the compendiums.",
@@ -943,7 +960,8 @@
         "needPrereq": "Needs {name}.",
         "needCross": "Needs {name} as well.",
         "needXP": "Costs {cost} XP; {have} available.",
-        "needRequired": "Needs {name}."
+        "needRequired": "Needs {name}.",
+        "needAncestry": "Needs the {name} ancestry."
       },
       "Issue": {
         "noId": "{name} has no talent id.",
@@ -960,7 +978,8 @@
         "crossIsParentsOwn": "{name}: the cross prerequisite must be a different tier-1 talent from its parent's own.",
         "requiresSelf": "{name} cannot require itself.",
         "requiredNotFound": "{name}: a required talent ({id}) does not exist.",
-        "cycle": "{name} is part of a prerequisite loop, so it can never be taken."
+        "cycle": "{name} is part of a prerequisite loop, so it can never be taken.",
+        "ancestryNotFound": "{name} requires an ancestry that doesn't exist ({id})."
       },
       "XPAvailable": "XP available",
       "TierN": "Tier {n}",
@@ -988,7 +1007,7 @@
       "PrinciplesTitle": "Authoring principles",
       "Principle": {
         "1": "Bonuses live at tier 1, if anywhere. A tier-1 effect reads \"gain X when you do Y\" and is gated.",
-        "2": "Higher tiers widen the circumstances, not the size. Tier 2: \"when Y or Z\". Tier 3: \"\u2026even when [unusual condition]\". The bonus never grows.",
+        "2": "Higher tiers widen the circumstances, not the size. Tier 2: \"when Y or Z\". Tier 3: \"…even when [unusual condition]\". The bonus never grows.",
         "3": "Tier 3 is more focused, not more powerful. A tier-3 effect that works in every circumstance is a design failure; it needs a ceiling that creates real blind spots.",
         "4": "A tier-1 circumstance sets the identity of everything above it.",
         "5": "Talents that push a secondary up a tier situationally are a legitimate build axis.",
@@ -1013,7 +1032,7 @@
         "outcome": "Outcome",
         "condition": "Condition",
         "stat": "Stat",
-        "delta": "Tiers (+/\u2212)",
+        "delta": "Tiers (+/−)",
         "applyTo": "Lands on",
         "appliesToRolls": "Applies to",
         "rounds": "Rounds (0 = next roll)",
@@ -1113,7 +1132,7 @@
         "outcomeNeedsResolve": "A hit or miss outcome needs timing \"When resolved\".",
         "badStat": "Pick a stat for each tier shift.",
         "zeroDelta": "A tier shift of 0 does nothing.",
-        "passiveBonus": "This fires every round with no conditions: it is a passive bonus, which the bonus rules forbid (\u00a72.5)."
+        "passiveBonus": "This fires every round with no conditions: it is a passive bonus, which the bonus rules forbid (§2.5)."
       },
       "PrereqFor": {
         "2": "Tier-1 prerequisite (any domain)",
@@ -1125,7 +1144,8 @@
       },
       "AlsoRequires": "Also requires",
       "AlsoRequiresHint": "Further talents this one needs, of any tier. A talent with several levels is a chain: level 2 requires level 1, level 3 requires level 2.",
-      "Needs": "needs"
+      "Needs": "needs",
+      "RequiresAncestryHint": "Advanced ancestry features: only characters of this ancestry can take the talent."
     },
     "Delayed": {
       "Title": "Delayed effects",
@@ -1142,6 +1162,52 @@
       "Next": "next at {xp} XP ({n} to go)",
       "Top": "all reached",
       "Tooltip": "How many XP thresholds this character's earned XP has reached (spent or banked). It stands in for level: track pips and break points, the momentum ceiling and word slots use it. The thresholds are world settings."
+    },
+    "Creation": {
+      "Title": "Character creation",
+      "Open": "Create character",
+      "Prompt": "Set stats, ancestry, societies and backgrounds in one place.",
+      "Rerun": "This character has been created. Finishing again replaces what creation picked before and refunds its XP.",
+      "RerunTooltip": "Re-run character creation (GM)",
+      "Step": {
+        "stats": "Stats",
+        "ancestry": "Ancestry",
+        "society": "Societies",
+        "background": "Backgrounds",
+        "word": "Words",
+        "review": "Review"
+      },
+      "AncestryHint": "Pick one ancestry. Ancestries cost no XP; advanced ancestry features are talents that require your ancestry.",
+      "SocietyHint": "Where you hail from, anything from a kingdom to a pact between friends. Pick as many as you like; each costs its XP.",
+      "BackgroundHint": "One Childhood, one Job and one Leisure background are required and free. Every further background costs its XP.",
+      "WordHint": "Pick up to {n} words to start with. Base words are known by everyone and are not listed.",
+      "NoneAuthored": "None authored yet. Create them in the Items sidebar or the Vocabulary Editor.",
+      "Required": "required",
+      "Free": "Free",
+      "XPCost": "XP cost",
+      "Total": "Total",
+      "Left": "Left to spend",
+      "TalentsHint": "XP left over is spent on talents in the Talents tab.",
+      "Back": "Back",
+      "Next": "Next",
+      "Finish": "Finish creation",
+      "Done": "{name} is created.",
+      "Error": {
+        "needAncestry": "Pick an ancestry.",
+        "needBackground": "Pick a {category} background.",
+        "tooManyWords": "At most {max} starting words ({have} picked).",
+        "baseWordPicked": "Base words are known by everyone and can't be picked: {names}.",
+        "duplicate": "Something is picked twice.",
+        "needXP": "Costs {cost} XP; {have} available."
+      }
+    },
+    "Respec": {
+      "Title": "Respec",
+      "Button": "Respec ({cost} of {have} points)",
+      "Confirm": "Clear this character's dot allocation and choose again? This spends {cost} respec point(s); the character has {have}.",
+      "Spend": "Spend respec points",
+      "Waive": "Respec for free (GM)",
+      "NeedPoints": "A respec costs {cost} respec point(s); this character has {have}."
     }
   }
 }

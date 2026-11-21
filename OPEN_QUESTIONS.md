@@ -24,7 +24,7 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 20 | Defeat: compounding, effect on defense, break-point effects, recovery | Per track, applies to defense, no break-point penalty, clears when pips return or GM clears | setting `defeatAffectsDefense`; `rules/tier.js` |
 | 21 | Damage scaling beyond 1 pip | Manual |  |
 | 22 | Pips at level 0; exact break-point structure | Treat level as ≥ 1; segment per level | setting `pips.minLevel`; `rules/tracks.js` `longRest` |
-| 23 | Respec and tier-shift rules; floating points | `respecPoints` counter, manual | `respecPoints`, sheet "Re-run allocation" |
+| 23 | Respec and tier-shift rules; floating points | `respecPoints` counter. A respec clears the dot allocation to choose again; free before character creation is finished, then costs `respec.cost` points (default 1); a GM may waive it | `respecPoints`, setting `respec.cost`, `rules/creation.js` `respecCheck` |
 | 24 | Scene-track bonus size and the Action/Drama/Intrigue names | 1 buff die; names provisional |  |
 | 25 | Room-entry momentum, witness effects, nested-instance linkage | Highest relationship, capped; GM adjusts |  |
 | 26 | Deck: draw formula, draw triggers, cash-in menu, blind-mode "double", hand persistence | Deck off by default. Reshuffle-when-dry, per-character decks and composition effects are now decided (`docs/CARD_DECK.md`). Blind mode not built. Hand persists while its encounter exists |  |
@@ -76,6 +76,9 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 73 | Delayed effects: do they fire at the start or the end of the due round, and outside an encounter? | Start of the due round (delay 1 = start of next round); outside an encounter they apply immediately; pending ones end with their encounter | `rules/delayed.js`, `encounter/outcomes.js` |
 | 76 | Unknown words: does the word still do everything else (tags, cost, effects), and does it use a word slot (and the extra-word penalty past two)? | Yes to both: it works fully, and it counts as a word | `rules/assembly.js` |
 | 78 | Unknown words: flat penalty, tier downgrade, or both? | Both fields exist; a word may use either or both while the designers playtest | `data/item.js` WordData, `rules/assembly.js` |
+| 81 | How much XP does a new character start with? | 100 (world setting) | setting `creation.startingXP` |
+| 82 | Must a character belong to at least one society? | No; societies are optional, each costs its own XP | `rules/creation.js` `validateCreation` |
+| 83 | Which background in a required category is free when a character takes two of the same category? | The first picked; the second costs its XP | `rules/creation.js` `freeBackgrounds` |
 
 ## Resolved
 
@@ -94,4 +97,6 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 75 | Talents with several levels | Separate talents chained by prerequisites ("Also requires"): level 2 requires level 1. Each level has its own XP cost. |
 | 74 | What replaces level (pips and break points, momentum ceiling, word slots)? | XP thresholds: 10 configurable thresholds of earned XP (spent or banked); the number reached stands in for level. May be removed later. |
 | 4 | How do characters acquire words? | From talents (*Grants words*), plus base words everyone knows. Trained actions likewise come from talents (*Grants actions*). |
+| 79 | Advanced ancestries cost "100–500 XP per level", but levels are removed. | Advanced ancestry features are talents with the character's ancestry as a prerequisite. Ancestries themselves cost no XP. |
+| 80 | Starting word packs were written for skills, which are removed. | A world setting sets how many words a character picks at creation (default 0); the designers will test starting words against words from talents only. |
 | 77 | How do characters use words they don't have? | Anyone may use any word; not knowing it costs its penalty on the roll. Known = base word, on the sheet, or granted by a talent. |

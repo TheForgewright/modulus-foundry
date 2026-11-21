@@ -344,3 +344,27 @@
 .modulus .em-delayed a { cursor: pointer; margin-left: 4px; }
 .modulus-outcomes li.scheduled span:first-child { font-style: italic; }
 .modulus .header-row .threshold { display: flex; flex-direction: column; font-size: 11px; } .modulus .header-row .threshold strong { font-size: 16px; }
+
+/* Character creation (§3.7) */
+.modulus.character-creation .window-content { padding: 0; }
+.modulus .creation { display: flex; flex-direction: column; height: 100%; }
+.modulus .creation-steps { display: flex; gap: 4px; padding: 6px 8px; border-bottom: 1px solid var(--mod-border); flex-wrap: wrap; }
+.modulus .creation-step { padding: 3px 10px; border: 1px solid var(--mod-border); border-radius: 12px; cursor: pointer; }
+.modulus .creation-step.active { font-weight: bold; background: color-mix(in srgb, var(--mod-primary) 25%, transparent); border-color: var(--mod-primary); }
+.modulus .creation-step.problem i { color: var(--mod-danger); }
+.modulus .creation-body { flex: 1; overflow-y: auto; padding: 8px 10px; }
+.modulus .creation-body h3 { margin: 10px 0 4px; }
+.modulus .creation-list { list-style: none; margin: 0; padding: 0; }
+.modulus .creation-entry { display: flex; align-items: center; gap: 8px; padding: 4px; border-bottom: 1px solid var(--mod-border); }
+.modulus .creation-entry.picked { background: color-mix(in srgb, var(--mod-primary) 12%, transparent); }
+.modulus .creation-entry button.pick { flex: 0 0 32px; }
+.modulus .creation-entry img { flex: 0 0 32px; border: none; }
+.modulus .creation-entry-text { flex: 1; }
+.modulus .creation-entry .boon { font-size: var(--font-size-12, 12px); }
+.modulus .creation-cost { flex: 0 0 auto; white-space: nowrap; }
+.modulus .creation-review { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+.modulus .creation-review th, .modulus .creation-review td { text-align: left; padding: 3px 6px; border-bottom: 1px solid var(--mod-border); }
+.modulus .creation-footer { display: flex; gap: 6px; justify-content: flex-end; padding: 6px 10px; border-top: 1px solid var(--mod-border); }
+.modulus .creation-footer button { flex: 0 0 auto; }
+.modulus .creation-prompt { display: flex; align-items: center; gap: 8px; }
+.modulus .creation-prompt button { flex: 0 0 auto; }

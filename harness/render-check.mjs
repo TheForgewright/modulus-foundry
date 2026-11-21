@@ -25,6 +25,7 @@ const { VocabularyEditor } = await import("../module/apps/vocab-editor.js");
 const { ActionBuilder } = await import("../module/apps/action-builder.js");
 const { EncounterManager } = await import("../module/apps/encounter-manager.js");
 const { TalentGraph } = await import("../module/apps/talent-graph.js");
+const { CharacterCreation } = await import("../module/apps/character-creation.js");
 const E = await import("../module/rules/encounter.js");
 const { newCondFxState, processEvent } = await import("../module/rules/condfx.js");
 const { scheduleDelayed } = await import("../module/rules/delayed.js");
@@ -107,7 +108,19 @@ const talents = [
   item("talent", { name: "Crushing Hold", system: { talentId: "crushing-hold", domain: "physical", tier: 2, xpCost: 60, prereqTalent: "iron-grip-1" } }),
   item("talent", { name: "Grand Master", system: { talentId: "grand-master", domain: "physical", tier: 3, xpCost: 120, prereqTalent: "crushing-hold", crossPrereq: "missing-one" } })
 ];
-for (const it of [acrobatic, exposed, ...talents]) game.items.set(it.id, it);
+// Creation content (§3.7) and an advanced ancestry feature (a talent requiring the ancestry).
+const aspects = [
+  item("ancestry", { name: "Elf", system: { ancestryId: "elf", minorBoon: "Keen eyes", majorBoon: "Long memory", minorBane: "Frail in iron" } }),
+  item("ancestry", { name: "Dwarf", system: { ancestryId: "dwarf" } }),
+  item("society", { name: "The Crown", system: { xpCost: 25 } }),
+  item("background", { name: "Farmhand", system: { category: "childhood" } }),
+  item("background", { name: "Street urchin", system: { category: "childhood", xpCost: 15 } }),
+  item("background", { name: "Smith", system: { category: "job" } }),
+  item("background", { name: "Gambler", system: { category: "leisure" } }),
+  item("background", { name: "Veteran", system: { category: "extra", xpCost: 40 } })
+];
+talents.push(item("talent", { name: "Starsight", system: { talentId: "starsight", domain: "mental", tier: 1, xpCost: 10, requiresAncestry: "elf" } }));
+for (const it of [acrobatic, exposed, ...talents, ...aspects]) game.items.set(it.id, it);
 
 const ava = makeActor(ModulusActor, CharacterData, {
   name: "Ava", id: "ava",
@@ -259,6 +272,48 @@ await renderApp("Encounter Manager / player view", playerView);
 game.user.isGM = true;
 
 await renderApp("Talent graph", new TalentGraph());
+
+// Character creation: every step, with picks, a too-expensive plan, and a re-run after creation.
+setSetting("creation.startingWords", 2);
+const creation = new CharacterCreation(unset);
+for (const step of ["stats", "ancestry", "society", "background", "word", "review"]) {
+  creation.step = step;
+  await renderApp(`Character creation / ${step} (empty)`, creation);
+}
+creation.plan.allocation = { domain: "mental", expression: "finesse", freeDot: "physical.power" };
+creation.plan.ancestry = aspects[0].uuid;
+creation.plan.society = [aspects[2].uuid];
+creation.plan.background = [aspects[3].uuid, aspects[4].uuid, aspects[5].uuid, aspects[6].uuid, aspects[7].uuid];
+creation.plan.word = [acrobatic.uuid];
+for (const step of ["stats", "ancestry", "society", "background", "word", "review"]) {
+  creation.step = step;
+  await renderApp(`Character creation / ${step} (picked, over budget)`, creation);
+}
+await attempt("Character creation / review cost", async () => {
+  creation.step = "review";
+  const ctx = await creation._prepareContext({});
+  if (ctx.review.cost !== 25 + 15 + 40) throw new Error(`cost ${ctx.review.cost}, expected 80`);
+  if (ctx.valid) throw new Error("a plan costing 80 XP with 0 available should be invalid");
+  return renderFile(CharacterCreation.PARTS.body.template, ctx);
+});
+setSetting("creation.startingWords", 0);
+ava.flags.modulus.created = true;
+const rerun = new CharacterCreation(ava);
+rerun.step = "review";
+await renderApp("Character creation / re-run (words step hidden)", rerun);
+for (const tab of ["main"]) {
+  const sheet = new ModulusActorSheet({ document: ava });
+  sheet.tabGroups.primary = tab;
+  await renderApp(`Actor sheet Ava (created) / ${tab}`, sheet);
+}
+delete ava.flags.modulus.created;
+await attempt("Talents tab: advanced ancestry feature is locked with its reason", async () => {
+  const sheet = new ModulusActorSheet({ document: ava });
+  sheet.tabGroups.primary = "talents";
+  const html = renderFile(ModulusActorSheet.PARTS.talents.template, await sheet._prepareContext({}));
+  if (!html.includes("Needs the Elf ancestry.")) throw new Error("Starsight does not say it needs the Elf ancestry");
+  return html;
+});
 
 /* ---------------- Chat cards and dialogs ---------------- */
 

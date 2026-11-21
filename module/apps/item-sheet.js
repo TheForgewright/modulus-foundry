@@ -9,7 +9,7 @@ import { EFFECT_OPS, EFFECT_TRIGGERS, EFFECT_TARGETS, OUTCOME_TRIGGERS, coerceEf
 import { normalizeTag } from "../rules/tags.js";
 import { tagRegistry } from "../settings.js";
 import { editorRows, recordsFromForm, newRecord } from "../talents/condfx-editor.js";
-import { knownTalents, talentData, issueText } from "../talents/talents.js";
+import { knownTalents, knownAncestries, talentData, issueText } from "../talents/talents.js";
 import { validateTalentGraph } from "../rules/talents.js";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -19,7 +19,7 @@ const fields = foundry.data.fields;
 const STRING_LISTS = ["grantsWords", "grantsActions", "affectsTags", "defendsAgainst"];
 const JSON_FIELDS = [];
 /** Talent fields with their own editor block instead of the generic one. */
-const TALENT_CUSTOM = ["prereqTalent", "crossPrereq"];
+const TALENT_CUSTOM = ["prereqTalent", "crossPrereq", "requiresAncestry"];
 
 export function statLabel(key) {
   return key ? game.i18n.localize(`MODULUS.Stat.${key.replace(".", "_")}`) : "";
@@ -151,7 +151,10 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const choose = (tier) => Object.fromEntries([["", "—"], ...others.filter((k) => k.tier === tier)
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((k) => [k.talentId, `${k.name} (${game.i18n.localize(`MODULUS.Domain.${k.domain || "physical"}`)})`])]);
-    const graph = validateTalentGraph([...others, self]).filter((i) => i.talentId === self.talentId);
+    const ancestries = knownAncestries();
+    const graph = validateTalentGraph([...others, self], { ancestryIds: [...ancestries.keys()] }).filter((i) => i.talentId === self.talentId);
+    const ancestryOptions = Object.fromEntries([["", "—"], ...[...ancestries].sort((a, b) => a[1].localeCompare(b[1]))]);
+    if (s.requiresAncestry && !ancestries.has(s.requiresAncestry)) ancestryOptions[s.requiresAncestry] = s.requiresAncestry;
     const required = (s.requires ?? []).map((id) => ({ id, name: known.get(id)?.name ?? id, missing: !known.has(id) }));
     const requireOptions = Object.fromEntries([["", "—"], ...others.filter((k) => !(s.requires ?? []).includes(k.talentId))
       .sort((a, b) => a.name.localeCompare(b.name))
@@ -166,6 +169,8 @@ export class ModulusItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       cross: s.crossPrereq,
       required,
       requireOptions,
+      ancestryOptions,
+      requiresAncestry: s.requiresAncestry,
       issues: graph.map(issueText),
       cfx: editorRows(item.system._source.conditionalEffects)
     };

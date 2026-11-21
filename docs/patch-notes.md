@@ -2,6 +2,12 @@
 
 Newest first. Every build adds a section for its version (`build.sh` checks for it).
 
+## 0.1.3
+- **Character creation.** New characters get a *Create character* button on their sheet. It walks through stats (the dot allocation), ancestry, societies, backgrounds, starting words and a review showing the XP cost. One Childhood, one Job and one Leisure background are required and free; further backgrounds and societies cost their XP. Finishing puts everything on the character and spends the XP. Afterwards only the GM can re-run it (from the sheet header); re-running replaces the earlier picks and refunds them.
+- **Ancestries cost no XP.** Advanced ancestry features are now talents: a talent can *Require ancestry*, and only characters of that ancestry can take it. The Talents tab says which ancestry a locked talent needs. Ancestries have a stable *Ancestry id* that talents point at; the old *Advanced* and *XP cost* fields on ancestries are gone.
+- **Respec.** Once a character is created, re-running the dot allocation spends respec points (setting *Respec cost*, default 1). A GM can waive the cost.
+- **New settings:** *Starting XP* (default 100), *Starting words* (default 0: words come only from talents) and *Respec cost*.
+
 ## 0.1.2
 - **Encounter Manager stack:** entries that have resolved now say *Resolved* instead of *Submitted*, and interrupted entries say *Interrupted* in the same badge.
 - **Fix:** a stack entry's title ("Name: Action") stays on one line instead of breaking before the colon.

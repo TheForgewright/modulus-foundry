@@ -11,6 +11,7 @@
         <span class="hint">{{#if system.nextThreshold}}{{localize "MODULUS.Threshold.Next" xp=system.nextThreshold n=system.toNextThreshold}}{{else}}{{localize "MODULUS.Threshold.Top"}}{{/if}}</span>
       </span>
       <label>{{localize "MODULUS.Field.respecPoints"}} <input type="number" name="system.respecPoints" value="{{source.respecPoints}}" min="0" step="1" {{#unless isGM}}disabled{{/unless}}></label>
+      {{#if creation.canOpen}}{{#if creation.created}}<button type="button" class="secondary" data-action="openCreation" data-tooltip="MODULUS.Creation.RerunTooltip"><i class="fa-solid fa-user-pen"></i> {{localize "MODULUS.Creation.Title"}}</button>{{/if}}{{/if}}
       <button type="button" class="roll-button" data-action="buildAction"><i class="fa-solid fa-hand-fist"></i> {{localize "MODULUS.Builder.Open"}}</button>
       <button type="button" class="roll-button secondary" data-action="rollManual"><i class="fa-solid fa-dice-d20"></i> {{localize "MODULUS.Roll.Roll"}}</button>
     </div>

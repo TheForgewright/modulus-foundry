@@ -1,0 +1,148 @@
+<div class="creation">
+  <nav class="creation-steps">
+    {{#each steps}}
+    <a class="creation-step {{#if active}}active{{/if}} {{#if problem}}problem{{/if}}" data-action="step" data-step="{{id}}">{{label}}{{#if problem}} <i class="fa-solid fa-circle-exclamation"></i>{{/if}}</a>
+    {{/each}}
+  </nav>
+
+  <section class="creation-body">
+    {{#if rerun}}<p class="hint"><i class="fa-solid fa-rotate"></i> {{localize "MODULUS.Creation.Rerun"}}</p>{{/if}}
+
+    {{!-- Stats: dot allocation (§3.2) --}}
+    {{#if isStep.stats}}
+    <p class="hint">{{localize "MODULUS.Allocation.Instructions"}}</p>
+    <table class="stat-grid allocating">
+      <thead>
+        <tr>
+          <th></th>
+          {{#each expressions}}<th><button type="button" class="pick {{#if chosen}}chosen{{/if}}" data-action="pickExpression" data-expression="{{expression}}">{{label}}</button></th>{{/each}}
+        </tr>
+      </thead>
+      <tbody>
+        {{#each grid}}
+        <tr>
+          <th><button type="button" class="pick {{#if chosen}}chosen{{/if}}" data-action="pickDomain" data-domain="{{domain}}">{{label}}</button></th>
+          {{#each cells}}
+          <td class="stat-cell tier-{{tier}} {{#if intersection}}intersection{{/if}} {{#if freeDot}}free-dot{{/if}}">
+            <div class="stat-name">{{label}}</div>
+            <div class="dots" data-action="pickFreeDot" data-stat="{{key}}" data-tooltip="MODULUS.Allocation.FreeDotTooltip">
+              {{#each dots}}<span class="dot {{#if this}}filled{{/if}}"></span>{{/each}}
+            </div>
+            <div class="tier-badge tier-{{tier}}">{{tierLabel}}</div>
+          </td>
+          {{/each}}
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    <div class="allocation-footer">
+      <span class="shape">
+        <span class="tier-badge tier-primary">{{shape.primary}} {{localize "MODULUS.Tier.primary"}}</span>
+        <span class="tier-badge tier-secondary">{{shape.secondary}} {{localize "MODULUS.Tier.secondary"}}</span>
+        <span class="tier-badge tier-tertiary">{{shape.tertiary}} {{localize "MODULUS.Tier.tertiary"}}</span>
+      </span>
+    </div>
+    {{/if}}
+
+    {{!-- Ancestry (§3.7) --}}
+    {{#if isStep.ancestry}}
+    <p class="hint">{{localize "MODULUS.Creation.AncestryHint"}}</p>
+    <ul class="creation-list">
+      {{#each ancestries}}
+      <li class="creation-entry {{#if picked}}picked{{/if}}" data-uuid="{{uuid}}">
+        <button type="button" class="pick {{#if picked}}chosen{{/if}}" data-action="pickAncestry"><i class="fa-solid {{#if picked}}fa-circle-dot{{else}}fa-circle{{/if}}"></i></button>
+        <img src="{{img}}" alt="" width="32" height="32">
+        <div class="creation-entry-text">
+          <a data-action="openEntry"><strong>{{name}}</strong></a>
+          {{#each boons}}<div class="boon"><em>{{label}}:</em> {{text}}</div>{{/each}}
+        </div>
+      </li>
+      {{else}}
+      <li class="hint">{{localize "MODULUS.Creation.NoneAuthored"}}</li>
+      {{/each}}
+    </ul>
+    {{/if}}
+
+    {{!-- Societies (§3.7) --}}
+    {{#if isStep.society}}
+    <p class="hint">{{localize "MODULUS.Creation.SocietyHint"}}</p>
+    <ul class="creation-list" data-type="society">
+      {{#each societies}}
+      <li class="creation-entry {{#if picked}}picked{{/if}}" data-uuid="{{uuid}}">
+        <button type="button" class="pick {{#if picked}}chosen{{/if}}" data-action="togglePick"><i class="fa-solid {{#if picked}}fa-square-check{{else}}fa-square{{/if}}"></i></button>
+        <img src="{{img}}" alt="" width="32" height="32">
+        <div class="creation-entry-text"><a data-action="openEntry"><strong>{{name}}</strong></a></div>
+        <span class="creation-cost">{{cost}} XP</span>
+      </li>
+      {{else}}
+      <li class="hint">{{localize "MODULUS.Creation.NoneAuthored"}}</li>
+      {{/each}}
+    </ul>
+    {{/if}}
+
+    {{!-- Backgrounds (§3.7) --}}
+    {{#if isStep.background}}
+    <p class="hint">{{localize "MODULUS.Creation.BackgroundHint"}}</p>
+    {{#each backgroundGroups}}
+    <h3>{{label}}{{#if required}} <span class="hint">({{localize "MODULUS.Creation.Required"}})</span>{{/if}}</h3>
+    <ul class="creation-list" data-type="background">
+      {{#each entries}}
+      <li class="creation-entry {{#if picked}}picked{{/if}}" data-uuid="{{uuid}}">
+        <button type="button" class="pick {{#if picked}}chosen{{/if}}" data-action="togglePick"><i class="fa-solid {{#if picked}}fa-square-check{{else}}fa-square{{/if}}"></i></button>
+        <img src="{{img}}" alt="" width="32" height="32">
+        <div class="creation-entry-text"><a data-action="openEntry"><strong>{{name}}</strong></a></div>
+        <span class="creation-cost">{{#if free}}{{localize "MODULUS.Creation.Free"}}{{else}}{{cost}} XP{{/if}}</span>
+      </li>
+      {{else}}
+      <li class="hint">{{localize "MODULUS.Creation.NoneAuthored"}}</li>
+      {{/each}}
+    </ul>
+    {{/each}}
+    {{/if}}
+
+    {{!-- Starting words (§3.7, setting creation.startingWords) --}}
+    {{#if isStep.word}}
+    <p class="hint">{{localize "MODULUS.Creation.WordHint" n=wordLimit}} <strong>{{wordCount}} / {{wordLimit}}</strong></p>
+    <ul class="creation-list" data-type="word">
+      {{#each words}}
+      <li class="creation-entry {{#if picked}}picked{{/if}}" data-uuid="{{uuid}}">
+        <button type="button" class="pick {{#if picked}}chosen{{/if}}" data-action="togglePick"><i class="fa-solid {{#if picked}}fa-square-check{{else}}fa-square{{/if}}"></i></button>
+        <img src="{{img}}" alt="" width="32" height="32">
+        <div class="creation-entry-text"><a data-action="openEntry"><strong>{{name}}</strong></a></div>
+      </li>
+      {{else}}
+      <li class="hint">{{localize "MODULUS.Creation.NoneAuthored"}}</li>
+      {{/each}}
+    </ul>
+    {{/if}}
+
+    {{!-- Review --}}
+    {{#if isStep.review}}
+    <table class="creation-review">
+      <tr><th>{{localize "MODULUS.Creation.Step.stats"}}</th><td>{{review.shape.primary}} {{localize "MODULUS.Tier.primary"}}, {{review.shape.secondary}} {{localize "MODULUS.Tier.secondary"}}, {{review.shape.tertiary}} {{localize "MODULUS.Tier.tertiary"}}</td></tr>
+      <tr><th>{{localize "MODULUS.Creation.Step.ancestry"}}</th><td>{{review.ancestry}}</td></tr>
+      <tr><th>{{localize "MODULUS.Creation.Step.society"}}</th><td>{{review.societies}}</td></tr>
+      <tr><th>{{localize "MODULUS.Creation.Step.background"}}</th><td>{{review.backgrounds}}</td></tr>
+      {{#if wordLimit}}<tr><th>{{localize "MODULUS.Creation.Step.word"}}</th><td>{{review.words}}</td></tr>{{/if}}
+    </table>
+    <h3>{{localize "MODULUS.Creation.XPCost"}}</h3>
+    <table class="creation-review">
+      {{#each review.lines}}<tr><td>{{name}}</td><td>{{cost}} XP</td></tr>{{/each}}
+      <tr><th>{{localize "MODULUS.Creation.Total"}}</th><th>{{review.cost}} XP</th></tr>
+      <tr><td>{{localize "MODULUS.Field.xp.available"}}</td><td>{{review.xp}} XP</td></tr>
+      <tr><td>{{localize "MODULUS.Creation.Left"}}</td><td>{{review.left}} XP</td></tr>
+    </table>
+    <p class="hint">{{localize "MODULUS.Creation.TalentsHint"}}</p>
+    {{/if}}
+
+    {{#if errors.length}}
+    <ul class="alloc-errors">{{#each errors}}<li>{{this}}</li>{{/each}}</ul>
+    {{/if}}
+  </section>
+
+  <footer class="creation-footer">
+    {{#if hasBack}}<button type="button" data-action="back"><i class="fa-solid fa-arrow-left"></i> {{localize "MODULUS.Creation.Back"}}</button>{{/if}}
+    {{#if hasNext}}<button type="button" data-action="next">{{localize "MODULUS.Creation.Next"}} <i class="fa-solid fa-arrow-right"></i></button>{{/if}}
+    {{#if isStep.review}}<button type="button" class="roll-button" data-action="finish" {{#unless valid}}disabled{{/unless}}><i class="fa-solid fa-check"></i> {{localize "MODULUS.Creation.Finish"}}</button>{{/if}}
+  </footer>
+</div>

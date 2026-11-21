@@ -18,6 +18,7 @@ export function talentData(item) {
     prereqTalent: s.prereqTalent,
     crossPrereq: s.crossPrereq,
     requires: [...(s.requires ?? [])],
+    requiresAncestry: s.requiresAncestry ?? "",
     xpCost: s.xpCost ?? 0,
     uuid: item.uuid,
     img: item.img
@@ -50,8 +51,24 @@ export function reasonText(r) {
   return game.i18n.format(`MODULUS.Talent.Reason.${r.code}`, { ...r, domain, missing: (r.need ?? 0) - (r.have ?? 0) });
 }
 
+/** An ancestry's stable key: its ancestryId, or a slug of its name for older items. */
+export function ancestryKey(item) {
+  return item.system.ancestryId || talentSlug(item.name);
+}
+
+/** Every ancestry a character could have: id -> name (world Items and the system's compendiums). */
+export function knownAncestries() {
+  const out = new Map();
+  for (const item of catalogItems("ancestry")) if (!out.has(ancestryKey(item))) out.set(ancestryKey(item), item.name);
+  return out;
+}
+
 export function eligibilityFor(actor, talent, byId) {
-  return talentEligibility(talent, ownedTalents(actor), byId, { xpAvailable: xpAvailable(actor) });
+  return talentEligibility(talent, ownedTalents(actor), byId, {
+    xpAvailable: xpAvailable(actor),
+    ancestries: actor.items.filter((i) => i.type === "ancestry").map(ancestryKey),
+    ancestryNames: knownAncestries()
+  });
 }
 
 /**
@@ -90,21 +107,23 @@ export async function removeTalent(actor, item, { refund = true } = {}) {
 
 /** Problems in the authored talent graph, for the editor and the graph window. */
 export async function talentIssues() {
-  return validateTalentGraph([...(await knownTalents()).values()]);
+  return validateTalentGraph([...(await knownTalents()).values()], { ancestryIds: [...knownAncestries().keys()] });
 }
 
 export function issueText(i) {
   return game.i18n.format(`MODULUS.Talent.Issue.${i.code}`, { ...i, name: i.name ?? i.talentId });
 }
 
-/** New world talents get a unique talentId from their name. */
+/** New world talents and ancestries get a unique stable id from their name. */
 export function registerTalentHooks() {
+  const KEYS = { talent: "talentId", ancestry: "ancestryId" };
   Hooks.on("preCreateItem", (item) => {
-    if (item.type !== "talent" || item.system.talentId) return;
-    const taken = new Set(game.items.filter((i) => i.type === "talent").map((i) => i.system.talentId));
+    const key = KEYS[item.type];
+    if (!key || item.system[key]) return;
+    const taken = new Set(game.items.filter((i) => i.type === item.type).map((i) => i.system[key]));
     const base = talentSlug(item.name);
     let id = base;
     for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
-    item.updateSource({ "system.talentId": id });
+    item.updateSource({ [`system.${key}`]: id });
   });
 }

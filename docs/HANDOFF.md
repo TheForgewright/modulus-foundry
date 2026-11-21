@@ -5,9 +5,9 @@ Read `CLAUDE.md` first; it has the working rules. These notes add the history an
 ## Where things stand
 
 - **Branch:** all work is on `claude/brave-rubin-om0s98`. It has never been merged to `main`. Ask the owner before merging or opening a pull request.
-- **Deployed:** 0.1.1 is installed on Bellows. It was deployed from the owner's PC with `./build.sh 0.1.1`; the server-side compendium check passed.
+- **Deployed:** 0.1.2 was built on 2026-11-20; 0.1.3 (character creation, respec, ancestry talents) on 2026-11-21. Builds run from the owner's PC with `./build.sh <version>`.
 - **Not tested in real Foundry:** every feature since Phase 1. All checks so far ran in Node: 140 unit tests, the load, actions and render checks, and an end-to-end round against mocked documents. Expect the first real play session to turn up bugs in clicks, form saves, player prompts (user queries), dice and CSS. Fix those first.
-- **Next version:** 0.1.2. Add a `## 0.1.2` section at the top of `docs/patch-notes.md` before building.
+- **Next version:** 0.1.4. Add a `## 0.1.4` section at the top of `docs/patch-notes.md` before building.
 
 ## Built so far
 
@@ -17,7 +17,10 @@ Read `CLAUDE.md` first; it has the working rules. These notes add the history an
   - XP spending;
   - *Also requires* chains, which are how talent levels work;
   - the talent editor and the talent graph;
-  - conditional effects with 31 triggers.
+  - conditional effects with 31 triggers;
+  - character creation (`apps/character-creation.js`, `creation/creation.js`, `rules/creation.js`) and respec with respec points;
+  - advanced ancestry features as talents with `requiresAncestry`.
+- **Content to author before creation is useful:** there are no ancestry, society or background compendium packs; author them as world Items. Phase 4 is complete.
 - **Additions requested by the owner along the way:**
   - optional card deck: per-character, composition effects, marks, reshuffle when the deck runs dry;
   - delayed effects;
@@ -56,18 +59,18 @@ Read `CLAUDE.md` first; it has the working rules. These notes add the history an
 ## Likely next work (ask the owner which)
 
 1. **Fix whatever the first real play session turns up** on the 0.1.1 test world: character sheet, Act window, an encounter round, and a player connected.
-2. **Rest of Phase 4:** a character creation flow (dot allocation, ancestry, society, backgrounds) and a respec that spends respec points.
-3. **Phase 5, persistent encounters:**
+2. **Phase 5, persistent encounters:**
    - momentum resets when a non-persistent encounter ends;
    - relationships, investigations and ordeals keep their momentum;
    - room-entry momentum;
    - subjects (a GM-controlled participant, such as the mystery or the wilderness);
    - the scene-track choice with its bonus die;
    - a prompt to change scene track at a break point.
-4. **Phase 6:** armor feeding momentum resistance, card-deck blind mode, and the ability builder. The builder needs a designer decision first.
+3. **Phase 6:** armor feeding momentum resistance, card-deck blind mode, and the ability builder. The builder needs a designer decision first.
 
 The open questions most likely to come up in play:
 - #57: who can use which actions;
 - #60–66: encounter edge cases;
 - #69–73: talents and delayed effects;
-- #76–78: unknown words.
+- #76–78: unknown words;
+- #81–83: creation (starting XP, societies, which background is free).
