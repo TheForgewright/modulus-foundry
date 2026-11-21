@@ -11,3 +11,4 @@ packs/**/LOG.old
 dist/
 *.zip
 deploy.local.conf
+.claude/settings.local.json
