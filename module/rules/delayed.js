@@ -3,14 +3,15 @@
  *
  * An outcome effect with `delay: n` is not applied when it is applied: it is scheduled in the
  * encounter state and fires at the start of round (current + n). The encounter keeps
- *   state.delayed = [{ id, dueRound, scheduledRound, effect, source, text, actorPid, targetPid, actorUuid, targetUuid }]
+ *   state.delayed = [{ id, dueRound, scheduledRound, effect, source, text, actorPid, targetPid, actorUuid, targetUuid, linked }]
+ * `linked` lists the other encounters the action was linked to; its momentum changes follow them there.
  */
 
 /**
  * Schedule an effect. `effect.delay` is the number of rounds; the stored effect has no delay, so
  * applying it when due does not schedule it again.
  */
-export function scheduleDelayed(state, { effect, source = "", text = "", actorPid = null, targetPid = null, actorUuid = null, targetUuid = null }) {
+export function scheduleDelayed(state, { effect, source = "", text = "", actorPid = null, targetPid = null, actorUuid = null, targetUuid = null, linked = [] }) {
   const delay = Math.max(1, Math.trunc(effect?.delay ?? 1));
   const { delay: _omit, ...now } = effect;
   const s = structuredClone(state);
@@ -25,7 +26,8 @@ export function scheduleDelayed(state, { effect, source = "", text = "", actorPi
     actorPid,
     targetPid,
     actorUuid,
-    targetUuid
+    targetUuid,
+    linked: [...linked]
   };
   s.delayed = [...(s.delayed ?? []), entry];
   return { state: s, entry };

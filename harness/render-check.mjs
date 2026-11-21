@@ -17,7 +17,8 @@ const { ModulusActor } = await import("../module/documents/actor.js");
 const { ModulusItem } = await import("../module/documents/item.js");
 const { ModulusCombat, ModulusCombatant } = await import("../module/documents/combat.js");
 const { ModulusRoll } = await import("../module/documents/roll.js");
-const { CharacterData, NPCData } = await import("../module/data/actor.js");
+const { CharacterData, NPCData, SubjectData } = await import("../module/data/actor.js");
+const { SubjectSheet } = await import("../module/apps/subject-sheet.js");
 const { ITEM_MODELS } = await import("../module/data/item.js");
 const { ModulusActorSheet } = await import("../module/apps/actor-sheet.js");
 const { ModulusItemSheet } = await import("../module/apps/item-sheet.js");
@@ -264,6 +265,69 @@ await attempt("Encounter Manager / surrender (stack badges)", async () => {
   if (!/class="em-entry-title"><strong>/.test(html)) throw new Error("stack entry title is not wrapped in em-entry-title");
   return html;
 });
+
+// Phase 5: labels, a closed extended encounter, the list filter, a subject, acting in a chosen encounter.
+combats.idle.flags.modulus.labels = ["court", "Act 2"];
+const feud = makeCombat("C-feud", "Old feud", E.newEncounterState(), { kind: "relationship" });
+Object.assign(feud.flags.modulus, { closed: true, outcome: "Bram left the city.", labels: ["court"] });
+const mystery = makeActor(ModulusActor, SubjectData, { name: "The Hollow Murders", id: "mystery", system: { momentum: { starting: 4 } } });
+game.actors.set(mystery.id, mystery);
+const hollow = makeCombat("C-hollow", "The Hollow Murders", E.newEncounterState(), { kind: "investigation" });
+{
+  const c = Object.create(ModulusCombatant.prototype);
+  Object.assign(c, { id: "cm", actor: mystery, actorId: mystery.id, name: mystery.name, img: mystery.img, defeated: false, parent: hollow, tokenId: null });
+  c.flags = { modulus: { momentum: 5 } };
+  hollow.combatants.set("cm", c);
+}
+await renderApp("Subject sheet", new SubjectSheet({ document: mystery }));
+await attempt("Encounter Manager / labelled relationship", async () => {
+  const em = new EncounterManager();
+  em.selectedId = combats.idle.id;
+  const html = renderFile(EncounterManager.PARTS.body.template, await em._prepareContext({}));
+  if (!html.includes('class="em-label">court<')) throw new Error("labels are not shown as chips");
+  if (html.includes("Old feud")) throw new Error("a closed encounter is listed without the Closed filter");
+  if (!html.includes('data-action="closeEncounter"')) throw new Error("no Close button on a persistent encounter");
+  if (!html.includes('data-action="addSubject"')) throw new Error("no Add subject button on an extended encounter");
+  return html;
+});
+await attempt("Encounter Manager / closed encounter, filtered by label", async () => {
+  const em = new EncounterManager();
+  em.filter = { kind: "relationship", label: "court", text: "", closed: true };
+  em.selectedId = feud.id;
+  const html = renderFile(EncounterManager.PARTS.body.template, await em._prepareContext({}));
+  if (!html.includes("Bram left the city.")) throw new Error("the outcome note is not shown");
+  if (!html.includes('data-action="reopenEncounter"')) throw new Error("no Reopen button");
+  if (html.includes('data-action="startRound"')) throw new Error("round controls shown on a closed encounter");
+  if (html.includes("Fight (executing)")) throw new Error("the kind filter let a standard encounter through");
+  return html;
+});
+await attempt("Encounter Manager / standard encounter has Room entry", async () => {
+  const em = new EncounterManager();
+  em.selectedId = combats.declaring.id;
+  const html = renderFile(EncounterManager.PARTS.body.template, await em._prepareContext({}));
+  if (!html.includes('data-action="roomEntry"')) throw new Error("no Room entry button");
+  return html;
+});
+await renderApp("Encounter Manager / investigation with a subject", Object.assign(new EncounterManager(), { selectedId: hollow.id }));
+ava.flags.modulus.focusEncounter = combats.idle.id;
+await attempt("Act window acting in a chosen encounter", async () => {
+  const app = new ActionBuilder(ava);
+  app.choice.action = "Item.mfxStrike0000001";
+  const ctx = await app._prepareContext({});
+  if (ctx.momentum !== 4) throw new Error(`momentum ${ctx.momentum}, expected the encounter's 4`);
+  const html = renderFile(ActionBuilder.PARTS.body.template, ctx);
+  if (!html.includes('data-state="encounter"') || !html.includes("Fight (idle)")) throw new Error("no encounter choice");
+  return html;
+});
+await attempt("Actor sheet Ava: acting-here marker", async () => {
+  const sheet = new ModulusActorSheet({ document: ava });
+  sheet.tabGroups.primary = "main";
+  const html = renderFile(ModulusActorSheet.PARTS.main.template, await sheet._prepareContext({}));
+  if (!html.includes("fa-location-crosshairs")) throw new Error("the focused encounter is not marked");
+  if (html.includes("Old feud")) throw new Error("a closed encounter is on the sheet");
+  return html;
+});
+delete ava.flags.modulus.focusEncounter;
 
 game.user.isGM = false;
 const playerView = new EncounterManager();

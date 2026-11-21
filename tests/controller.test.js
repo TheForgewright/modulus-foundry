@@ -258,3 +258,45 @@ test("delayed effects: scheduled from the outcome button, fire at the start of t
   await ctl.startRound();
   assert.equal(combat.combatants.get("j").momentum, 10); // above the ceiling, so no gain; the cancelled +9 never came
 });
+
+test("linked encounters: one action's momentum changes apply in every linked encounter, once each", async () => {
+  const A = makeActor("Lio"), B = makeActor("Mae"), C = makeActor("Ned");
+  const fight = makeCombat([["l", A, 5], ["m", B, 6]]);
+  fight.id = "C6";
+  const bond = makeCombat([["l2", A, 2], ["m2", B, 4]]);
+  bond.id = "C7";
+  const other = makeCombat([["l3", A, 1], ["n3", C, 1]]); // only the actor is here
+  other.id = "C8";
+  const elsewhere = makeCombat([["n4", C, 0]]); // neither is here
+  elsewhere.id = "C9";
+  for (const c of [fight, bond, other, elsewhere]) game.combats.set(c.id, c);
+  const { applyOutcome, setLinked, linkCandidates } = await import("../module/encounter/outcomes.js");
+  globalThis.fromUuidSync = (u) => (u === B.uuid ? B : items.get(u) ?? null);
+  // Cost 2 already paid in the fight; on hit the target loses 1 momentum; on resolution you gain 1.
+  const card = await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor: A }),
+    rolls: [{ options: { modulus: { hit: true, context: {
+      label: "Taunt", encounter: { combatId: "C6" }, targetUuid: B.uuid, costSpent: true, action: { cost: 2 },
+      outcomeEffects: [
+        { trigger: "onHit", source: "Taunt", text: "", effect: { trigger: "onHit", op: "momentum", args: { delta: -1 }, to: "target" } },
+        { trigger: "onResolve", source: "Taunt", text: "", effect: { trigger: "onResolve", op: "momentum", args: { delta: 1 }, to: "self" } }
+      ]
+    } } } }]
+  });
+  assert.deepEqual(linkCandidates(card).map((x) => x.combat.id), ["C7", "C8"]);
+  await applyOutcome(card, 0);
+  assert.equal(fight.combatants.get("m").momentum, 5);
+  // Linking afterwards catches the linked encounters up: the cost and the applied outcome.
+  await setLinked(card, ["C7", "C8"]);
+  assert.equal(bond.combatants.get("l2").momentum, 0);
+  assert.equal(bond.combatants.get("m2").momentum, 3);
+  assert.equal(other.combatants.get("l3").momentum, -1);
+  assert.equal(other.combatants.get("n3").momentum, 1); // not the target
+  // Re-linking applies nothing twice.
+  await setLinked(card, ["C7", "C8"]);
+  assert.equal(bond.combatants.get("l2").momentum, 0);
+  // An outcome applied after linking goes to every linked encounter at once.
+  await applyOutcome(card, 1);
+  assert.deepEqual([fight.combatants.get("l").momentum, bond.combatants.get("l2").momentum, other.combatants.get("l3").momentum], [6, 1, 0]);
+  assert.equal(elsewhere.combatants.get("n4").momentum, 0);
+});

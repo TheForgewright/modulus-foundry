@@ -5,6 +5,11 @@
  */
 import { SYSTEM_ID } from "../config.js";
 import { newEncounterState } from "../rules/encounter.js";
+import { parseLabels, roomEntryMomentum } from "../rules/extended.js";
+import { getSetting } from "../settings.js";
+import { relationshipsOf } from "../encounter/lookup.js";
+
+export { combatantOf, encountersOf, relationshipsOf } from "../encounter/lookup.js";
 
 export const ENCOUNTER_KINDS = Object.freeze(["standard", "relationship", "investigation", "ordeal"]);
 
@@ -41,6 +46,20 @@ export class ModulusCombat extends Combat {
 
   get parentId() {
     return this.getFlag(SYSTEM_ID, "parentId") ?? null;
+  }
+
+  /** GM labels that tell encounters apart ("court", "Act 2"). */
+  get labels() {
+    return parseLabels(this.getFlag(SYSTEM_ID, "labels") ?? []);
+  }
+
+  /** A closed extended encounter keeps its momentum and history but leaves the open lists (§7.11). */
+  get closed() {
+    return Boolean(this.getFlag(SYSTEM_ID, "closed"));
+  }
+
+  get outcomeNote() {
+    return this.getFlag(SYSTEM_ID, "outcome") ?? "";
   }
 
   get label() {
@@ -90,10 +109,31 @@ export class ModulusCombatant extends Combatant {
   async _preCreate(data, options, user) {
     const allowed = await super._preCreate(data, options, user);
     if (allowed === false) return false;
-    const start = this.actor?.system.momentum.starting ?? 3;
     if (!Number.isFinite(this.getFlag(SYSTEM_ID, "momentum"))) {
+      const start = this.entryMomentum().value;
       this.updateSource({ [`flags.${SYSTEM_ID}.momentum`]: start, initiative: start });
     }
+  }
+
+  /**
+   * Momentum on joining (§5, §7.11, OPEN #25). In a short encounter (a room) with the room-entry
+   * setting on, a character brings the highest momentum of their open relationships with
+   * someone already there, capped at their ceiling. Otherwise their starting momentum.
+   */
+  entryMomentum() {
+    const actor = this.actor;
+    const starting = actor?.system.momentum.starting ?? 3;
+    const combat = this.parent;
+    if (!actor || !combat || combat.persistent || combat.kind !== "standard" || getSetting("roomEntryMomentum") !== "highestCapped") {
+      return { value: starting, from: null };
+    }
+    const present = combat.combatants.filter((c) => c !== this && c.actorId && c.actorId !== actor.id).map((c) => c.actorId);
+    return roomEntryMomentum({
+      starting,
+      ceiling: actor.system.momentum.ceiling,
+      relationships: relationshipsOf(actor, { except: combat.id }),
+      present
+    });
   }
 
   /**

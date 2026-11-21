@@ -7,7 +7,11 @@
 import { SYSTEM_ID } from "../config.js";
 import { DOMAINS } from "../rules/constants.js";
 import { breakPointEvents, sceneTrackEvent } from "../rules/condfx.js";
+import { crossedThresholds, talentThresholds } from "../rules/extended.js";
 import { encounterController } from "./controller.js";
+import { participantTalents } from "./condfx-bridge.js";
+import { combatantOf } from "./lookup.js";
+import { getSetting } from "../settings.js";
 
 const isActiveGM = () => game.users.activeGM?.isSelf;
 const rid = () => foundry.utils.randomID(8);
@@ -16,7 +20,8 @@ const rid = () => foundry.utils.randomID(8);
 function encountersOf(actor) {
   const out = [];
   for (const combat of game.combats) {
-    const combatant = combat.combatants.find((c) => c.actor === actor || (c.actorId === actor.id && !actor.isToken));
+    if (combat.closed) continue;
+    const combatant = combatantOf(combat, actor);
     if (combatant && combat.encounterState.round > 0) out.push({ combat, combatant });
   }
   return out;
@@ -49,6 +54,34 @@ async function emitQuery({ actorUuid, event }, { user }) {
   return true;
 }
 
+/**
+ * Momentum thresholds met, in any encounter (running, resting or never started), go to chat:
+ * talent thresholds (momentum triggers), dropping below zero (§5.2) and reaching the ceiling.
+ */
+export function thresholdsMet(combatant, from, to) {
+  const combat = combatant.parent;
+  return crossedThresholds({
+    from, to,
+    ceiling: combatant.actor?.system.momentum.ceiling,
+    thresholds: talentThresholds(participantTalents(combat), combatant.id, combat.kind)
+  });
+}
+
+async function postThresholds(combatant, from, to) {
+  if (!getSetting("momentum.thresholdChat") || !Number.isFinite(from) || !Number.isFinite(to)) return;
+  const met = thresholdsMet(combatant, from, to);
+  if (!met.length) return;
+  const combat = combatant.parent;
+  const esc = foundry.utils.escapeHTML;
+  const line = (m) => game.i18n.format(`MODULUS.MomentumThreshold.Met.${m.type}`, { value: m.value, source: esc(m.source ?? "") });
+  const labels = combat.labels.length ? ` <span class="hint">${combat.labels.map(esc).join(" · ")}</span>` : "";
+  const content = `<div class="modulus-encounter-note modulus-threshold">
+    <strong>${esc(combat.label)}</strong> <span class="hint">${esc(game.i18n.localize(`MODULUS.Encounter.Kind.${combat.kind}`))}</span>${labels}
+    <p>${esc(game.i18n.format("MODULUS.MomentumThreshold.Moved", { name: combatant.name, from, to }))}</p>
+    <ul>${met.map((m) => `<li>${line(m)}</li>`).join("")}</ul></div>`;
+  await ChatMessage.create({ content, speaker: { alias: game.i18n.localize("MODULUS.Encounter.Speaker") } });
+}
+
 export function registerEncounterEvents() {
   CONFIG.queries[`${SYSTEM_ID}.emitEvent`] = emitQuery;
 
@@ -59,6 +92,9 @@ export function registerEncounterEvents() {
   Hooks.on("updateCombatant", (c, changes, options) => {
     if (!isActiveGM() || !options.modulusBefore) return;
     const combat = c.parent;
+    const moved = foundry.utils.getProperty(changes, `flags.${SYSTEM_ID}.momentum`);
+    if (moved !== undefined) postThresholds(c, options.modulusBefore.momentum, moved);
+    if (combat.closed) return;
     const round = combat.encounterState.round;
     if (round < 1) return;
     const before = options.modulusBefore;

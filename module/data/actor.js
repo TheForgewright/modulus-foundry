@@ -138,3 +138,16 @@ export class NPCData extends ModulusActorData {
     return { dots, tiers };
   }
 }
+
+/**
+ * A subject (§7.11): the GM-controlled other side of an extended encounter when there is no other
+ * character (the mystery, the wilderness, the trial). Momentum only, no HP tracks (OPEN #40,
+ * default). It keeps the NPC fields so rolls aimed at it still find defense tiers, set directly.
+ */
+export class SubjectData extends NPCData {
+  static defineSchema() {
+    const schema = super.defineSchema();
+    schema.statsMode = new fields.StringField({ required: true, initial: "direct", choices: { dots: "MODULUS.NPC.StatsMode.dots", direct: "MODULUS.NPC.StatsMode.direct" } });
+    return schema;
+  }
+}

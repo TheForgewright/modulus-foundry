@@ -7,7 +7,16 @@ Read `CLAUDE.md` first; it has the working rules. These notes add the history an
 - **Branch:** all work is on `claude/brave-rubin-om0s98`. It has never been merged to `main`. Ask the owner before merging or opening a pull request.
 - **Deployed:** 0.1.2 was built on 2026-11-20; 0.1.3 (character creation, respec, ancestry talents) on 2026-11-21. Builds run from the owner's PC with `./build.sh <version>`.
 - **Not tested in real Foundry:** every feature since Phase 1. All checks so far ran in Node: 140 unit tests, the load, actions and render checks, and an end-to-end round against mocked documents. Expect the first real play session to turn up bugs in clicks, form saves, player prompts (user queries), dice and CSS. Fix those first.
-- **Next version:** 0.1.4. Add a `## 0.1.4` section at the top of `docs/patch-notes.md` before building.
+- **Next version:** 0.1.5. Add a `## 0.1.5` section at the top of `docs/patch-notes.md` before building.
+- **Phase 5, first part (0.1.4):**
+  - storage: every encounter is a Combat; persistent ones hold world actors, not tokens, and are closed (with an outcome note) rather than deleted;
+  - labels and the Encounter Manager filter;
+  - the Act window's encounter choice and the sheet's marker for it;
+  - linked encounters: one action's momentum changes in several encounters (`encounter/outcomes.js` `syncLinked`, `rules/extended.js`);
+  - momentum thresholds to chat from every encounter (`encounter/events.js`);
+  - room entry;
+  - the `subject` actor type.
+- **Phase 5, still to build:** the scene-track prompt at encounter start and at a break point; the witness rule beyond hand edits; targeting a whole room (§7.11).
 
 ## Built so far
 

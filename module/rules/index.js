@@ -18,3 +18,4 @@ export * from "./condfx.js";
 export * from "./delayed.js";
 export * from "./thresholds.js";
 export * from "./catalog.js";
+export * from "./extended.js";

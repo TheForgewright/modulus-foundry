@@ -55,6 +55,7 @@ const DEFINITIONS = [
   ["condFx.shiftsAffectDefense", Boolean, true],
   ["condFx.disabledTriggers", String, ""],
   ["enableDeck", Boolean, false],
+  ["momentum.thresholdChat", Boolean, true],
   ["roomEntryMomentum", String, "highestCapped", { choices: ["highestCapped", "baseline"] }],
   ["showAdvancedBonus", Boolean, false],
   ["autoSyncCompendiums", Boolean, true]

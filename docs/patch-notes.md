@@ -2,6 +2,16 @@
 
 Newest first. Every build adds a section for its version (`build.sh` checks for it).
 
+## 0.1.4
+- **Several encounters at once, switch between them.** The Encounter Manager lists every encounter with its kind, who is in it and its labels. Filter the list by kind, label or name, and show or hide closed ones. *Show in tracker* puts the selected encounter in Foundry's combat tracker; the others keep their state.
+- **Labels.** Give an encounter labels ("court", "Act 2") when you create it or in the Manager header. They show as chips in the list, on character sheets and in the linking window.
+- **One action, several encounters.** Every action card has an *Encounters…* button for the GM. It lists the other open encounters the acting character or the target is in, with their momentum there. Tick the ones the action also affects: its momentum cost and momentum outcomes apply in each, to whichever of the two takes part. Linking after applying catches up; nothing applies twice. The card says where else its momentum applied.
+- **Momentum thresholds go to chat from every encounter**, not just the one being played: a talent's momentum trigger value being met, dropping below 0, or reaching the ceiling. Setting: *Post momentum thresholds to chat* (on).
+- **Act in an encounter.** The Act window has an *Encounter* choice, and the sheet's encounter list has a marker for it. Acting in an encounter uses that encounter's momentum and talent effects and spends the cost there. *Outside encounters* uses the sheet's momentum as before.
+- **Persistent encounters** (relationships, investigations, ordeals) now hold the world actor rather than the token, so they survive scene changes and deleted tokens. Close one with an optional outcome note: it keeps its momentum and history, leaves the open lists, and can be reopened.
+- **Room entry.** A character joining a standard encounter starts at the highest momentum of their open relationships with someone already there, capped at their ceiling. The *Room entry* button recalculates everyone and posts the result. Setting *Room entry momentum* can switch this to baseline.
+- **Subjects.** *Add subject* on an extended encounter creates a GM-controlled participant (the mystery, the wilderness) with momentum only and a small sheet for its momentum and defense tiers.
+
 ## 0.1.3
 - **Character creation.** New characters get a *Create character* button on their sheet. It walks through stats (the dot allocation), ancestry, societies, backgrounds, starting words and a review showing the XP cost. One Childhood, one Job and one Leisure background are required and free; further backgrounds and societies cost their XP. Finishing puts everything on the character and spends the XP. Afterwards only the GM can re-run it (from the sheet header); re-running replaces the earlier picks and refunds them.
 - **Ancestries cost no XP.** Advanced ancestry features are now talents: a talent can *Require ancestry*, and only characters of that ancestry can take it. The Talents tab says which ancestry a locked talent needs. Ancestries have a stable *Ancestry id* that talents point at; the old *Advanced* and *XP cost* fields on ancestries are gone.

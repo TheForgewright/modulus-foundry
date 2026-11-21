@@ -10,6 +10,7 @@ import { ENCOUNTER_KINDS } from "../documents/combat.js";
 import { encounterController } from "../encounter/controller.js";
 import { ActionBuilder } from "./action-builder.js";
 import { describeInstance } from "../encounter/condfx-bridge.js";
+import { filterEncounters, parseLabels } from "../rules/extended.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
@@ -39,7 +40,13 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
       endRound: EncounterManager.#onEndRound,
       openSheet: EncounterManager.#onOpenSheet,
       cancelDelayed: EncounterManager.#onCancelDelayed,
-      removeEffect: EncounterManager.#onRemoveEffect
+      removeEffect: EncounterManager.#onRemoveEffect,
+      closeEncounter: EncounterManager.#onCloseEncounter,
+      reopenEncounter: EncounterManager.#onReopenEncounter,
+      showInTracker: EncounterManager.#onShowInTracker,
+      roomEntry: EncounterManager.#onRoomEntry,
+      addSubject: EncounterManager.#onAddSubject,
+      clearFilter: EncounterManager.#onClearFilter
     }
   };
 
@@ -55,30 +62,52 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
   }
 
   selectedId = null;
+  /** List filter: kind, label, text, and whether closed extended encounters show. */
+  filter = { kind: "", label: "", text: "", closed: false };
   #hooks = [];
 
-  get encounters() {
+  /** Every encounter this user may see. */
+  get allEncounters() {
     return game.combats.filter((c) => game.user.isGM || c.combatants.some((x) => x.actor?.isOwner) || c.visible);
   }
 
+  /** The list after the filter. The selected encounter stays listed even when filtered out. */
+  get encounters() {
+    const all = this.allEncounters;
+    const shown = new Set(filterEncounters(all.map((c) => ({ c, name: c.label, kind: c.kind, labels: c.labels, closed: c.closed })), this.filter).map((e) => e.c));
+    return all.filter((c) => shown.has(c) || c.id === this.selectedId);
+  }
+
   get combat() {
-    const list = this.encounters;
-    return list.find((c) => c.id === this.selectedId) ?? list[0] ?? null;
+    const all = this.allEncounters;
+    return all.find((c) => c.id === this.selectedId) ?? this.encounters[0] ?? null;
   }
 
   async _prepareContext() {
     const t = (k) => game.i18n.localize(k);
     const combat = this.combat;
     const isGM = game.user.isGM;
+    const all = this.allEncounters;
+    const allLabels = [...new Set(all.flatMap((c) => c.labels))].sort((a, b) => a.localeCompare(b));
     const ctx = {
       isGM,
+      filter: this.filter,
+      filtered: Boolean(this.filter.kind || this.filter.label || this.filter.text || this.filter.closed),
+      kindOptions: { "": t("MODULUS.Encounter.Filter.AllKinds"), ...Object.fromEntries(ENCOUNTER_KINDS.map((k) => [k, t(`MODULUS.Encounter.Kind.${k}`)])) },
+      labelOptions: allLabels.length ? { "": t("MODULUS.Encounter.Filter.AllLabels"), ...Object.fromEntries(allLabels.map((l) => [l, l])) } : null,
+      hiddenCount: all.length - this.encounters.length,
       encounters: this.encounters.map((c) => ({
         id: c.id,
         label: c.label,
         kind: t(`MODULUS.Encounter.Kind.${c.kind}`),
+        kindKey: c.kind,
+        labels: c.labels,
         round: c.encounterState.round,
         phase: t(`MODULUS.Encounter.Phase.${c.encounterState.phase}`),
         persistent: c.persistent,
+        closed: c.closed,
+        active: c.active,
+        who: c.combatants.map((x) => x.name).join(", "),
         parent: c.parentId ? game.combats.get(c.parentId)?.label : null,
         selected: c === combat
       })),
@@ -101,6 +130,13 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
       label: combat.label,
       kind: t(`MODULUS.Encounter.Kind.${combat.kind}`),
       persistent: combat.persistent,
+      extended: combat.kind !== "standard",
+      isStandard: combat.kind === "standard" && !combat.persistent,
+      labels: combat.labels,
+      labelText: combat.labels.join(", "),
+      closed: combat.closed,
+      outcomeNote: combat.outcomeNote,
+      active: combat.active,
       round: s.round,
       phase: s.phase,
       phaseLabel: t(`MODULUS.Encounter.Phase.${s.phase}`),
@@ -198,6 +234,15 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
 
   _onRender(context, options) {
     super._onRender(context, options);
+    // List filter (kept on this window while it is open).
+    for (const el of this.element.querySelectorAll("[data-filter]")) {
+      // "change": text search applies on Enter or leaving the box, so typing keeps focus.
+      el.addEventListener("change", (ev) => {
+        const key = ev.target.dataset.filter;
+        this.filter[key] = ev.target.type === "checkbox" ? ev.target.checked : ev.target.value;
+        this.render();
+      });
+    }
     const combat = this.combat;
     if (!combat) return;
     for (const input of this.element.querySelectorAll("input.em-momentum")) {
@@ -212,6 +257,7 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
     for (const sel of this.element.querySelectorAll("select.em-track")) {
       sel.addEventListener("change", (ev) => combat.combatants.get(ev.target.dataset.id)?.setFlag(SYSTEM_ID, "sceneTrack", ev.target.value));
     }
+    this.element.querySelector("input.em-labels")?.addEventListener("change", (ev) => combat.setFlag(SYSTEM_ID, "labels", parseLabels(ev.target.value)));
     // Drop actors (no token needed) to add them, e.g. for relationships.
     const zone = this.element.querySelector(".em-participants");
     zone?.addEventListener("dragover", (ev) => ev.preventDefault());
@@ -220,7 +266,7 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
       const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(ev);
       if (data?.type !== "Actor") return;
       const actor = await fromUuid(data.uuid);
-      if (actor) await combat.createEmbeddedDocuments("Combatant", [{ actorId: actor.id, name: actor.name, img: actor.img }]);
+      if (actor && !actor.isToken) await combat.createEmbeddedDocuments("Combatant", [{ actorId: actor.id, name: actor.name, img: actor.img }]);
     });
   }
 
@@ -259,6 +305,7 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
       content: `
         <div class="form-group"><label>${t("Name")}</label><input type="text" name="name" autofocus></div>
         <div class="form-group"><label>${t("MODULUS.Encounter.KindLabel")}</label><select name="kind">${kinds}</select></div>
+        <div class="form-group"><label>${t("MODULUS.Encounter.Labels")}</label><input type="text" name="labels" placeholder="${t("MODULUS.Encounter.LabelsHint")}"></div>
         <div class="form-group"><label>${t("MODULUS.Encounter.Persistent")}</label><input type="checkbox" name="persistent"></div>
         <div class="form-group"><label>${t("MODULUS.Encounter.Parent")}</label><select name="parentId"><option value=""></option>${parents}</select></div>
         <div class="form-group"><label>${t("MODULUS.Encounter.Scale")}</label><select name="scale"><option value=""></option><option value="macro">macro</option><option value="meso">meso</option><option value="micro">micro</option></select></div>
@@ -271,17 +318,31 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
       name: data.name || "",
       scene: null,
       active: false,
-      flags: { [SYSTEM_ID]: { kind: data.kind, persistent: Boolean(data.persistent) || data.kind !== "standard", parentId: data.parentId || null, scale: data.scale || "" } }
+      flags: { [SYSTEM_ID]: { kind: data.kind, persistent: Boolean(data.persistent) || data.kind !== "standard", parentId: data.parentId || null, scale: data.scale || "", labels: parseLabels(data.labels) } }
     });
     this.selectedId = combat.id;
     if (data.addTokens) await EncounterManager.#addControlled(combat);
     this.render();
   }
 
+  /**
+   * Add the selected tokens. A persistent encounter outlives scenes and tokens, so its
+   * participants are the world actors, not the tokens; an unlinked token's own changes are not
+   * carried (the GM is told).
+   */
   static async #addControlled(combat) {
-    const tokens = canvas.tokens?.controlled ?? [];
-    const existing = new Set(combat.combatants.map((c) => c.tokenId).filter(Boolean));
-    const data = tokens.filter((t) => t.actor && !existing.has(t.id)).map((t) => ({ tokenId: t.id, sceneId: t.scene.id, actorId: t.actor.id }));
+    const tokens = (canvas.tokens?.controlled ?? []).filter((t) => t.actor);
+    let data;
+    if (combat.persistent) {
+      const existing = new Set(combat.combatants.map((c) => c.actorId));
+      const unlinked = tokens.filter((t) => !t.document.actorLink).map((t) => t.name);
+      if (unlinked.length) ui.notifications.warn(game.i18n.format("MODULUS.Encounter.UnlinkedToken", { names: unlinked.join(", ") }));
+      const actors = [...new Map(tokens.map((t) => [t.document.actorId, game.actors.get(t.document.actorId)])).values()].filter((a) => a && !existing.has(a.id));
+      data = actors.map((a) => ({ actorId: a.id, name: a.name, img: a.img }));
+    } else {
+      const existing = new Set(combat.combatants.map((c) => c.tokenId).filter(Boolean));
+      data = tokens.filter((t) => !existing.has(t.id)).map((t) => ({ tokenId: t.id, sceneId: t.scene.id, actorId: t.actor.id }));
+    }
     if (data.length) await combat.createEmbeddedDocuments("Combatant", data);
   }
 
@@ -396,6 +457,65 @@ export class EncounterManager extends HandlebarsApplicationMixin(ApplicationV2) 
 
   static #onRemoveEffect(event, target) {
     this.controller.removeEffect(target.dataset.fxId);
+  }
+
+  /** Close an extended encounter (§7.11): it keeps its momentum and history, with an outcome note. */
+  static async #onCloseEncounter() {
+    const combat = this.combat;
+    if (!combat) return;
+    const note = await DialogV2.prompt({
+      window: { title: "MODULUS.Encounter.Close" },
+      classes: ["modulus"],
+      content: `<p>${game.i18n.format("MODULUS.Encounter.CloseHint", { name: foundry.utils.escapeHTML(combat.label) })}</p>
+        <textarea name="outcome" rows="4">${foundry.utils.escapeHTML(combat.outcomeNote)}</textarea>`,
+      ok: { label: "MODULUS.Encounter.Close", callback: (e, b) => b.form.elements.outcome.value.trim() },
+      rejectClose: false
+    });
+    if (note == null) return;
+    await combat.update({ [`flags.${SYSTEM_ID}.closed`]: true, [`flags.${SYSTEM_ID}.outcome`]: note, active: false });
+  }
+
+  static async #onReopenEncounter() {
+    await this.combat?.setFlag(SYSTEM_ID, "closed", false);
+  }
+
+  /** Show this encounter in Foundry's combat tracker (the tracker shows one at a time). */
+  static async #onShowInTracker() {
+    await this.combat?.activate();
+  }
+
+  /** Room entry (§7.11): set each participant's momentum from their relationships with those present. */
+  static async #onRoomEntry() {
+    const combat = this.combat;
+    if (!combat) return;
+    const lines = [];
+    for (const c of combat.combatants) {
+      const { value, from } = c.entryMomentum();
+      if (value !== c.momentum) await c.setMomentum(value);
+      lines.push(`${foundry.utils.escapeHTML(c.name)}: ${value}${from ? ` (${foundry.utils.escapeHTML(game.combats.get(from)?.label ?? "")})` : ""}`);
+    }
+    if (lines.length) await encounterController(combat).chat(`${game.i18n.localize("MODULUS.Encounter.RoomEntryDone")}<br>${lines.join("<br>")}`);
+  }
+
+  /** A subject (§7.11): a GM-controlled participant such as the mystery or the wilderness, momentum only. */
+  static async #onAddSubject() {
+    const combat = this.combat;
+    if (!combat) return;
+    const name = await DialogV2.prompt({
+      window: { title: "MODULUS.Encounter.AddSubject" },
+      classes: ["modulus"],
+      content: `<p class="hint">${game.i18n.localize("MODULUS.Encounter.AddSubjectHint")}</p><input type="text" name="name" value="${foundry.utils.escapeHTML(combat.label)}" autofocus>`,
+      ok: { callback: (e, b) => b.form.elements.name.value.trim() },
+      rejectClose: false
+    });
+    if (!name) return;
+    const actor = await Actor.create({ name, type: "subject", img: "icons/svg/mystery-man.svg" });
+    if (actor) await combat.createEmbeddedDocuments("Combatant", [{ actorId: actor.id, name: actor.name, img: actor.img }]);
+  }
+
+  static #onClearFilter() {
+    this.filter = { kind: "", label: "", text: "", closed: false };
+    this.render();
   }
 
   static #onOpenSheet(event, target) {

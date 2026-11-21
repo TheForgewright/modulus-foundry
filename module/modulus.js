@@ -3,13 +3,14 @@
  */
 import { SYSTEM_ID, MODULUS } from "./config.js";
 import { registerSettings } from "./settings.js";
-import { CharacterData, NPCData } from "./data/actor.js";
+import { CharacterData, NPCData, SubjectData } from "./data/actor.js";
 import { ITEM_MODELS } from "./data/item.js";
 import { ModulusActor } from "./documents/actor.js";
 import { ModulusItem } from "./documents/item.js";
 import { ModulusRoll } from "./documents/roll.js";
 import { ModulusActorSheet } from "./apps/actor-sheet.js";
 import { ModulusItemSheet } from "./apps/item-sheet.js";
+import { SubjectSheet } from "./apps/subject-sheet.js";
 import { openRollDialog, buildRollPlan, rollFromPlan } from "./apps/roll-dialog.js";
 import * as rules from "./rules/index.js";
 import { registerDeckHooks } from "./deck/lifecycle.js";
@@ -38,7 +39,7 @@ Hooks.once("init", () => {
   CONFIG.Item.documentClass = ModulusItem;
   CONFIG.Combat.documentClass = ModulusCombat;
   CONFIG.Combatant.documentClass = ModulusCombatant;
-  Object.assign(CONFIG.Actor.dataModels, { character: CharacterData, npc: NPCData });
+  Object.assign(CONFIG.Actor.dataModels, { character: CharacterData, npc: NPCData, subject: SubjectData });
   Object.assign(CONFIG.Item.dataModels, ITEM_MODELS);
   CONFIG.Dice.rolls.unshift(ModulusRoll);
 
@@ -47,6 +48,11 @@ Hooks.once("init", () => {
     types: ["character", "npc"],
     makeDefault: true,
     label: "MODULUS.Sheet.Actor"
+  });
+  DocumentSheetConfig.registerSheet(Actor, SYSTEM_ID, SubjectSheet, {
+    types: ["subject"],
+    makeDefault: true,
+    label: "MODULUS.Sheet.Subject"
   });
   DocumentSheetConfig.registerSheet(Item, SYSTEM_ID, ModulusItemSheet, {
     makeDefault: true,
@@ -61,6 +67,7 @@ Hooks.once("init", () => {
     `systems/${SYSTEM_ID}/templates/actor/notes.hbs`,
     `systems/${SYSTEM_ID}/templates/actor/cards.hbs`,
     `systems/${SYSTEM_ID}/templates/actor/talents.hbs`,
+    `systems/${SYSTEM_ID}/templates/actor/subject.hbs`,
     `systems/${SYSTEM_ID}/templates/apps/talent-graph.hbs`,
     `systems/${SYSTEM_ID}/templates/apps/character-creation.hbs`,
     `systems/${SYSTEM_ID}/templates/chat/hand-card.hbs`,

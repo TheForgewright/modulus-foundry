@@ -137,15 +137,18 @@
     </div>
     {{#if encounters.length}}
     <table class="sheet-encounters">
-      <tr><th>{{localize "MODULUS.Encounter.Instances"}}</th><th>{{localize "MODULUS.Encounter.Round"}}</th><th>{{localize "MODULUS.Sheet.Momentum"}}</th></tr>
+      <tr><th></th><th>{{localize "MODULUS.Encounter.Instances"}}</th><th>{{localize "MODULUS.Encounter.Round"}}</th><th>{{localize "MODULUS.Sheet.Momentum"}}</th></tr>
       {{#each encounters}}
-      <tr>
-        <td><a data-action="openEncounter" data-combat-id="{{combatId}}">{{label}}</a>{{#if persistent}} <i class="fa-solid fa-infinity"></i>{{/if}}</td>
+      <tr class="{{#if focused}}focused{{/if}}">
+        <td>{{#if focused}}<i class="fa-solid fa-location-crosshairs" data-tooltip="MODULUS.Sheet.ActingHere"></i>{{else}}<a data-action="focusEncounter" data-combat-id="{{combatId}}" data-tooltip="MODULUS.Sheet.ActHere"><i class="fa-regular fa-circle"></i></a>{{/if}}</td>
+        <td><a data-action="openEncounter" data-combat-id="{{combatId}}">{{label}}</a>{{#if persistent}} <i class="fa-solid fa-infinity"></i>{{/if}}
+          <span class="hint">{{kind}}</span>{{#each labels}} <span class="em-label">{{this}}</span>{{/each}}</td>
         <td>{{round}} · {{phase}}</td>
         <td><input type="number" class="encounter-momentum" data-combat-id="{{combatId}}" data-combatant-id="{{combatantId}}" value="{{momentum}}" step="1"></td>
       </tr>
       {{/each}}
     </table>
+    {{#if focusedAny}}<a data-action="focusEncounter" data-combat-id="" class="hint"><i class="fa-solid fa-arrow-right-from-bracket"></i> {{localize "MODULUS.Sheet.ActOutside"}}</a>{{/if}}
     {{/if}}
     <p class="hint">{{localize "MODULUS.Sheet.MomentumHint"}}</p>
   </fieldset>

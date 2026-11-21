@@ -26,7 +26,7 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 22 | Pips at level 0; exact break-point structure | Treat level as ≥ 1; segment per level | setting `pips.minLevel`; `rules/tracks.js` `longRest` |
 | 23 | Respec and tier-shift rules; floating points | `respecPoints` counter. A respec clears the dot allocation to choose again; free before character creation is finished, then costs `respec.cost` points (default 1); a GM may waive it | `respecPoints`, setting `respec.cost`, `rules/creation.js` `respecCheck` |
 | 24 | Scene-track bonus size and the Action/Drama/Intrigue names | 1 buff die; names provisional |  |
-| 25 | Room-entry momentum, witness effects, nested-instance linkage | Highest relationship, capped; GM adjusts |  |
+| 25 | Room-entry momentum, witness effects, nested-instance linkage | Highest relationship, capped; GM adjusts. Witness effects: GM edits momentum by hand. Nested instances: `parentId` link only | setting `roomEntryMomentum`; `rules/extended.js` `roomEntryMomentum`; `documents/combat.js` `entryMomentum`; Encounter Manager *Room entry* |
 | 26 | Deck: draw formula, draw triggers, cash-in menu, blind-mode "double", hand persistence | Deck off by default. Reshuffle-when-dry, per-character decks and composition effects are now decided (`docs/CARD_DECK.md`). Blind mode not built. Hand persists while its encounter exists |  |
 | 27 | Opposed/contested rolls | Not built; manual GM roll |  |
 | 28 | `draining X` | Not built |  |
@@ -38,8 +38,8 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 34 | Conditional effects: is "nearby" encounter-scoped only, or does distance or range ever matter | Encounter-scoped |  |
 | 36 | Conditional effects: when a duration-1 effect is gained mid-round, does it apply to remaining resolutions this round or start next round | Applies to the rest of this round |  |
 | 37 | Conditional effects: should effects be allowed to grant dice and not only tier shifts at launch | Schema allows it; editor can hide it |  |
-| 39 | Extended encounters: what momentum means for investigations and ordeals, and what ends them | Not defined; GM closes manually |  |
-| 40 | Extended encounters: does a subject (mystery, wilderness) have HP tracks | Momentum only |  |
+| 39 | Extended encounters: what momentum means for investigations and ordeals, and what ends them | Not defined; GM closes manually with an optional outcome note, and can reopen | Encounter Manager *Close* / *Reopen*; flags `closed`, `outcome` |
+| 40 | Extended encounters: does a subject (mystery, wilderness) have HP tracks | Momentum only; the subject sheet shows momentum settings and defense tiers (for the DC when targeted) | actor type `subject` (`data/actor.js` `SubjectData`, `apps/subject-sheet.js`) |
 | 41 | Extended encounters: do investigations and ordeals use the room-entry and witness rules (§7.11) or only relationships | Relationships only |  |
 | 38 | Conditional effects: final trigger list (which of the suggested triggers in §8.1.1 are in v1) | All implemented behind a registry; designers can disable triggers in settings |  |
 
@@ -78,6 +78,9 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 78 | Unknown words: flat penalty, tier downgrade, or both? | Both fields exist; a word may use either or both while the designers playtest | `data/item.js` WordData, `rules/assembly.js` |
 | 81 | How much XP does a new character start with? | 100 (world setting) | setting `creation.startingXP` |
 | 82 | Must a character belong to at least one society? | No; societies are optional, each costs its own XP | `rules/creation.js` `validateCreation` |
+| 84 | Linked encounters: in a linked encounter where only one of the two (actor or target) takes part, do that one's changes still apply? | Yes; each change goes to whoever of the two is in that encounter | `rules/extended.js` `linkedMomentumOps` |
+| 85 | Room entry: which relationships are "relevant"? | An open relationship whose other participant is already in the room. A soured relationship below starting momentum counts too | `rules/extended.js` `roomEntryMomentum` |
+| 86 | Which momentum thresholds go to chat? | Values in participants' talent momentum triggers (*Momentum crossed*, *Extended momentum*), dropping below 0, and reaching the ceiling; setting to turn it off | `rules/extended.js` `crossedThresholds`, `encounter/events.js`; setting `momentum.thresholdChat` |
 | 83 | Which background in a required category is free when a character takes two of the same category? | The first picked; the second costs its XP | `rules/creation.js` `freeBackgrounds` |
 
 ## Resolved
@@ -100,3 +103,4 @@ Seeded from Appendix D of `docs/DESIGN.md`. Each row is undecided by the designe
 | 79 | Advanced ancestries cost "100–500 XP per level", but levels are removed. | Advanced ancestry features are talents with the character's ancestry as a prerequisite. Ancestries themselves cost no XP. |
 | 80 | Starting word packs were written for skills, which are removed. | A world setting sets how many words a character picks at creation (default 0); the designers will test starting words against words from talents only. |
 | 77 | How do characters use words they don't have? | Anyone may use any word; not knowing it costs its penalty on the roll. Known = base word, on the sheet, or granted by a talent. |
+| 87 | Can one action affect several encounters at once? | Yes. From an action's chat card the GM opens *Encounters…*, which lists the open encounters the acting character or the target is in, and ticks the ones it also affects. The action's momentum changes (its cost and its momentum outcomes) for those two apply in every ticked encounter. A momentum threshold met in any encounter, not only the one being played, is posted to chat. |

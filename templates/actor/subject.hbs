@@ -1,0 +1,50 @@
+<div class="subject-body">
+  <header class="modulus-header">
+    <img class="profile" src="{{actor.img}}" alt="{{actor.name}}" data-edit="img" data-action="editImage" width="96" height="96">
+    <div class="header-fields">
+      <input class="actor-name" type="text" name="name" value="{{actor.name}}" placeholder="{{localize 'Name'}}" {{#unless editable}}disabled{{/unless}}>
+      <p class="hint">{{localize "MODULUS.Subject.Hint"}}</p>
+    </div>
+  </header>
+
+  <fieldset>
+    <legend>{{localize "MODULUS.Sheet.Momentum"}}</legend>
+    <div class="header-row">
+      <label>{{localize "MODULUS.Field.momentum.starting"}} <input type="number" name="system.momentum.starting" value="{{source.momentum.starting}}" step="1" {{#unless editable}}disabled{{/unless}}></label>
+      <label>{{localize "MODULUS.Field.momentum.gainPerTurn"}} <input type="number" name="system.momentum.gainPerTurn" value="{{source.momentum.gainPerTurn}}" step="1" {{#unless editable}}disabled{{/unless}}></label>
+      <label>{{localize "MODULUS.Field.momentum.ceiling"}} <input type="number" value="{{system.momentum.ceiling}}" disabled></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>{{localize "MODULUS.Subject.Defense"}}</legend>
+    <p class="hint">{{localize "MODULUS.Subject.DefenseHint"}}</p>
+    <div class="subject-tiers">
+      {{#each tiers}}
+      <div class="subject-domain">
+        <strong>{{label}}</strong>
+        {{#each stats}}
+        <label>{{label}} <select name="{{name}}" {{#unless ../../editable}}disabled{{/unless}}>{{selectOptions ../../tierOptions selected=value}}</select></label>
+        {{/each}}
+      </div>
+      {{/each}}
+    </div>
+  </fieldset>
+
+  {{#if encounters.length}}
+  <fieldset>
+    <legend>{{localize "MODULUS.Encounter.Instances"}}</legend>
+    <table class="sheet-encounters">
+      <tr><th>{{localize "MODULUS.Encounter.Instances"}}</th><th>{{localize "MODULUS.Sheet.Momentum"}}</th></tr>
+      {{#each encounters}}
+      <tr><td><a data-action="openEncounter" data-combat-id="{{combatId}}">{{label}}</a> <span class="hint">{{kind}}{{#if closed}} · {{localize "MODULUS.Encounter.Closed"}}{{/if}}</span></td><td>{{momentum}}</td></tr>
+      {{/each}}
+    </table>
+  </fieldset>
+  {{/if}}
+
+  <fieldset>
+    <legend>{{localize "MODULUS.Sheet.Tab.notes"}}</legend>
+    {{formInput systemFields.biography enriched=biographyHTML value=source.biography name="system.biography" toggled=true}}
+  </fieldset>
+</div>

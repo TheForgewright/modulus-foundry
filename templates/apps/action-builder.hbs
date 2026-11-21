@@ -1,6 +1,14 @@
 <div class="builder-body">
   {{#if note}}<p class="builder-note"><i class="fa-solid fa-circle-info"></i> {{note}}</p>{{/if}}
-  {{#unless isStandalone}}<p class="hint">{{localize "MODULUS.Builder.EncounterMomentum"}}: <strong>{{momentum}}</strong></p>{{/unless}}
+  {{#if isStandalone}}
+  {{#if encounterOptions}}
+  <div class="form-group">
+    <label>{{localize "MODULUS.Builder.InEncounter"}}</label>
+    <select data-state="encounter">{{selectOptions encounterOptions selected=state.encounter}}</select>
+  </div>
+  {{/if}}
+  {{#if focusLabel}}<p class="hint">{{localize "MODULUS.Builder.EncounterMomentum"}} ({{focusLabel}}): <strong>{{momentum}}</strong></p>{{/if}}
+  {{else}}<p class="hint">{{localize "MODULUS.Builder.EncounterMomentum"}}: <strong>{{momentum}}</strong></p>{{/if}}
   {{#if noActions}}
   <p class="hint">{{localize "MODULUS.Builder.NoActions"}}</p>
   {{else}}

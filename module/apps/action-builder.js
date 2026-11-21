@@ -13,6 +13,7 @@ import { assemblySettings, dcTable, getSetting } from "../settings.js";
 import { ModulusRoll } from "../documents/roll.js";
 import { statLabel } from "./item-sheet.js";
 import { rollModifiers } from "../encounter/condfx-bridge.js";
+import { encountersOf, combatantOf } from "../encounter/lookup.js";
 import { talentGrants, isGranted, knowsWord } from "../rules/talents.js";
 import { catalogItems } from "../vocab/catalog.js";
 
@@ -187,7 +188,7 @@ export function toStackDeclaration(plan, { payload, target }) {
 }
 
 /** Roll a built declaration and post the card. Deducts momentum when `spend` is set (§5.3: at resolution). */
-export async function resolveDeclaration(actor, plan, { spend = true, encounter = null } = {}) {
+export async function resolveDeclaration(actor, plan, { spend = true, encounter = null, spendFrom = null } = {}) {
   const a = plan.assembled;
   const outcomeEffects = ["onHit", "onMiss", "onResolve"].flatMap((trigger) => a.outcomes[trigger].map((e) => {
     const { source, ...effect } = e;
@@ -205,6 +206,8 @@ export async function resolveDeclaration(actor, plan, { spend = true, encounter 
     extraDebuff: plan.extraDebuff,
     dcSource: plan.dcSource,
     encounter,
+    // Encounter entries pay their cost at resolution (the controller); standalone actions here.
+    costSpent: Boolean(a.cost.total) && (encounter?.entryId ? true : spend),
     targetUuid: plan.target?.uuid ?? null,
     outcomeEffects,
     talentEffects: (plan.condFxSources ?? []).map((i) => ({
@@ -239,7 +242,9 @@ export async function resolveDeclaration(actor, plan, { spend = true, encounter 
     const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/chat/action-card.hbs`, { ctx: context });
     message = await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content, flags: { [SYSTEM_ID]: { context } } });
   }
-  if (spend && a.cost.total && !encounter) {
+  if (spend && a.cost.total && spendFrom) {
+    await spendFrom.adjustMomentum(-a.cost.total);
+  } else if (spend && a.cost.total && !encounter) {
     await actor.update({ "system.momentum.current": actor.system.momentum.current - a.cost.total });
   }
   return { hit, message };
@@ -290,6 +295,8 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       words: [...(prefill?.wordUuids ?? [])],
       target: prefill?.target ? ActionBuilder.targetKey(prefill.target) : (mode === "standalone" ? "token" : "none"),
       spend: true,
+      // Standalone: the encounter the action is made in ("" = outside encounters, sheet momentum).
+      encounter: mode === "standalone" ? (actor.getFlag?.(SYSTEM_ID, "focusEncounter") ?? "") : "",
       sceneTrack: combatant?.sceneTrack ?? "",
       override: false
     };
@@ -320,8 +327,30 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     return game.i18n.format(key, { name: this.combatant?.name ?? this.actor.name });
   }
 
+  /** Standalone: the chosen encounter and the character's combatant in it, if still open. */
+  get focus() {
+    if (this.inEncounter || !this.choice.encounter) return null;
+    const combat = game.combats.get(this.choice.encounter);
+    const combatant = combat && !combat.closed ? combatantOf(combat, this.actor) : null;
+    return combatant ? { combat, combatant } : null;
+  }
+
+  /** The encounter whose momentum and talents this action uses. */
+  get rollEncounter() {
+    if (this.inEncounter) return { combat: this.combat, combatant: this.combatant };
+    return this.focus;
+  }
+
   get momentum() {
-    return this.inEncounter ? this.combatant.momentum : this.actor.system.momentum.current;
+    return this.rollEncounter?.combatant.momentum ?? this.actor.system.momentum.current;
+  }
+
+  /** Talent effects active in the action's encounter right now (looked up again at resolution in rounds). */
+  _condFx(target) {
+    const enc = this.rollEncounter;
+    if (!enc) return null;
+    const targetPid = target.stack?.kind === "actor" ? target.stack.pid : (target.actor ? combatantOf(enc.combat, target.actor)?.id ?? null : null);
+    return rollModifiers(enc.combat.encounterState, enc.combatant.id, targetPid);
   }
 
   /** Target choices for the select. */
@@ -373,9 +402,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
   _plan() {
     const { action, chosen, target } = this._current();
     if (!action) return null;
-    // In an encounter, preview the talent effects active right now (they are looked up again at resolution).
-    const targetPid = target.stack?.kind === "actor" ? target.stack.pid : null;
-    const condFx = this.inEncounter ? rollModifiers(this.combat.encounterState, this.combatant.id, targetPid) : null;
+    const condFx = this._condFx(target);
     return buildDeclaration(this.actor, {
       action, words: chosen, target: target.actor, targetMode: target.mode,
       sceneTrack: this.choice.sceneTrack || undefined, momentum: this.momentum, condFx
@@ -414,6 +441,11 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       sceneTracks: { "": "—", physical: t("MODULUS.Domain.physical"), mental: t("MODULUS.Domain.mental"), social: t("MODULUS.Domain.social") },
       isGM: game.user.isGM,
       momentum: this.momentum,
+      encounterOptions: this.inEncounter ? null : {
+        "": t("MODULUS.Builder.OutsideEncounters"),
+        ...Object.fromEntries(encountersOf(this.actor).map(({ combat, combatant }) => [combat.id, `${combat.label} (${t(`MODULUS.Encounter.Kind.${combat.kind}`)}${combat.labels.length ? ` · ${combat.labels.join(", ")}` : ""}) · ${combatant.momentum}`]))
+      },
+      focusLabel: this.focus?.combat.label ?? "",
       maxWords,
       noActions: !actions.length
     };
@@ -470,6 +502,8 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
           words[Number(ev.target.dataset.index)] = value;
           this.choice.words = words.filter(Boolean); // a blank slot removes the word
         } else this.choice[key] = value;
+        // The encounter choice sticks: the sheet and the next Act window open on it.
+        if (key === "encounter" && this.actor.isOwner) this.actor.setFlag(SYSTEM_ID, "focusEncounter", value);
         this.render();
       });
     }
@@ -482,7 +516,7 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
       ["targetToken", Hooks.on("targetToken", rerender)],
       ["updateActor", Hooks.on("updateActor", (doc) => doc === this.actor && rerender())],
       ["updateCombat", Hooks.on("updateCombat", (doc) => doc === this.combat && rerender())],
-      ["updateCombatant", Hooks.on("updateCombatant", (doc) => doc === this.combatant && rerender())],
+      ["updateCombatant", Hooks.on("updateCombatant", (doc) => (doc === this.combatant || doc === this.focus?.combatant) && rerender())],
       ["updateItem", Hooks.on("updateItem", rerender)],
       ["createItem", Hooks.on("createItem", rerender)],
       ["deleteItem", Hooks.on("deleteItem", rerender)],
@@ -518,10 +552,16 @@ export class ActionBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     const { action, chosen, target } = this._current();
     if (!action) return;
     const plan = buildDeclaration(this.actor, {
-      action, words: chosen, target: target.actor, targetMode: target.mode, sceneTrack: this.choice.sceneTrack || undefined
+      action, words: chosen, target: target.actor, targetMode: target.mode, sceneTrack: this.choice.sceneTrack || undefined,
+      momentum: this.momentum, condFx: this._condFx(target)
     });
     if (!plan.assembled.valid && !(game.user.isGM && this.choice.override)) return;
-    await resolveDeclaration(this.actor, plan, { spend: this.choice.spend });
+    const focus = this.focus;
+    await resolveDeclaration(this.actor, plan, {
+      spend: this.choice.spend,
+      encounter: focus ? { combatId: focus.combat.id } : null,
+      spendFrom: focus?.combatant ?? null
+    });
   }
 
   static #onSubmit() {

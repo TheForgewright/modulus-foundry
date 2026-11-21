@@ -368,3 +368,32 @@
 .modulus .creation-footer button { flex: 0 0 auto; }
 .modulus .creation-prompt { display: flex; align-items: center; gap: 8px; }
 .modulus .creation-prompt button { flex: 0 0 auto; }
+
+/* Phase 5: encounter labels, list filter, closed encounters, linking, subjects */
+.modulus .em-filter { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.modulus .em-filter input[type="search"], .modulus .em-filter select { width: 100%; }
+.modulus .em-filter-closed { display: flex; align-items: center; gap: 4px; }
+.modulus .em-labels { display: flex; flex-wrap: wrap; gap: 2px; }
+.modulus .em-label, .modulus-link-dialog .em-label { display: inline-block; padding: 0 6px; border-radius: 999px; font-size: 11px; background: color-mix(in srgb, var(--mod-secondary, #6a5acd) 25%, transparent); }
+.modulus .em-list li.closed { opacity: 0.6; }
+.modulus .em-list li .em-who { font-size: 11px; }
+.modulus .em-list li.em-kind-relationship { border-left: 3px solid #b0608a; }
+.modulus .em-list li.em-kind-investigation { border-left: 3px solid #4f7fbf; }
+.modulus .em-list li.em-kind-ordeal { border-left: 3px solid #b5853d; }
+.modulus .em-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0; }
+.modulus .em-meta button { width: auto; flex: 0 0 auto; }
+.modulus .em-labels-edit { display: flex; align-items: center; gap: 4px; flex: 1 1 200px; }
+.modulus .em-labels-edit input { flex: 1; }
+.modulus .em-outcome-note { margin: 4px 0; padding: 4px 6px; border-left: 3px solid var(--mod-border); }
+.modulus .em-phase.phase-closed { opacity: 0.7; }
+.modulus .sheet-encounters tr.focused { background: color-mix(in srgb, var(--mod-secondary, #6a5acd) 15%, transparent); }
+.modulus-link-bar { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
+.modulus-link-bar span { flex: 1; }
+.modulus-link-bar .link-encounters { width: auto; flex: 0 0 auto; line-height: 18px; font-size: 11px; padding: 0 6px; }
+.modulus-link-table { width: 100%; }
+.modulus-link-table td:first-child { width: 24px; }
+.modulus-threshold ul { margin: 2px 0 0; padding-left: 18px; }
+.modulus.subject .subject-tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.modulus.subject .subject-domain { display: flex; flex-direction: column; gap: 2px; }
+.modulus.subject .subject-domain label { display: flex; justify-content: space-between; gap: 4px; font-size: 12px; }
+.modulus.subject .subject-body { padding: 6px; display: flex; flex-direction: column; gap: 8px; }

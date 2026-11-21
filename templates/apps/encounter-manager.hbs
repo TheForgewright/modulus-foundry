@@ -1,11 +1,20 @@
 <div class="em-body">
   <aside class="em-list">
     <h3>{{localize "MODULUS.Encounter.Instances"}}</h3>
+    <div class="em-filter">
+      <input type="search" data-filter="text" value="{{filter.text}}" placeholder="{{localize 'MODULUS.Encounter.Filter.Search'}}">
+      <select data-filter="kind">{{selectOptions kindOptions selected=filter.kind}}</select>
+      {{#if labelOptions}}<select data-filter="label">{{selectOptions labelOptions selected=filter.label}}</select>{{/if}}
+      <label class="em-filter-closed"><input type="checkbox" data-filter="closed" {{checked filter.closed}}> {{localize "MODULUS.Encounter.Filter.ShowClosed"}}</label>
+      {{#if filtered}}<a data-action="clearFilter" class="hint"><i class="fa-solid fa-filter-circle-xmark"></i> {{localize "MODULUS.Encounter.Filter.Clear"}}{{#if hiddenCount}} ({{localize "MODULUS.Encounter.Filter.Hidden"}} {{hiddenCount}}){{/if}}</a>{{/if}}
+    </div>
     <ul>
       {{#each encounters}}
-      <li class="{{#if selected}}selected{{/if}}" data-combat-id="{{id}}" data-action="select">
-        <strong>{{label}}</strong>
-        <span class="hint">{{kind}}{{#if persistent}} · <i class="fa-solid fa-infinity" data-tooltip="MODULUS.Encounter.Persistent"></i>{{/if}} · {{localize "MODULUS.Encounter.Round"}} {{round}} · {{phase}}</span>
+      <li class="em-kind-{{kindKey}} {{#if selected}}selected{{/if}} {{#if closed}}closed{{/if}}" data-combat-id="{{id}}" data-action="select">
+        <strong>{{label}}</strong>{{#if active}} <i class="fa-solid fa-eye" data-tooltip="MODULUS.Encounter.InTracker"></i>{{/if}}
+        <span class="hint">{{kind}}{{#if persistent}} · <i class="fa-solid fa-infinity" data-tooltip="MODULUS.Encounter.Persistent"></i>{{/if}}{{#if closed}} · {{localize "MODULUS.Encounter.Closed"}}{{else}} · {{localize "MODULUS.Encounter.Round"}} {{round}} · {{phase}}{{/if}}</span>
+        {{#if who}}<span class="hint em-who">{{who}}</span>{{/if}}
+        {{#if labels.length}}<span class="em-labels">{{#each labels}}<span class="em-label">{{this}}</span>{{/each}}</span>{{/if}}
         {{#if parent}}<span class="hint">↳ {{parent}}</span>{{/if}}
       </li>
       {{else}}
@@ -20,14 +29,29 @@
     <header class="em-header">
       <h2>{{label}} <span class="hint">{{kind}}</span></h2>
       <div class="em-status">
+        {{#if closed}}<span class="em-phase phase-closed">{{localize "MODULUS.Encounter.Closed"}}</span>{{else}}
         <span class="em-round">{{localize "MODULUS.Encounter.Round"}} {{round}}</span>
-        <span class="em-phase phase-{{phase}}">{{phaseLabel}}</span>
+        <span class="em-phase phase-{{phase}}">{{phaseLabel}}</span>{{/if}}
       </div>
     </header>
+    <div class="em-meta">
+      {{#if ../isGM}}
+      <label class="em-labels-edit"><i class="fa-solid fa-tags"></i> <input type="text" class="em-labels" value="{{labelText}}" placeholder="{{localize 'MODULUS.Encounter.LabelsHint'}}"></label>
+      {{#unless active}}<button type="button" class="secondary" data-action="showInTracker" data-tooltip="MODULUS.Encounter.ShowInTrackerHint"><i class="fa-solid fa-eye"></i> {{localize "MODULUS.Encounter.ShowInTracker"}}</button>{{/unless}}
+      {{#if isStandard}}<button type="button" class="secondary" data-action="roomEntry" data-tooltip="MODULUS.Encounter.RoomEntryHint"><i class="fa-solid fa-door-open"></i> {{localize "MODULUS.Encounter.RoomEntry"}}</button>{{/if}}
+      {{#if extended}}<button type="button" class="secondary" data-action="addSubject" data-tooltip="MODULUS.Encounter.AddSubjectHint"><i class="fa-solid fa-mountain-sun"></i> {{localize "MODULUS.Encounter.AddSubject"}}</button>{{/if}}
+      {{#if persistent}}{{#if closed}}<button type="button" data-action="reopenEncounter"><i class="fa-solid fa-folder-open"></i> {{localize "MODULUS.Encounter.Reopen"}}</button>
+      {{else}}<button type="button" class="secondary" data-action="closeEncounter" data-tooltip="MODULUS.Encounter.CloseTooltip"><i class="fa-solid fa-box-archive"></i> {{localize "MODULUS.Encounter.Close"}}</button>{{/if}}{{/if}}
+      {{else}}
+      {{#if labels.length}}<span class="em-labels">{{#each labels}}<span class="em-label">{{this}}</span>{{/each}}</span>{{/if}}
+      {{/if}}
+    </div>
+    {{#if closed}}<p class="em-outcome-note"><strong>{{localize "MODULUS.Encounter.OutcomeNote"}}:</strong> {{#if outcomeNote}}{{outcomeNote}}{{else}}<span class="hint">—</span>{{/if}}</p>{{/if}}
 
     {{!-- What the encounter needs next --}}
     <div class="em-controls">
-      {{#if ../isGM}}
+      {{#if closed}}<span class="hint">{{localize "MODULUS.Encounter.ClosedHint"}}</span>{{#if ../isGM}} <button type="button" class="danger" data-action="deleteEncounter" data-tooltip="MODULUS.Encounter.End"><i class="fa-solid fa-trash"></i></button>{{/if}}
+      {{else if ../isGM}}
         {{#if is.idle}}
         <button type="button" data-action="startRound"><i class="fa-solid fa-play"></i> {{localize "MODULUS.Encounter.StartRound"}}</button>
         <button type="button" class="secondary" data-action="addTokens"><i class="fa-solid fa-user-plus"></i> {{localize "MODULUS.Encounter.AddTokens"}}</button>

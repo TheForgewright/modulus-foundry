@@ -14,6 +14,7 @@ import { sourceOf } from "../compendium/sync.js";
 import { knownTalents, ownedTalents, eligibilityFor, reasonText, takeTalent, removeTalent, xpAvailable } from "../talents/talents.js";
 import { requestEmit } from "../encounter/events.js";
 import { describeInstance } from "../encounter/condfx-bridge.js";
+import { encountersOf } from "../encounter/lookup.js";
 import { normalizeCondFx } from "../rules/condfx.js";
 import { CharacterCreation } from "./character-creation.js";
 import { isCreated, respec } from "../creation/creation.js";
@@ -46,6 +47,7 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       deleteItem: ModulusActorSheet.#onDeleteItem,
       switchTab: ModulusActorSheet.#onSwitchTab,
       openEncounter: ModulusActorSheet.#onOpenEncounter,
+      focusEncounter: ModulusActorSheet.#onFocusEncounter,
       selectCard: ModulusActorSheet.#onSelectCard,
       drawCards: ModulusActorSheet.#onDrawCards,
       burnSelected: ModulusActorSheet.#onBurnSelected,
@@ -174,16 +176,18 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
       tabActive: Object.fromEntries(["main", "talents", "items", "cards", "notes"].map((id) => [id, this.tabGroups.primary === id])),
       talents: this.tabGroups.primary === "talents" ? await this._prepareTalents() : null,
       cards: this._prepareCards(),
-      encounters: game.combats.filter((c) => c.combatants.some((x) => x.actor === actor)).map((c) => {
-        const combatant = c.combatants.find((x) => x.actor === actor);
+      encounters: encountersOf(actor).map(({ combat: c, combatant }) => {
         const st = c.encounterState;
         return {
           combatId: c.id, combatantId: combatant.id, label: c.label, momentum: combatant.momentum,
-          round: st.round, phase: game.i18n.localize(`MODULUS.Encounter.Phase.${st.phase}`), persistent: c.persistent
+          round: st.round, phase: game.i18n.localize(`MODULUS.Encounter.Phase.${st.phase}`), persistent: c.persistent,
+          kind: game.i18n.localize(`MODULUS.Encounter.Kind.${c.kind}`), labels: c.labels,
+          focused: c.id === actor.getFlag(SYSTEM_ID, "focusEncounter")
         };
       }),
       biographyHTML: await foundry.applications.ux.TextEditor.implementation.enrichHTML(system.biography, { relativeTo: actor, secrets: actor.isOwner })
     });
+    context.focusedAny = context.encounters.some((e) => e.focused);
     return context;
   }
 
@@ -629,6 +633,11 @@ export class ModulusActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) 
 
   static #onOpenEncounter(event, target) {
     game.modulus.openEncounterManager(target.dataset.combatId);
+  }
+
+  /** The encounter the character's Act button acts in ("" = outside encounters). */
+  static async #onFocusEncounter(event, target) {
+    await this.document.setFlag(SYSTEM_ID, "focusEncounter", target.dataset.combatId ?? "");
   }
 
   static #onSwitchTab(event, target) {
